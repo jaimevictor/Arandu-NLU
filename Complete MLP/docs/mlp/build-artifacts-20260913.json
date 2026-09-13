@@ -1,0 +1,10 @@
+{
+  "target\\release\\local-nlu": {
+    "sha256": "b39a6ad8789d3ad7a012f3b310de8ce3269b5c63f7cd31475e81572d1f803040",
+    "bytes": 3106184
+  },
+  "target\\local-nlu-0.1.0-amd64.tar": {
+    "sha256": "cfc9559a886b20b7298c85898e5b13ce2177660b1a173beb01a9debbe8348f68",
+    "bytes": 1363456
+  }
+}

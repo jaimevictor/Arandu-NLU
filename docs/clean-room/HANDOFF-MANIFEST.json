@@ -1,0 +1,103 @@
+{
+  "allowed_files": [
+    "01-product-scope.md",
+    "02-functional-requirements.md",
+    "03-non-functional-requirements.md",
+    "04-domain-model.md",
+    "05-pipeline-contracts.md",
+    "06-external-contracts.md",
+    "07-security-boundaries.md",
+    "08-data-requirements.md",
+    "09-acceptance-test-plan.md",
+    "10-open-decisions.md",
+    "HANDOFF-MANIFEST.json",
+    "README.md"
+  ],
+  "decision_status": {
+    "architecture_decision": "accepted",
+    "blocking_open_decisions": [
+      "OPEN-002",
+      "OPEN-003",
+      "OPEN-014"
+    ],
+    "clean_room_scope": "hybrid_architecture_with_clean_room_linguistic_core_and_runtime",
+    "open_decisions": [
+      "OPEN-001",
+      "OPEN-002",
+      "OPEN-003",
+      "OPEN-004",
+      "OPEN-005",
+      "OPEN-006",
+      "OPEN-007",
+      "OPEN-008",
+      "OPEN-009",
+      "OPEN-010",
+      "OPEN-011",
+      "OPEN-012",
+      "OPEN-013",
+      "OPEN-014",
+      "OPEN-015",
+      "OPEN-016",
+      "OPEN-017",
+      "OPEN-018",
+      "OPEN-019",
+      "OPEN-020",
+      "OPEN-021",
+      "OPEN-022",
+      "OPEN-023",
+      "OPEN-024",
+      "OPEN-025",
+      "OPEN-026"
+    ]
+  },
+  "excluded_material_categories": [
+    "algoritmos_heuristicas_e_estruturas_internas_observadas",
+    "binarios_credenciais_e_configuracao_operacional",
+    "codigo_dependencias_workspaces_e_artefatos_de_implementacao",
+    "dados_dinamicos_reais_aliases_e_observacoes_operacionais",
+    "dados_linguisticos_vocabularios_corpora_modelos_e_listas",
+    "identificadores_de_evidencia_nomes_urls_e_caminhos_da_origem",
+    "metricas_e_limites_do_produto_analisado",
+    "protocolos_formatos_wire_e_simbolos_observados"
+  ],
+  "file_hashes_sha256": {
+    "01-product-scope.md": "1ceae4fbda50aad8333978d0e4f410260f4ef4c218effb29686c5865883f2148",
+    "02-functional-requirements.md": "9d855cba4120eff7c84834edae4d7e1d451e755147a74e37a724acbbb0def5aa",
+    "03-non-functional-requirements.md": "e86ab5c3284379e6ff271e2df083c891f9d4a5752c55823aa60db8a0a3d2954b",
+    "04-domain-model.md": "53dfe8f84f84f5e4986890146ce2fc283713923ed82bee314a34a71ab2d798c8",
+    "05-pipeline-contracts.md": "0a1227670df18b6f9ebead4e708bb44020fad793be498acdc8828fd85f2ac495",
+    "06-external-contracts.md": "f1d4e3d0e6a4ad0fb88e8a1522114d908bd88c287cdeaff8857659236d82be97",
+    "07-security-boundaries.md": "7b76d20a0f52a431cc486875980162ad8a61f903ed4d6091778c3cfdd827ab60",
+    "08-data-requirements.md": "92b1a039416081f0ce8c0587e0b0b347dfd5b006bb281fcc751923ec8e124e02",
+    "09-acceptance-test-plan.md": "41bc36509c06133119797036e6f38a4d87c59f01b6f6d256582076bc96be16b4",
+    "10-open-decisions.md": "cb7dc02c8b26826af5ab4eb12fb27ef3bef327d1b2417f0a12aa255a18b06a90",
+    "README.md": "c6591f34d0ea97021110aa614ea356324731760efb155dd0cf2be1ffca30114f"
+  },
+  "generated_at": "2026-08-12T14:15:07-03:00",
+  "hash_algorithm": "SHA-256",
+  "implementation_session_rules": [
+    "Iniciar em conversa nova, sem histórico, resumo, memória compartilhada ou anexos anteriores.",
+    "Usar repositório e diretório novos que nunca tenham contido código da implementação externa tomada apenas como contexto de negócio.",
+    "Receber, abrir e usar somente os arquivos autorizados em allowed_files neste manifesto.",
+    "Não receber nem consultar docs/architecture/, docs/clean-room-audit/, o ADR original, endereços externos do produto anteriormente analisado nem registros de decisão produzidos fora deste pacote.",
+    "Não pesquisar, localizar, baixar, inspecionar ou comparar o produto ou a implementação externa que motivou a especificação.",
+    "Registrar a origem de cada entrada, decisão, dependência, código e dado desde o primeiro commit da nova implementação.",
+    "Interromper a etapa afetada quando faltar informação essencial, registrar a lacuna e aguardar decisão sem inferir, importar ou inventar a resposta."
+  ],
+  "package_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "unresolved_blockers": [
+    {
+      "id": "OPEN-002",
+      "summary": "Política normativa de normalização Unicode, caixa, diacríticos e transformações permitidas."
+    },
+    {
+      "id": "OPEN-003",
+      "summary": "Unidade, origem, convenção de intervalos e mapeamento dos offsets."
+    },
+    {
+      "id": "OPEN-014",
+      "summary": "Plataformas, arquiteturas e ambientes oficialmente suportados na primeira versão."
+    }
+  ]
+}

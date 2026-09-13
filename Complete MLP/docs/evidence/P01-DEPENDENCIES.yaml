@@ -1,0 +1,472 @@
+schema_version: 1
+as_of: "2026-08-29"
+status: ADMITTED_P01_P04_P08
+scope: workspace_production_and_evaluation_crates
+
+resolution:
+  lockfile: Cargo.lock
+  registry: crates.io
+  registry_index: https://github.com/rust-lang/crates.io-index
+  direct_dependencies:
+    - serde@1.0.228
+    - serde_json@1.0.145
+    - unicode-normalization@0.1.25
+    - unicode-segmentation@1.13.3
+  morphology_eval_reused_dependencies:
+    - serde@1.0.228
+    - serde_json@1.0.145
+  pos_eval_reused_dependencies:
+    - serde@1.0.228
+    - serde_json@1.0.145
+  resolved_packages: 15
+  version_policy: exact_direct_versions_and_versioned_lockfile
+  vendored_directory: vendor
+  cargo_network_policy: offline
+  nlu_core_external_dependencies: 0
+
+acquisition_and_transformation:
+  archive_origin: immutable_crates.io_package_archives
+  archive_identity: Cargo.lock_checksum_and_per_package_cargo_checksum_package_field
+  extraction: Cargo_versioned_vendor_layout
+  transformations:
+    - Cargo_generated_normalized_manifest
+    - Cargo_generated_per_file_checksum_manifest
+  source_edits: none
+  reproduction_recipe:
+    - resolve_the_four_exact_direct_versions_with_Rust_1_98_0
+    - verify_each_registry_archive_against_the_recorded_SHA_256
+    - vendor_with_versioned_directories
+    - run_Cargo_with_source_crates_io_replaced_by_vendor_and_offline_mode
+  removal_recipe:
+    - remove_the_named_vendor_directory
+    - remove_the_package_from_Cargo_lock
+    - remove_or_replace_its_declaring_dependency_edge
+    - rerun_the_complete_offline_workspace_gate
+
+review_disposition:
+  discovery: complete_from_Cargo_lock_package_metadata_and_vendored_manifests
+  license: complete_from_retained_full_license_texts
+  provenance: complete_from_archive_SHA_256_and_vendored_VCS_metadata
+  quality: complete_for_selected_features_build_scripts_and_dependency_edges
+  adversarial: complete_for_network_process_owner_license_and_Amazon_exclusion_hypotheses
+  independent_final_review: WAIVED_BY_USER_DIRECTION_TO_SKIP_FINAL_REVIEW_AND_MOVE_ON_AFTER_SUCCESSFUL_RUN
+  executor_responsibility: retained
+
+executed_checks:
+  vendored_file_integrity:
+    command: Ruby_SHA_256_comparison_of_every_file_against_each_.cargo-checksum.json
+    result: PASS
+    checked_package_files: 549
+    generated_checksum_manifests: 15
+  offline_compile:
+    command: cargo_test_workspace_all_features_with_CARGO_NET_OFFLINE_true
+    result: PASS
+  package_closure:
+    command: Cargo_lock_resolution_from_the_versioned_vendor_directory
+    result: PASS_15_PACKAGES
+  amazon_exclusion:
+    command: case_insensitive_source_manifest_documentation_and_metadata_scan_for_Amazon_or_AWS_identifiers
+    result: PASS_NO_MATCH
+  build_script_review:
+    result: PASS
+    finding: build_scripts_invoke_only_the_pinned_RUSTC_or_write_Cargo_OUT_DIR_configuration
+  runtime_network_review:
+    result: PASS
+    finding: no_dependency_build_script_or_selected_protocol_path_opens_a_socket_or_runs_a_network_client
+  unsafe_review:
+    result: PASS_BOUNDED
+    finding: unicode_normalization_has_five_Hangul_from_u32_unchecked_sites_guarded_by_closed_arithmetic_ranges_and_full_Unicode_17_conformance
+
+license_selection:
+  compatibility: all_selected_terms_are_OSI_approved_and_Apache_2_0_compatible
+  commercial_use: permitted
+  modification: permitted
+  redistribution: permitted_with_retained_notices
+  attribution_or_notice_obligations:
+    - retain_applicable_MIT_Apache_2_0_Unlicense_or_BSL_1_0_texts_with_redistributed_vendor_source
+    - retain_the_Unicode_3_0_notice_with_unicode_ident_source_and_derived_tables
+    - retain_Apache_2_0_or_alternate_permissive_license_texts_with_the_four_P04_vendor_packages
+  share_alike_obligations: none
+  copyleft_obligations: none
+
+packages:
+  - name: itoa
+    version: 1.0.18
+    dependency_role: transitive_runtime
+    purpose: deterministic_integer_to_JSON_text_formatting
+    archive_url: https://static.crates.io/crates/itoa/itoa-1.0.18.crate
+    archive_sha256: 8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/itoa
+    vcs_commit: af77385d0daf4d0e949e81f2588be2e44f69f086
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/itoa-1.0.18/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/itoa-1.0.18/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/itoa-1.0.18
+    checked_package_files: 12
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: memchr
+    version: 2.8.3
+    dependency_role: transitive_runtime
+    purpose: bounded_JSON_parser_byte_search
+    archive_url: https://static.crates.io/crates/memchr/memchr-2.8.3.crate
+    archive_sha256: cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98
+    repository_owner: BurntSushi
+    repository_url: https://github.com/BurntSushi/memchr
+    vcs_commit: 5fdb40c054e1fff359a2f7bdf7f87a13b34b465d
+    vcs_path: repository_root
+    rightsholders: [Andrew_Gallant, bluss, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_MIT_notice_and_pinned_VCS_identity
+    license_expression: Unlicense OR MIT
+    selected_license: MIT
+    license_files:
+      - path: vendor/memchr-2.8.3/COPYING
+        sha256: 01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f
+      - path: vendor/memchr-2.8.3/LICENSE-MIT
+        sha256: 0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f
+      - path: vendor/memchr-2.8.3/UNLICENSE
+        sha256: 7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c
+    vendored_path: vendor/memchr-2.8.3
+    checked_package_files: 57
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: proc-macro2
+    version: 1.0.107
+    dependency_role: transitive_build
+    purpose: token_stream_abstraction_for_Serde_derive
+    archive_url: https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.107.crate
+    archive_sha256: 985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/proc-macro2
+    vcs_commit: ed8a5497669cd63db33bf24646f261b012bbbc4a
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, Alex_Crichton, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/proc-macro2-1.0.107/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/proc-macro2-1.0.107/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/proc-macro2-1.0.107
+    checked_package_files: 31
+    build_script: true
+    build_script_behavior: invokes_only_pinned_RUSTC_for_capability_probes_and_writes_Cargo_OUT_DIR
+    shipped_in_source_archive: true
+
+  - name: quote
+    version: 1.0.47
+    dependency_role: transitive_build
+    purpose: deterministic_Rust_token_generation_for_Serde_derive
+    archive_url: https://static.crates.io/crates/quote/quote-1.0.47.crate
+    archive_sha256: 1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/quote
+    vcs_commit: 723dcb47d3f0ddc896e17287c8a8d3f2ea2317d5
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/quote-1.0.47/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/quote-1.0.47/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/quote-1.0.47
+    checked_package_files: 33
+    build_script: true
+    build_script_behavior: invokes_only_pinned_RUSTC_version_query
+    shipped_in_source_archive: true
+
+  - name: ryu
+    version: 1.0.23
+    dependency_role: transitive_runtime_unused_by_integer_only_DTOs
+    purpose: mandatory_Serde_JSON_transitive_float_formatter_while_protocol_rejects_float_DTOs
+    archive_url: https://static.crates.io/crates/ryu/ryu-1.0.23.crate
+    archive_sha256: 9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/ryu
+    vcs_commit: f0b52bb194befe6fd242154f2182fafd43a819b8
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, Ulf_Adams, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_embedded_upstream_notices_and_pinned_VCS_identity
+    license_expression: Apache-2.0 OR BSL-1.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/ryu-1.0.23/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/ryu-1.0.23/LICENSE-BOOST
+        sha256: c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566
+    vendored_path: vendor/ryu-1.0.23
+    checked_package_files: 36
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: serde
+    version: 1.0.228
+    dependency_role: direct_runtime_and_build
+    purpose: typed_JSON_DTO_serialization_and_deserialization_traits
+    archive_url: https://static.crates.io/crates/serde/serde-1.0.228.crate
+    archive_sha256: 9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e
+    repository_owner: serde-rs
+    repository_url: https://github.com/serde-rs/serde
+    vcs_commit: a866b336f14aa57a07f0d0be9f8762746e64ecb4
+    vcs_path: serde
+    rightsholders: [Erick_Tryzelaar, David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/serde-1.0.228/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/serde-1.0.228/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/serde-1.0.228
+    checked_package_files: 32
+    build_script: true
+    build_script_behavior: invokes_only_pinned_RUSTC_version_query_and_writes_Cargo_OUT_DIR
+    shipped_in_source_archive: true
+
+  - name: serde_core
+    version: 1.0.228
+    dependency_role: transitive_runtime
+    purpose: Serde_core_serialization_and_deserialization_traits
+    archive_url: https://static.crates.io/crates/serde_core/serde_core-1.0.228.crate
+    archive_sha256: 41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad
+    repository_owner: serde-rs
+    repository_url: https://github.com/serde-rs/serde
+    vcs_commit: a866b336f14aa57a07f0d0be9f8762746e64ecb4
+    vcs_path: serde_core
+    rightsholders: [Erick_Tryzelaar, David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/serde_core-1.0.228/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/serde_core-1.0.228/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/serde_core-1.0.228
+    checked_package_files: 26
+    build_script: true
+    build_script_behavior: invokes_only_pinned_RUSTC_version_query_and_writes_Cargo_OUT_DIR
+    shipped_in_source_archive: true
+
+  - name: serde_derive
+    version: 1.0.228
+    dependency_role: transitive_build_proc_macro
+    purpose: compile_time_generation_of_closed_DTO_implementations
+    archive_url: https://static.crates.io/crates/serde_derive/serde_derive-1.0.228.crate
+    archive_sha256: d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79
+    repository_owner: serde-rs
+    repository_url: https://github.com/serde-rs/serde
+    vcs_commit: a866b336f14aa57a07f0d0be9f8762746e64ecb4
+    vcs_path: serde_derive
+    rightsholders: [Erick_Tryzelaar, David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/serde_derive-1.0.228/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/serde_derive-1.0.228/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/serde_derive-1.0.228
+    checked_package_files: 35
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: serde_json
+    version: 1.0.145
+    dependency_role: direct_runtime
+    purpose: strict_UTF_8_JSON_parser_and_canonical_struct_serializer
+    archive_url: https://static.crates.io/crates/serde_json/serde_json-1.0.145.crate
+    archive_sha256: 402a6f66d8c709116cf22f558eab210f5a50187f702eb4d7e5ef38d9a7f1c79c
+    repository_owner: serde-rs
+    repository_url: https://github.com/serde-rs/json
+    vcs_commit: efa66e3a1d61459ab2d325f92ebe3acbd6ca18b1
+    vcs_path: repository_root
+    rightsholders: [Erick_Tryzelaar, David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/serde_json-1.0.145/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/serde_json-1.0.145/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/serde_json-1.0.145
+    checked_package_files: 86
+    build_script: true
+    build_script_behavior: reads_only_Cargo_target_configuration_and_emits_cfg_values
+    shipped_in_source_archive: true
+
+  - name: syn
+    version: 2.0.119
+    dependency_role: transitive_build
+    purpose: compile_time_Rust_syntax_parser_for_Serde_derive
+    archive_url: https://static.crates.io/crates/syn/syn-2.0.119.crate
+    archive_sha256: 872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/syn
+    vcs_commit: 3295f9e9841785ac88a5e558c884854d5fb7d67f
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/syn-2.0.119/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/syn-2.0.119/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    vendored_path: vendor/syn-2.0.119
+    checked_package_files: 104
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: unicode-ident
+    version: 1.0.24
+    dependency_role: transitive_build
+    purpose: Unicode_identifier_tables_for_compile_time_Rust_syntax
+    archive_url: https://static.crates.io/crates/unicode-ident/unicode-ident-1.0.24.crate
+    archive_sha256: e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75
+    repository_owner: dtolnay
+    repository_url: https://github.com/dtolnay/unicode-ident
+    vcs_commit: 5b54a632702b5744a1c40ea01c127c0ac0498172
+    vcs_path: repository_root
+    rightsholders: [David_Tolnay, Unicode_Inc, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_Unicode_notice_and_pinned_VCS_identity
+    license_expression: (MIT OR Apache-2.0) AND Unicode-3.0
+    selected_license: MIT AND Unicode-3.0
+    license_files:
+      - path: vendor/unicode-ident-1.0.24/LICENSE-APACHE
+        sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+      - path: vendor/unicode-ident-1.0.24/LICENSE-MIT
+        sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+      - path: vendor/unicode-ident-1.0.24/LICENSE-UNICODE
+        sha256: f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1
+    vendored_path: vendor/unicode-ident-1.0.24
+    checked_package_files: 22
+    build_script: false
+    shipped_in_source_archive: true
+
+  - name: tinyvec
+    version: 1.12.0
+    dependency_role: transitive_runtime
+    purpose: bounded_small_buffer_storage_for_Unicode_normalization
+    archive_url: https://static.crates.io/crates/tinyvec/tinyvec-1.12.0.crate
+    archive_sha256: bb4ebadaa0af04fab11ae01eb5f9fdb5f9c5b875506e210e71c07873528baa7f
+    repository_owner: Lokathor
+    repository_url: https://github.com/Lokathor/tinyvec
+    vcs_commit: 347ddc6463159eec38d3758a8881a22f44d50373
+    vcs_path: repository_root
+    rightsholders: [Daniel_Lokathor_Gee, pinned_repository_contributors]
+    rightsholder_basis: Cargo_authors_Zlib_notice_and_pinned_VCS_identity
+    license_expression: Zlib OR Apache-2.0 OR MIT
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/tinyvec-1.12.0/LICENSE-APACHE.md
+        sha256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
+      - path: vendor/tinyvec-1.12.0/LICENSE-MIT.md
+        sha256: fd80a26fbb3f644af1fa994134446702932968519797227e07a1368dea80f0bc
+      - path: vendor/tinyvec-1.12.0/LICENSE-ZLIB.md
+        sha256: 84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151
+    vendored_path: vendor/tinyvec-1.12.0
+    checked_package_files: 25
+    build_script: false
+    unsafe_review: forbid_unsafe_code
+    shipped_in_source_archive: true
+
+  - name: tinyvec_macros
+    version: 0.1.1
+    dependency_role: transitive_runtime_macro
+    purpose: safe_internal_TinyVec_mirrored_method_generation
+    archive_url: https://static.crates.io/crates/tinyvec_macros/tinyvec_macros-0.1.1.crate
+    archive_sha256: 1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20
+    repository_owner: Soveu
+    repository_url: https://github.com/Soveu/tinyvec_macros
+    vcs_commit: 860c23a09d91c8b9203134a81de7888b7191d5f2
+    vcs_path: repository_root
+    rightsholders: [Tomasz_Soveu_Marx, pinned_repository_contributors]
+    rightsholder_basis: embedded_license_notices_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0 OR Zlib
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/tinyvec_macros-0.1.1/LICENSE-APACHE.md
+        sha256: 4f44572785f35152c1fd2eadf565b7e079c0f300b4324f0af653419f9d76b735
+      - path: vendor/tinyvec_macros-0.1.1/LICENSE-MIT.md
+        sha256: 1dd8eca0f83669e75fa119e34fb9e1be9d16e3e9b6368962b8019db6e8ae5f7b
+      - path: vendor/tinyvec_macros-0.1.1/LICENSE-ZLIB.md
+        sha256: 41ace205715d9f19a3214218cc1c01d57c533e02cd0fef7c8e51a49a7fce5ac5
+    vendored_path: vendor/tinyvec_macros-0.1.1
+    checked_package_files: 7
+    build_script: false
+    unsafe_review: forbid_unsafe_code
+    shipped_in_source_archive: true
+
+  - name: unicode-normalization
+    version: 0.1.25
+    dependency_role: direct_runtime
+    purpose: Unicode_17_NFC_canonical_normalization
+    archive_url: https://static.crates.io/crates/unicode-normalization/unicode-normalization-0.1.25.crate
+    archive_sha256: 5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8
+    repository_owner: unicode-rs
+    repository_url: https://github.com/unicode-rs/unicode-normalization
+    vcs_commit: 5a69b3bafb625caccdec7871a42bed0d9a6604d1
+    vcs_path: repository_root
+    rightsholders: [Rust_Project_Developers, unicode_rs_contributors]
+    rightsholder_basis: source_headers_MIT_notice_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/unicode-normalization-0.1.25/LICENSE-APACHE
+        sha256: a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2
+      - path: vendor/unicode-normalization-0.1.25/LICENSE-MIT
+        sha256: 7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0
+      - path: vendor/unicode-normalization-0.1.25/COPYRIGHT
+        sha256: 23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d
+    vendored_path: vendor/unicode-normalization-0.1.25
+    checked_package_files: 24
+    build_script: false
+    unsafe_review: five_Hangul_from_u32_unchecked_sites_with_preceding_closed_range_proofs
+    shipped_in_source_archive: true
+
+  - name: unicode-segmentation
+    version: 1.13.3
+    dependency_role: direct_runtime
+    purpose: Unicode_17_extended_grapheme_and_default_word_boundaries
+    archive_url: https://static.crates.io/crates/unicode-segmentation/unicode-segmentation-1.13.3.crate
+    archive_sha256: c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8
+    repository_owner: unicode-rs
+    repository_url: https://github.com/unicode-rs/unicode-segmentation
+    vcs_commit: 66a032fd8d667bc47ac5b640b151dff3f5356d07
+    vcs_path: repository_root
+    rightsholders: [Rust_Project_Developers, unicode_rs_contributors]
+    rightsholder_basis: source_headers_MIT_notice_and_pinned_VCS_identity
+    license_expression: MIT OR Apache-2.0
+    selected_license: Apache-2.0
+    license_files:
+      - path: vendor/unicode-segmentation-1.13.3/LICENSE-APACHE
+        sha256: a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2
+      - path: vendor/unicode-segmentation-1.13.3/LICENSE-MIT
+        sha256: 7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0
+      - path: vendor/unicode-segmentation-1.13.3/COPYRIGHT
+        sha256: 23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d
+    vendored_path: vendor/unicode-segmentation-1.13.3
+    checked_package_files: 19
+    build_script: false
+    unsafe_review: deny_unsafe_code
+    shipped_in_source_archive: true

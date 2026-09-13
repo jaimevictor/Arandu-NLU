@@ -1,0 +1,913 @@
+schema_version: 4
+
+path_rules:
+  - classification: project_authored
+    origin_id: project-authored
+    license: Apache-2.0
+    license_files: [LICENSE]
+    copyright: project_contributors
+    path_prefixes:
+      - addon/
+      - crates/addon-runtime/
+      - crates/ha-adapter/
+      - crates/ha-catalog/
+      - crates/intent-eval/
+      - crates/intent-engine/
+      - crates/lang-ptbr/
+      - crates/morphology-eval/
+      - crates/noise-channel/
+      - crates/nlu-data/
+      - crates/plan-engine/
+      - crates/plan-eval/
+      - crates/evaluation-contract/
+      - crates/release-eval/
+      - crates/release-packager/
+      - crates/pos-eval/
+      - crates/policy-engine/
+      - crates/nlu-server/
+      - crates/runtime-security/
+      - crates/session-engine/
+      - crates/wyoming-runtime/
+      - custom_components/local_nlu/
+      - data/evaluation/
+      - data/evaluation/p15/
+      - data/home-assistant/p10/
+      - data/intents/
+      - data/lexicon/
+      - data/manifests/
+      - data/pos/
+      - data/project-authored/p02-v1/
+      - data/project-authored/p02-v2/
+      - data/project-authored/p02-v3/
+      - data/project-authored/p11-v1/
+      - docs/reviews/P06/
+      - docs/reviews/P07/
+      - docs/reviews/P08/
+      - docs/reviews/P09/
+      - docs/reviews/P10/
+      - docs/reviews/P11/
+      - docs/reviews/P12/
+      - docs/reviews/P13/
+      - docs/reviews/P14/
+      - docs/reviews/P15/
+      - docs/reviews/P16/
+      - docs/reviews/FINAL/
+      - release/
+      - tests/p14_addon/
+      - tests/p14_companion/
+      - tests/p14_ha/
+      - tests/p16_companion/
+      - tests/p16_release/
+      - tools/p13-noise-probe/
+      - tools/p14-resolver-fixtures/
+    paths:
+      - .cargo/config.toml
+      - .gitattributes
+      - .gitignore
+      - AGENTS.md
+      - Cargo.lock
+      - Cargo.toml
+      - LICENSING.md
+      - README.md
+      - crates/nlu-core/Cargo.toml
+      - crates/nlu-core/src/error.rs
+      - crates/nlu-core/src/id.rs
+      - crates/nlu-core/src/lib.rs
+      - crates/nlu-core/src/limits.rs
+      - crates/nlu-core/src/outcome.rs
+      - crates/nlu-core/src/plan.rs
+      - crates/nlu-core/src/providers.rs
+      - crates/nlu-core/src/semantic_plan.rs
+      - crates/nlu-core/src/text.rs
+      - crates/nlu-core/src/value.rs
+      - crates/nlu-core/tests/public_contract.rs
+      - crates/nlu-core/tests/resource_limits.rs
+      - crates/nlu-core/tests/semantic_plan.rs
+      - crates/protocol/Cargo.toml
+      - crates/protocol/src/error.rs
+      - crates/protocol/src/lib.rs
+      - crates/protocol/src/preflight.rs
+      - crates/protocol/src/v1.rs
+      - crates/protocol/src/v2.rs
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-cancel-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-confirm-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-continue-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-health-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-interpret-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_request-v1.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-abstention-v1.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-abstention-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-clarification-v1.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-cancellation-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-complete-plan-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-confirmation-required-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-entity-clarification-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-health-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-plan-v1.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-policy-accepted-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-policy-denial-v2.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-protocol-error-v1.json
+      - crates/protocol/tests/fixtures/FIXTURE_TECNICA_response-protocol-error-v2.json
+      - crates/protocol/tests/schema_contract.rs
+      - crates/protocol/tests/v1_regression.rs
+      - crates/protocol/tests/v2_hostile_corpus.rs
+      - crates/protocol/tests/v2_schema_contract.rs
+      - crates/protocol/tests/v2_wire_contract.rs
+      - crates/protocol/tests/wire_contract.rs
+      - docs/adr/ADR-0001-clean-room-and-foss-policy.md
+      - docs/adr/ADR-0002-product-scope-and-ha-coverage.md
+      - docs/adr/ADR-0003-rust-core-architecture.md
+      - docs/adr/ADR-0004-versioned-json-protocol.md
+      - docs/adr/ADR-0005-quality-performance-contract.md
+      - docs/adr/ADR-0006-baseline-and-review-evidence.md
+      - docs/adr/ADR-0007-home-assistant-integration-contract.md
+      - docs/adr/ADR-0008-deterministic-envelope.md
+      - docs/adr/ADR-0009-deterministic-data-pipeline.md
+      - docs/adr/ADR-0010-unicode-normalization-and-span-mapping.md
+      - docs/adr/ADR-0011-auditable-tokenization.md
+      - docs/adr/ADR-0012-provenance-bearing-lexicon-package.md
+      - docs/adr/ADR-0013-lexical-evidence-morphology-evaluation.md
+      - docs/adr/ADR-0014-conservative-contextual-pos.md
+      - docs/adr/ADR-0015-evidence-bearing-intent-recognition.md
+      - docs/adr/ADR-0016-home-assistant-catalog-and-resolution.md
+      - docs/adr/ADR-0017-evidence-bound-plan-composition.md
+      - docs/adr/ADR-0018-bounded-session-continuation.md
+      - docs/adr/ADR-0019-policy-protocol-v2-and-local-server.md
+      - docs/adr/ADR-0020-conditional-transport-source-remediation.md
+      - docs/adr/ADR-0021-reject-cpython-openssl-transport-portfolio.md
+      - docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+      - docs/adr/ADR-0023-compile-only-transport-source-projection.md
+      - docs/adr/ADR-0024-projected-origin-notice-closure.md
+      - docs/adr/ADR-0025-p13-source-evidence-closeout-boundary.md
+      - docs/adr/ADR-0026-direct-p13-validation-closeout.md
+      - docs/adr/ADR-0027-bounded-p13-review-correction.md
+      - docs/adr/ADR-0028-exact-rust-toolchain-source-closure.md
+      - docs/adr/ADR-0029-dedicated-process-deadline-containment.md
+      - docs/adr/ADR-0030-scheduler-conditional-containment-and-artifact-retention.md
+      - docs/adr/ADR-0031-terminal-p13-evidence-and-request-order-closure.md
+      - docs/adr/ADR-0032-bounded-p13-archive-and-copied-source-closure.md
+      - docs/adr/ADR-0033-exact-path-source-rights-and-governance-closure.md
+      - docs/adr/ADR-0034-bounded-source-review-closeout.md
+      - docs/adr/ADR-0035-terminal-validator-and-evidence-closeout.md
+      - docs/adr/ADR-0036-final-p13-source-and-governance-closeout.md
+      - docs/adr/ADR-0037-p14-adapter-companion-boundary.md
+      - docs/adr/ADR-0038-p14-helper-bootstrap.md
+      - docs/adr/ADR-0039-p14-host-validation-boundary.md
+      - docs/adr/ADR-0040-p14-real-ha-runtime-transfer.md
+      - docs/adr/ADR-0041-bounded-p14-blocker-closeout.md
+      - docs/adr/ADR-0042-terminal-p14-correction.md
+      - docs/adr/ADR-0043-final-p14-blocker-remediation.md
+      - docs/adr/ADR-0044-p14-user-directed-p15-transition.md
+      - docs/adr/ADR-0045-p15-release-qualification-and-source-portfolio.md
+      - docs/adr/ADR-0046-release-and-terminal-baseline-state-model.md
+      - docs/adr/ADR-0047-p14-p15-authorized-remediation-and-evaluation-refreeze.md
+      - docs/adr/ADR-0048-p15-v3-clean-evaluation-restart.md
+      - docs/adr/ADR-0049-p15-blob-bound-final-evaluation-freeze.md
+      - docs/adr/README.md
+      - docs/clean-room/AMAZON-EXCLUSION-ALLOWLIST.yaml
+      - docs/clean-room/BOUNDARY.md
+      - docs/clean-room/DISTRIBUTION-LICENSES.yaml
+      - docs/clean-room/MATERIALS.yaml
+      - docs/clean-room/ROOT-INVENTORY.md
+      - docs/clean-room/SOPHIA-REFERENCE-STUDY.md
+      - docs/clean-room/SOURCE-POLICY.md
+      - docs/clean-room/USER-DECISIONS.md
+      - docs/evidence/P00-ENVIRONMENT.md
+      - docs/evidence/P00-VALIDATION.md
+      - docs/evidence/P01-ADVISORIES.md
+      - docs/evidence/P01-DEPENDENCIES.yaml
+      - docs/evidence/P01-TOOLCHAIN.md
+      - docs/evidence/P01-VALIDATION.md
+      - docs/evidence/P02-CORPUS-FREE-FALLBACK.md
+      - docs/evidence/P02-VALIDATION.md
+      - docs/evidence/P03-VALIDATION.md
+      - docs/evidence/P04-SOURCES.yaml
+      - docs/evidence/P04-VALIDATION.md
+      - docs/evidence/P05-SOURCES.yaml
+      - docs/evidence/P05-VALIDATION.md
+      - docs/evidence/P06-VALIDATION.md
+      - docs/evidence/P07-VALIDATION.md
+      - docs/evidence/P08-VALIDATION.md
+      - docs/evidence/P09-VALIDATION.md
+      - docs/evidence/P10-SOURCES.yaml
+      - docs/evidence/P10-VALIDATION.md
+      - docs/evidence/P11-SOURCE-FREEZE.md
+      - docs/evidence/P11-VALIDATION.md
+      - docs/evidence/P12-VALIDATION.md
+      - docs/evidence/P13-COMPATIBILITY-AND-TRANSPORT.md
+      - docs/evidence/P13-EXACT-SOURCES.yaml
+      - docs/evidence/P13-NOISE-SOURCES.yaml
+      - docs/evidence/P13-SOURCE-ACQUISITION.md
+      - docs/evidence/P13-NOISE-TRANSPORT.md
+      - docs/evidence/P14-HOST-TOOLS.yaml
+      - docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+      - docs/evidence/P14-VALIDATION.md
+      - docs/evidence/P15-BLOCKED-CHECKPOINT-VALIDATION.md
+      - docs/evidence/P15-EVALUATION-ACCESS.md
+      - docs/evidence/P15-EVALUATION-RESULT.md
+      - docs/evidence/P15-P02-V2-INVALIDATION.md
+      - docs/evidence/P15-P02-V3-FREEZE.md
+      - docs/evidence/P15-P02-V3-ROUND3-FAILURE.md
+      - docs/evidence/P15-P02-V3-USR047-REVIEW-REMEDIATION.md
+      - docs/evidence/P15-P02-V2-FREEZE.md
+      - docs/evidence/P15-P14-DEBT-REPRODUCTION.md
+      - docs/evidence/P15-SOURCE-DISCOVERY.md
+      - docs/evidence/REQUIREMENTS-MANIFEST.yaml
+      - docs/evidence/REQUIREMENTS-TRACEABILITY.md
+      - docs/evidence/TOOLCHAIN-PROVENANCE.yaml
+      - docs/evidence/P02-SOURCE-DISCOVERY.md
+      - docs/evidence/sources/home-assistant-intents-865163e-rejection.md
+      - docs/evidence/sources/libreoffice-pt-br-dictionary-32b006a-rejection.md
+      - docs/evidence/sources/p08-ptbr-pos-candidates-rejection.md
+      - docs/evidence/sources/rhasspy-official-pt-br-source-family-rejection.md
+      - docs/evidence/sources/ud-portuguese-bosque-8842885-rejection.md
+      - docs/phases/AUTONOMOUS-QUEUE.yaml
+      - docs/phases/OPEN-DECISIONS.md
+      - docs/phases/P00-REPORT.md
+      - docs/phases/P01-REPORT.md
+      - docs/phases/P02-BLOCKER-REPORT.md
+      - docs/phases/P02-REPORT.md
+      - docs/phases/P03-REPORT.md
+      - docs/phases/P04-REPORT.md
+      - docs/phases/P05-REPORT.md
+      - docs/phases/P06-REPORT.md
+      - docs/phases/P07-REPORT.md
+      - docs/phases/P08-REPORT.md
+      - docs/phases/P09-REPORT.md
+      - docs/phases/P10-REPORT.md
+      - docs/phases/P11-REPORT.md
+      - docs/phases/P12-REPORT.md
+      - docs/phases/P13-REPORT.md
+      - docs/phases/P14-REPORT.md
+      - docs/phases/P15-REPORT.md
+      - docs/phases/P15-RESUMPTION.md
+      - docs/phases/PROJECT-STATUS.md
+      - docs/reviews/P00/pre-phase-adversary.md
+      - docs/reviews/P00/pre-phase-architecture.md
+      - docs/reviews/P00/pre-phase-requirements.md
+      - docs/reviews/P01/pre-phase-adversary.md
+      - docs/reviews/P01/pre-phase-architecture.md
+      - docs/reviews/P01/pre-phase-requirements.md
+      - docs/reviews/P02/pre-phase-adversary.md
+      - docs/reviews/P02/pre-phase-architecture.md
+      - docs/reviews/P02/pre-phase-requirements.md
+      - docs/reviews/P03/pre-phase-adversary.md
+      - docs/reviews/P03/pre-phase-architecture.md
+      - docs/reviews/P03/pre-phase-requirements.md
+      - docs/reviews/P04/pre-phase-adversary.md
+      - docs/reviews/P04/pre-phase-architecture.md
+      - docs/reviews/P04/pre-phase-requirements.md
+      - docs/reviews/P05/pre-phase-adversary.md
+      - docs/reviews/P05/pre-phase-architecture.md
+      - docs/reviews/P05/pre-phase-requirements.md
+      - docs/reviews/P05/source-admission-adversarial.md
+      - docs/reviews/P05/source-admission-discovery.md
+      - docs/reviews/P05/source-admission-license.md
+      - docs/reviews/P05/source-admission-provenance.md
+      - docs/reviews/P05/source-admission-quality.md
+      - docs/reviews/P06/pre-phase-adversary.md
+      - docs/reviews/P06/pre-phase-architecture.md
+      - docs/reviews/P06/pre-phase-requirements.md
+      - docs/security/TRUST-BOUNDARIES.md
+      - rust-toolchain.toml
+      - schemas/protocol-v1-request.schema.json
+      - schemas/protocol-v1-response.schema.json
+      - schemas/protocol-v2-request.schema.json
+      - schemas/protocol-v2-response.schema.json
+      - schemas/p02-case-v1.schema.json
+      - schemas/p02-corpus-manifest-v1.schema.json
+      - schemas/p02-suite-case-v1.schema.json
+      - schemas/p11-plan-evaluation-report-v1.schema.json
+      - schemas/p11-semantic-plan-v1.schema.json
+      - schemas/data-package-manifest-v1.schema.json
+      - schemas/data-source-manifest-v1.schema.json
+      - schemas/data-stage-manifest-v1.schema.json
+      - schemas/lexicon-entry-v1.schema.json
+      - schemas/lexicon-package-manifest-v1.schema.json
+      - schemas/morphology-evaluation-manifest-v1.schema.json
+      - schemas/morphology-evaluation-report-v1.schema.json
+      - schemas/pos-evaluation-manifest-v1.schema.json
+      - schemas/pos-evaluation-report-v1.schema.json
+      - schemas/pos-model-manifest-v1.schema.json
+      - schemas/pos-split-manifest-v1.schema.json
+      - schemas/intent-projection-v1.schema.json
+      - schemas/intent-evaluation-report-v1.schema.json
+      - schemas/intent-output-v1.schema.json
+      - schemas/intent-schema-v1.schema.json
+      - schemas/ha-domain-coverage-v1.schema.json
+      - tools/generate-p02-corpus
+      - tools/generate-p02-corpus.rb
+      - tools/generate-p02-v2-corpus
+      - tools/generate-p02-v2-corpus.rb
+      - tools/generate-p02-v3-corpus.rb
+      - tools/generate-p11-corpus
+      - tools/generate-p11-corpus.rb
+      - tools/compile-p08-pos-splits
+      - tools/compile-p08-pos-splits.rb
+      - tools/test-validate-governance
+      - tools/test-validate-governance.rb
+      - tools/test-validate-p01
+      - tools/test-validate-p01.rb
+      - tools/test-validate-p02
+      - tools/test-validate-p02.rb
+      - tools/test-validate-p02-v2
+      - tools/test-validate-p02-v2.rb
+      - tools/test-generate-p02-v3-corpus.rb
+      - tools/test-validate-p02-v3.rb
+      - tools/test-validate-p04
+      - tools/test-validate-p04.rb
+      - tools/test-validate-p05
+      - tools/test-validate-p05.rb
+      - tools/test-validate-p06
+      - tools/test-validate-p06.rb
+      - tools/test-validate-p07
+      - tools/test-validate-p07.rb
+      - tools/test-validate-p08
+      - tools/test-validate-p08.rb
+      - tools/test-validate-p09
+      - tools/test-validate-p09.rb
+      - tools/test-validate-p10
+      - tools/test-validate-p10.rb
+      - tools/test-validate-p11
+      - tools/test-validate-p11.rb
+      - tools/test-validate-p12
+      - tools/test-validate-p12.rb
+      - tools/p13-evidence
+      - tools/p13-evidence.rb
+      - tools/p13-noise-evidence
+      - tools/p13-noise-evidence.rb
+      - tools/p13-rustc-driver
+      - tools/p13-rustc-driver.rb
+      - tools/p13-source-fetch
+      - tools/p13-source-fetch.rb
+      - tools/p13-transport-probe
+      - tools/p13-transport-probe.py
+      - tools/p14-rustc-driver
+      - tools/p14-rustc-driver.rb
+      - tools/test-p13-evidence
+      - tools/test-p13-evidence.rb
+      - tools/test-p13-noise-evidence
+      - tools/test-p13-noise-evidence.rb
+      - tools/test-p13-rustc-driver
+      - tools/test-p13-rustc-driver.rb
+      - tools/test-p13-source-fetch
+      - tools/test-p13-source-fetch.rb
+      - tools/test-validate-p13
+      - tools/test-validate-p13.rb
+      - tools/test-p14-rustc-driver
+      - tools/test-p14-rustc-driver.rb
+      - tools/test-validate-p14
+      - tools/test-validate-p14.rb
+      - tools/test-validate-p15
+      - tools/test-validate-p15.rb
+      - tools/materialize-p14-resolver-fixtures
+      - tools/materialize-p14-resolver-fixtures.rb
+      - tools/promote-p14-noise-sources
+      - tools/promote-p14-noise-sources.rb
+      - tools/validate-p13
+      - tools/validate-p13.rb
+      - tools/validate-p14
+      - tools/validate-p14-ha
+      - tools/validate-p14.rb
+      - tools/validate-p15
+      - tools/validate-p15.rb
+      - tools/test-generate-p11-corpus
+      - tools/test-generate-p11-corpus.rb
+      - tools/benchmark-p02-fallback
+      - tools/benchmark-p02-fallback.rb
+      - tools/p02-fallback.rb
+      - tools/test-p02-fallback
+      - tools/test-p02-fallback.rb
+      - tools/test-compile-p08-pos-splits
+      - tools/test-compile-p08-pos-splits.rb
+      - tools/validate-governance
+      - tools/validate-governance.rb
+      - tools/validate-p01
+      - tools/validate-p01.rb
+      - tools/validate-p02
+      - tools/validate-p02.rb
+      - tools/validate-p02-v2
+      - tools/validate-p02-v2.rb
+      - tools/validate-p02-v3.rb
+      - tools/validate-p04
+      - tools/validate-p04.rb
+      - tools/validate-p05
+      - tools/validate-p05.rb
+      - tools/validate-p06
+      - tools/validate-p06.rb
+      - tools/validate-p07
+      - tools/validate-p07.rb
+      - tools/validate-p08
+      - tools/validate-p08.rb
+      - tools/validate-p09
+      - tools/validate-p09.rb
+      - tools/validate-p10
+      - tools/validate-p10.rb
+      - tools/validate-p11
+      - tools/validate-p11.rb
+      - tools/validate-p12
+      - tools/validate-p12.rb
+      - vendor/p14-noise-source-manifest.json
+
+  - classification: third_party_documentation_and_derived_rules
+    origin_id: ud-portuguese-docs-bdd95cf
+    license: Apache-2.0
+    license_files:
+      - data/tokenization/p05/ud-docs-bdd95cf/LICENSE.txt
+    copyright: Universal_Dependencies_docs_contributors
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    compatibility_decision: docs/adr/ADR-0011-auditable-tokenization.md
+    path_prefixes: [data/tokenization/p05/ud-docs-bdd95cf/]
+    paths:
+      - data/tokenization/p05/rules/ud-portuguese.tsv
+
+  - classification: third_party_locale_data_and_derived_rules
+    origin_id: cldr-48-acd6d88
+    license: Unicode-3.0
+    license_files:
+      - data/tokenization/p05/cldr-48/LICENSE-UNICODE
+    copyright: Unicode_Inc_and_CLDR_contributors
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    compatibility_decision: docs/adr/ADR-0011-auditable-tokenization.md
+    path_prefixes: [data/tokenization/p05/cldr-48/]
+    paths:
+      - data/tokenization/p05/rules/cldr-portuguese.tsv
+
+  - classification: third_party_unicode_conformance_data
+    origin_id: unicode-character-database-17.0.0
+    license: Unicode-3.0
+    license_files:
+      - data/unicode/17.0.0/LICENSE-UNICODE
+    copyright: Unicode_Inc
+    source_evidence: docs/evidence/P04-SOURCES.yaml
+    additional_source_evidence: docs/evidence/P05-SOURCES.yaml
+    path_prefixes: [data/unicode/17.0.0/]
+    paths: []
+
+  - classification: canonical_license_text
+    origin_id: apache-license-2.0-text
+    license: Apache-2.0
+    license_files: [LICENSE]
+    copyright: not_applicable
+    path_prefixes: []
+    paths:
+      - LICENSE
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-itoa-1.0.18
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/itoa-1.0.18/LICENSE-APACHE
+      - vendor/itoa-1.0.18/LICENSE-MIT
+    copyright: David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/itoa-1.0.18/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-memchr-2.8.3
+    license: Unlicense OR MIT
+    license_files:
+      - vendor/memchr-2.8.3/COPYING
+      - vendor/memchr-2.8.3/LICENSE-MIT
+      - vendor/memchr-2.8.3/UNLICENSE
+    copyright: Andrew_Gallant_bluss_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/memchr-2.8.3/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-proc-macro2-1.0.107
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/proc-macro2-1.0.107/LICENSE-APACHE
+      - vendor/proc-macro2-1.0.107/LICENSE-MIT
+    copyright: David_Tolnay_Alex_Crichton_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/proc-macro2-1.0.107/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-quote-1.0.47
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/quote-1.0.47/LICENSE-APACHE
+      - vendor/quote-1.0.47/LICENSE-MIT
+    copyright: David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/quote-1.0.47/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-ryu-1.0.23
+    license: Apache-2.0 OR BSL-1.0
+    license_files:
+      - vendor/ryu-1.0.23/LICENSE-APACHE
+      - vendor/ryu-1.0.23/LICENSE-BOOST
+    copyright: David_Tolnay_Ulf_Adams_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/ryu-1.0.23/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-serde-1.0.228
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/serde-1.0.228/LICENSE-APACHE
+      - vendor/serde-1.0.228/LICENSE-MIT
+    copyright: Erick_Tryzelaar_David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/serde-1.0.228/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-serde-core-1.0.228
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/serde_core-1.0.228/LICENSE-APACHE
+      - vendor/serde_core-1.0.228/LICENSE-MIT
+    copyright: Erick_Tryzelaar_David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/serde_core-1.0.228/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-serde-derive-1.0.228
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/serde_derive-1.0.228/LICENSE-APACHE
+      - vendor/serde_derive-1.0.228/LICENSE-MIT
+    copyright: Erick_Tryzelaar_David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/serde_derive-1.0.228/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-serde-json-1.0.145
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/serde_json-1.0.145/LICENSE-APACHE
+      - vendor/serde_json-1.0.145/LICENSE-MIT
+    copyright: Erick_Tryzelaar_David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/serde_json-1.0.145/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-syn-2.0.119
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/syn-2.0.119/LICENSE-APACHE
+      - vendor/syn-2.0.119/LICENSE-MIT
+    copyright: David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/syn-2.0.119/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-unicode-ident-1.0.24
+    license: (MIT OR Apache-2.0) AND Unicode-3.0
+    license_files:
+      - vendor/unicode-ident-1.0.24/LICENSE-APACHE
+      - vendor/unicode-ident-1.0.24/LICENSE-MIT
+      - vendor/unicode-ident-1.0.24/LICENSE-UNICODE
+    copyright: David_Tolnay_Unicode_Inc_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/unicode-ident-1.0.24/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-tinyvec-1.12.0
+    license: Zlib OR Apache-2.0 OR MIT
+    license_files:
+      - vendor/tinyvec-1.12.0/LICENSE-APACHE.md
+      - vendor/tinyvec-1.12.0/LICENSE-MIT.md
+      - vendor/tinyvec-1.12.0/LICENSE-ZLIB.md
+    copyright: Daniel_Lokathor_Gee_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/tinyvec-1.12.0/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-tinyvec-macros-0.1.1
+    license: MIT OR Apache-2.0 OR Zlib
+    license_files:
+      - vendor/tinyvec_macros-0.1.1/LICENSE-APACHE.md
+      - vendor/tinyvec_macros-0.1.1/LICENSE-MIT.md
+      - vendor/tinyvec_macros-0.1.1/LICENSE-ZLIB.md
+    copyright: Tomasz_Soveu_Marx_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/tinyvec_macros-0.1.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-unicode-normalization-0.1.25
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/unicode-normalization-0.1.25/LICENSE-APACHE
+      - vendor/unicode-normalization-0.1.25/LICENSE-MIT
+      - vendor/unicode-normalization-0.1.25/COPYRIGHT
+    copyright: Rust_Project_Developers_unicode_rs_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/unicode-normalization-0.1.25/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-unicode-segmentation-1.13.3
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/unicode-segmentation-1.13.3/LICENSE-APACHE
+      - vendor/unicode-segmentation-1.13.3/LICENSE-MIT
+      - vendor/unicode-segmentation-1.13.3/COPYRIGHT
+    copyright: Rust_Project_Developers_unicode_rs_and_contributors
+    source_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    path_prefixes: [vendor/unicode-segmentation-1.13.3/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-aead-0.5.2
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/aead-0.5.2/LICENSE-APACHE
+      - vendor/aead-0.5.2/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/aead-0.5.2/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-blake2-0.10.6
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/blake2-0.10.6/LICENSE-APACHE
+      - vendor/blake2-0.10.6/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/blake2-0.10.6/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-block-buffer-0.10.4
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/block-buffer-0.10.4/LICENSE-APACHE
+      - vendor/block-buffer-0.10.4/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/block-buffer-0.10.4/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-cfg-if-1.0.1
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/cfg-if-1.0.1/LICENSE-APACHE
+      - vendor/cfg-if-1.0.1/LICENSE-MIT
+    copyright: Alex_Crichton_and_contributors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/cfg-if-1.0.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-chacha20-0.9.1
+    license: Apache-2.0 OR MIT
+    license_files:
+      - vendor/chacha20-0.9.1/LICENSE-APACHE
+      - vendor/chacha20-0.9.1/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/chacha20-0.9.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-chacha20poly1305-0.10.1
+    license: Apache-2.0 OR MIT
+    license_files:
+      - vendor/chacha20poly1305-0.10.1/LICENSE-APACHE
+      - vendor/chacha20poly1305-0.10.1/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/chacha20poly1305-0.10.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-cipher-0.4.4
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/cipher-0.4.4/LICENSE-APACHE
+      - vendor/cipher-0.4.4/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/cipher-0.4.4/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-cpufeatures-0.2.17
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/cpufeatures-0.2.17/LICENSE-APACHE
+      - vendor/cpufeatures-0.2.17/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/cpufeatures-0.2.17/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-crypto-common-0.1.6
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/crypto-common-0.1.6/LICENSE-APACHE
+      - vendor/crypto-common-0.1.6/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/crypto-common-0.1.6/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-curve25519-dalek-4.1.3
+    license: BSD-3-Clause
+    license_files:
+      - vendor/curve25519-dalek-4.1.3/LICENSE
+    copyright: Isis_Lovecruft_Henry_de_Valence_Go_Authors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/curve25519-dalek-4.1.3/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-digest-0.10.7
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/digest-0.10.7/LICENSE-APACHE
+      - vendor/digest-0.10.7/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/digest-0.10.7/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-generic-array-0.14.7
+    license: MIT
+    license_files:
+      - vendor/generic-array-0.14.7/LICENSE
+      - vendor/generic-array-0.14.7/LICENSE-RUST-MIT
+    copyright: Bartlomiej_Kaminski_Aaron_Trent_Rust_Project
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/generic-array-0.14.7/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-inout-0.1.4
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/inout-0.1.4/LICENSE-APACHE
+      - vendor/inout-0.1.4/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/inout-0.1.4/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-opaque-debug-0.3.1
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/opaque-debug-0.3.1/LICENSE-APACHE
+      - vendor/opaque-debug-0.3.1/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/opaque-debug-0.3.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-poly1305-0.8.0
+    license: Apache-2.0 OR MIT
+    license_files:
+      - vendor/poly1305-0.8.0/LICENSE-APACHE
+      - vendor/poly1305-0.8.0/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/poly1305-0.8.0/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-rustc-version-0.4.1
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/rustc_version-0.4.1/LICENSE-APACHE
+      - vendor/rustc_version-0.4.1/LICENSE-MIT
+    copyright: Rust_Project_Developers_and_contributors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/rustc_version-0.4.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-semver-1.0.26
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/semver-1.0.26/LICENSE-APACHE
+      - vendor/semver-1.0.26/LICENSE-MIT
+    copyright: David_Tolnay_and_contributors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/semver-1.0.26/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-snow-0.10.0
+    license: Apache-2.0 OR MIT
+    license_files:
+      - vendor/snow-0.10.0/LICENSE-APACHE
+      - vendor/snow-0.10.0/LICENSE-MIT
+    copyright: Jake_McGinty_trevp_and_contributors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/snow-0.10.0/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-subtle-2.6.1
+    license: BSD-3-Clause
+    license_files:
+      - vendor/subtle-2.6.1/LICENSE
+    copyright: Isis_Lovecruft_Henry_de_Valence
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/subtle-2.6.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-typenum-1.18.0
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/typenum-1.18.0/LICENSE
+      - vendor/typenum-1.18.0/LICENSE-APACHE
+      - vendor/typenum-1.18.0/LICENSE-MIT
+      - vendor/typenum-1.18.0/LICENSE-RUST-NUM-MIT
+    copyright: Paho_Lurie_Gregg_Andre_Bogus_Rust_Project
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/typenum-1.18.0/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-universal-hash-0.5.1
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/universal-hash-0.5.1/LICENSE-APACHE
+      - vendor/universal-hash-0.5.1/LICENSE-MIT
+    copyright: RustCrypto_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/universal-hash-0.5.1/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-version-check-0.9.5
+    license: MIT OR Apache-2.0
+    license_files:
+      - vendor/version_check-0.9.5/LICENSE-APACHE
+      - vendor/version_check-0.9.5/LICENSE-MIT
+    copyright: Sergio_Benitez_and_contributors
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/version_check-0.9.5/]
+    paths: []
+
+  - classification: third_party_vendored_source
+    origin_id: crates-io-zeroize-1.8.1
+    license: Apache-2.0 OR MIT
+    license_files:
+      - vendor/zeroize-1.8.1/LICENSE-APACHE
+      - vendor/zeroize-1.8.1/LICENSE-MIT
+    copyright: RustCrypto_Project_Developers
+    source_evidence: docs/evidence/P14-NOISE-SOURCE-PROMOTION.md
+    compatibility_decision: docs/adr/ADR-0022-noise-snow-transport-portfolio.md
+    path_prefixes: [vendor/zeroize-1.8.1/]
+    paths: []
+
+excluded_inputs:
+  - path: STEERING-NLU-PTBR-SOL-MAX.md
+    license: NOASSERTION
+    reason: user_owned_bootstrap_instruction
+    retained_location: ignored_local_file_and_out_of_tree_backup_only
+
+release_rules:
+  reject_tracked_noassertion: true
+  reject_unmatched_tracked_paths: true
+  reject_unbound_origins: true
+  reject_excluded_input_in_archive: true

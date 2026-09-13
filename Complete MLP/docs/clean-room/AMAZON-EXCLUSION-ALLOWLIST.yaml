@@ -1,0 +1,20 @@
+schema_version: 1
+allowed_governance_paths:
+  - path: docs/clean-room/MATERIALS.yaml
+    reason: structured_rejected_exposure_evidence
+  - path: docs/evidence/P00-ENVIRONMENT.md
+    reason: rejected_package_attestation
+  - path: docs/evidence/P01-TOOLCHAIN.md
+    reason: public_toolchain_exclusion_attestation
+  - path: docs/evidence/P01-DEPENDENCIES.yaml
+    reason: public_dependency_exclusion_attestation
+  - path: docs/evidence/P01-ADVISORIES.md
+    reason: public_advisory_source_exclusion_attestation
+  - path: docs/evidence/TOOLCHAIN-PROVENANCE.yaml
+    reason: structured_rejected_tool_evidence
+  - path: tools/test-validate-governance.rb
+    reason: negative_regression_fixtures
+  - path: tests/p14_ha/test_real_ha_gate.py
+    reason: prohibited_import_guard
+  - path: tools/validate-governance.rb
+    reason: scanner_patterns

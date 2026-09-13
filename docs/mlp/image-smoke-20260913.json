@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "architecture": "amd64",
+  "health": {
+    "status": "ok",
+    "version": 1
+  },
+  "case_id": "ordered-mixed-actions",
+  "expected_matched": true,
+  "read_only": true,
+  "user": "65534:65534"
+}

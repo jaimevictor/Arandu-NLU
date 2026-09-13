@@ -1,0 +1,42 @@
+# Build artifacts
+target/
+*.exe
+*.pdb
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Cargo
+Cargo.lock
+**/*.rs.bk
+*.orig
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Archives
+archive/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local toolchain
+.tools/
+.cargo-home/

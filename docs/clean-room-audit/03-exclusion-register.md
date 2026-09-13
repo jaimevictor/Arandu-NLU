@@ -1,0 +1,67 @@
+# Registro de exclusões do pacote clean-room
+
+Data: 2026-08-12
+
+## Finalidade
+
+Este registro documenta material deliberadamente excluído de `docs/clean-room/`. Ele pode mencionar Sophia, Cicero, `cicero-sophia`, `sophia-interfaces`, evidências `E-*` e fontes da Fase 1 porque permanece exclusivamente na área de auditoria.
+
+Excluir não significa afirmar que o material é irrelevante em qualquer contexto. Significa que ele não é necessário para implementar os contratos próprios do novo produto, possui risco de contaminação, carece de aprovação ou pertence a uma fase posterior.
+
+## Material excluído
+
+| Categoria excluída | Material abrangido | Origem ou evidência de auditoria | Motivo da exclusão | Tratamento no handoff |
+| --- | --- | --- | --- | --- |
+| Código-fonte do produto analisado | Todo código Rust empacotado, trechos, expressões, comentários, testes, exemplos e build scripts de `cicero-sophia` e `sophia-interfaces` | `E-010` a `E-034` | A decisão aceita exige clean-room no núcleo linguístico e runtime; copiar ou traduzir código criaria risco jurídico e de derivação | Somente comportamento próprio, invariantes e critérios observáveis foram especificados |
+| Símbolos e organização interna | Nomes de módulos, structs, enums, funções, métodos, campos, DTOs, traits e superfícies internas/públicas observadas | `E-010` a `E-015`, `E-020`, `E-024` a `E-029`, `E-034` | Podem tornar a implementação identificavelmente semelhante e não são necessários ao contrato | O modelo usa terminologia conceitual própria em português e não define shape de código |
+| Caminhos e layout de arquivos | Caminhos do pacote, nomes de arquivos fonte, diretórios temporários de auditoria, layout do workspace e caminhos de artefatos observados | `E-001`, `E-002`, `E-005`, `E-013` a `E-015` | Não constituem requisito do produto-alvo e revelam organização da origem | O handoff não prescreve árvore de código nem caminhos de implementação |
+| Sequência interna identificável | Fluxo concreto de inicialização, tokenização, POS, interpretação e estruturas intermediárias do produto analisado | `E-012`, `E-017` a `E-029` | Reproduzir a ordem e a decomposição observadas poderia funcionar como pseudocódigo derivado | `05-pipeline-contracts.md` define apenas fronteiras lógicas por entrada, saída e invariantes, permitindo agrupamento diferente |
+| Algoritmos e heurísticas observados | HMM/Viterbi, tries, distância lexical, regras de prefixo/sufixo, listas contextuais, defaults de pessoa, equivalência/deduplicação concreta e outras heurísticas específicas | `E-017` a `E-023`, `E-027` a `E-029` | A Fase 2 não implementa algoritmo; os dados e heurísticas observados são acoplados ao inglês e/ou identificáveis; não há algoritmo de deduplicação autorizado | Quando necessário, o handoff especifica determinismo, alternativas, rastreabilidade e abstinência; `OPEN-025` reserva a deduplicação por classe |
+| Tagsets, categorias e inventários linguísticos | Tagset baseado em Penn Treebank, categorias, inventário pronominal, tags especiais e qualquer taxonomia observada | `E-018` a `E-024`, `02-english-coupling.md` | Não há taxonomia aprovada para PT-BR e seu reaproveitamento carregaria acoplamento e semelhança | `OPEN-004` bloqueia a seleção; nenhum rótulo linguístico de produção foi criado |
+| Vocabulário e listas de palavras | Listas inglesas hard-coded, palavras de exemplo, MWEs, regras lexicais, sinônimos, formas lembradas pelo modelo e listas geradas por LLM | `E-019`, `E-022`, `E-023`; `04-data-provenance-policy.md` | São dados linguísticos sem aprovação para o produto-alvo; inventar equivalentes em PT-BR é proibido | `DATA-016` rejeita vocabulário sem origem, licença, hash, extração e revisão |
+| Corpora, datasets e modelos | Qualquer corpus, conjunto de treino/validação/avaliação, modelo POS, artefato lexical ou modelo fechado/lembrado | `E-013`, `E-014`, `E-021` a `E-023`, `E-030`; `04-data-provenance-policy.md` | Nenhuma fonte foi selecionada ou licenciada nesta fase; importar material contaminaria as fases e partições | Apenas contratos de governança e testes estruturais foram documentados; `OPEN-016` e `OPEN-017` bloqueiam seleção e partição |
+| Formatos binários e esquemas observados | Serialização, schema do banco lexical, cache persistente, nomes de arquivos de dados e metadados específicos do pacote | `E-013` a `E-015` | Formatos não são necessários ao handoff e podem induzir compatibilidade interna não autorizada | O handoff exige artefatos íntegros, versionados e reproduzíveis, sem escolher formato físico |
+| Binários fechados e shared libraries | Binário premium, CLI, RPC, wrappers de biblioteca compartilhada e qualquer comportamento não verificável internamente | `E-033` a `E-035` | Binário fechado não pode servir de fonte de implementação; código e comportamento completos são desconhecidos | Nenhuma compatibilidade foi declarada; apenas contratos conceituais próprios foram definidos |
+| Protocolos e wire formats | Comandos CLI/RPC, endpoints, nomes de operações, envelopes, campos, códigos ou semântica de transporte observados/documentados | `E-034`, `E-035` | O objetivo não é compatibilidade wire-level e transporte, identidade do par e taxonomia concreta de erro ainda não foram decididos | `API-001..API-013` são semânticos; `OPEN-012`, `OPEN-021` e `OPEN-024` reservam as decisões concretas |
+| Métricas e alegações do produto | Números de desempenho, tamanho, qualidade, cobertura ou capacidade citados em README/marketing e sem baseline independente | `E-008`, `E-030`, `E-036` | Proveniência e comparabilidade são insuficientes; metas copiadas seriam arbitrárias | `NFR-009`, `TEST-016`, `OPEN-018` e `OPEN-026` exigem método, baseline e decisão antes de alvos |
+| Bugs e divergências da implementação analisada | Remoção de não ASCII, APIs possivelmente divergentes, flag sem efeito confirmado e dependências sem uso confirmado | `E-017`, `E-031`, `E-032`, `E-016`, `E-038` | Defeitos ou inconsistências observadas não são comportamento desejado nem requisitos positivos | Foram convertidos apenas em riscos gerais: preservar Unicode, validar contratos, falhar explicitamente e testar |
+| Links, URLs e identificadores de evidência | URLs do GitHub, crates.io, docs.rs, site do produto, caminhos de auditoria, commits, versões observadas e todos os IDs `E-*` | `00-evidence-register.md` | Conectariam o implementador ao material proibido e quebrariam o isolamento do handoff | Permanecem somente na auditoria; o handoff usa referências internas aos próprios arquivos |
+| Nomes e marcas do produto analisado | Sophia, Cicero, `cicero-sophia`, `sophia-interfaces`, organização e nomes relacionados | toda a documentação da Fase 1 | Não são necessários para implementar os requisitos e revelariam a origem analisada | O handoff descreve apenas um produto novo e neutro |
+| Licenças e análise jurídica específica | PolyForm Noncommercial, GPL, histórico de relicenciamento, disponibilidade do repositório e dúvidas sobre componentes permissivos | `E-006`, `E-007`, `E-009`, `E-033`, `E-036`; `ADR-0001-port-vs-clean-room.md` | O handoff não é parecer jurídico e não deve convidar consulta/reuso da origem; a consequência já foi incorporada pela decisão clean-room | README impõe implementação independente e DATA exige licença verificável para qualquer nova fonte/dependência |
+| Integrações concretas observadas ou presumidas | Implementação de adaptador Home Assistant, mapeamentos específicos, cliente, endpoints, inventários reais, identidade/autorização de processos, retry, transação e comportamento de serviço | `E-037` confirma ausência nos artefatos públicos; `03-ptbr-target-architecture.md` apenas propõe a fronteira | Não havia implementação confirmada para copiar e a Fase 2 não autoriza completar lacunas operacionais | Foram definidos limites de adaptador, catálogo e validação; `OPEN-021`, `OPEN-023` e `OPEN-024` preservam identidade, confiabilidade de efeitos e erros como decisões pendentes |
+| Credenciais, segredos e configuração operacional | Tokens, cookies, senhas, sockets autenticados, mecanismos de armazenamento/provisão/rotação/revogação, instâncias, nomes de recursos e dumps de inventário | fronteiras propostas em `03-ptbr-target-architecture.md`; política durável do `AGENTS.md` | Nunca devem entrar no núcleo nem no pacote documental; mecanismos concretos não podem ser inferidos e dados reais seriam sensíveis | `SEC-002`, `SEC-003`, `NFR-007` e `FR-021` proíbem trânsito indevido; `OPEN-022` reserva o ciclo de credenciais |
+| Dados dinâmicos reais e aliases de usuários | Inventários domésticos, nomes de entidades, áreas, aliases, histórico de sessão e observações reais de STT | `04-data-provenance-policy.md`; `E-037` | São dados específicos de instância, sensíveis e não constituem léxico geral ou corpus | `DATA-013` os mantém no Perfil O com metadados operacionais aplicáveis; URL, licença ou partição linguística não são inventadas, e promoção ao Perfil L exige nova admissão completa |
+| Frases e exemplos linguísticos | Comandos, diálogos, frases de treino, exemplos de intents, contrações, pronomes, nomes de cômodos/dispositivos e fixtures linguísticas | regras da Fase 2 e `04-data-provenance-policy.md` | Criá-los por LLM violaria a proibição de inventar dados e poderia contaminar a avaliação | Somente quatro exemplos **estruturais**, com identificadores opacos e rótulo `FIXTURE TÉCNICA, NÃO DADO LINGUÍSTICO`, aparecem em `06-external-contracts.md`; eles não são frases nem dados linguísticos |
+| Metas e limites quantitativos | Acurácia, qualidade, cobertura, latência, memória, tamanho, throughput, duração de sessão, número de candidatos e limites de entrada | `06-roadmap.md`; ausência de baseline verificável em `E-030` | Não existe baseline ou decisão humana que sustente números | Métodos são definidos; `OPEN-015`, `OPEN-018` e `OPEN-026` mantêm valores pendentes |
+| Plataformas e toolchains presumidos | Sistemas operacionais, arquiteturas, empacotamento, IPC e matriz de CI não aprovados | `06-roadmap.md`; `E-038` registra limitação do ambiente de auditoria | Portabilidade não pode ser prometida sem escolha e teste | `NFR-011` e `OPEN-014` bloqueiam a fundação até aprovação da plataforma |
+| Conteúdo de resposta de produção | Templates, frases de resposta, localização e fallback textual concreto | `03-ptbr-target-architecture.md` propõe templates; ausência de implementação pública em `E-030` | Seria dado linguístico/conteúdo de produto sem governança e revisão aprovadas | O contrato exige resposta textual tipada; `OPEN-020` reserva conteúdo e governança |
+| Questões desconhecidas da origem | Estado atual do repositório, conteúdo do produto premium e existência de componentes permissivos | `E-009`, `E-035`; seção `DESCONHECIDO` do ADR | Ausência de evidência não pode virar requisito ou implementação presumida | O pacote não depende dessas respostas e proíbe consultar a origem |
+
+## Proibições para a futura implementação
+
+A equipe que receber `docs/clean-room/` não deve:
+
+- pesquisar ou consultar o produto analisado para preencher lacunas;
+- reconstruir símbolos, layout, pipeline ou wire format a partir deste registro;
+- receber este diretório de auditoria;
+- importar dados ou dependências sem origem e licença registradas;
+- tratar conceitos gerais citados na especificação como autorização para reproduzir a implementação analisada;
+- substituir uma decisão `OPEN` por comportamento lembrado, inferido ou observado fora do pacote.
+
+## Material deliberadamente preservado
+
+| Material | Justificativa | Limite |
+| --- | --- | --- |
+| Nome Home Assistant | É o domínio-alvo explicitamente aprovado pelo usuário, não o produto analisado para fins de derivação | Pode identificar catálogo, adaptador, estado e fronteira; não autoriza endpoint, protocolo, serviço, entidade, parâmetro, credencial ou inventário concreto |
+| Conceitos gerais de NLU | São necessários para expressar comportamento observável do novo produto | Não podem carregar nomes, sequência, campos, heurísticas ou algoritmos identificáveis da origem |
+| Separação entre Perfis L e O | Deriva das regras atuais do usuário e do `AGENTS.md` e foi reautorizada como contrato próprio de governança | Não transporta fonte, dataset, vocabulário ou metadado fictício; conteúdo operacional só pode ser promovido por nova admissão linguística completa |
+| Identificadores opacos de fixtures estruturais | Permitem demonstrar cardinalidade, correlação e isolamento sem material linguístico | Devem permanecer rotulados, sem texto natural, categoria linguística, semântica de domínio ou promoção a dados |
+| Referências internas `FR/NFR/API/SEC/DATA/TEST/OPEN` | Permitem consistência e rastreabilidade dentro do handoff isolado | Não se confundem com IDs `E-*` da auditoria e não apontam para material externo |
+
+## Situação
+
+### CONFIRMADO
+
+As categorias acima foram excluídas dos doze arquivos finais do handoff por revisão manual e varredura automatizada. O `HANDOFF-MANIFEST.json` foi incluído na verificação; nenhum nome proibido, ID de evidência, URL, caminho absoluto, símbolo observado, código, dependência, workspace ou dado linguístico foi encontrado.
+
+A comparação textual com os documentos da Fase 1 não encontrou sequência identificável transportada: a maior coincidência foi uma formulação genérica de sete palavras sobre separação física e lógica de classes. O risco residual permanece restrito a conceitos comuns de governança e NLU já registrados neste documento.

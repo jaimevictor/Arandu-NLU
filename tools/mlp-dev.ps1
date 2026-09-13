@@ -1,0 +1,30 @@
+[CmdletBinding()]
+param(
+    [ValidateSet('check', 'build', 'corpus', 'corpus-check', 'versions', 'image')]
+    [string]$Task = 'check'
+)
+$ErrorActionPreference = 'Stop'
+$root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$image = 'local-nlu-dev:rust-1.98.0'
+$docker = Get-Command docker -ErrorAction Stop
+& $docker.Source info --format '{{.OSType}}' | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    & $docker.Source desktop start
+    if ($LASTEXITCODE -ne 0) { throw 'Start Docker Desktop in Linux-container mode, then rerun.' }
+}
+& $docker.Source build --tag $image --file (Join-Path $root 'tools/dev/Dockerfile') (Join-Path $root 'tools/dev')
+if ($LASTEXITCODE -ne 0) { throw 'Developer image build failed.' }
+if ($Task -eq 'image') {
+    & $docker.Source build --network none --platform linux/amd64 --tag 'local-nlu:0.1.0-amd64' --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.1.0 (Join-Path $root 'addon')
+    if ($LASTEXITCODE -ne 0) { throw 'Add-on image build failed.' }
+    exit 0
+}
+$output = Join-Path $root 'target'
+New-Item -ItemType Directory -Path $output -Force | Out-Null
+$mounts = @('--mount', "type=bind,source=$root,target=/source,readonly",
+    '--mount', "type=bind,source=$output,target=/output")
+if ($Task -eq 'corpus') {
+    $mounts += @('--mount', "type=bind,source=$(Join-Path $root 'data/mlp'),target=/corpus-output")
+}
+& $docker.Source run --rm --network none @mounts $image python3 /source/tools/dev/run.py $Task
+if ($LASTEXITCODE -ne 0) { throw "MLP task '$Task' failed (exit $LASTEXITCODE)." }

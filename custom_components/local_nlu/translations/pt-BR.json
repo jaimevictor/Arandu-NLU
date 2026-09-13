@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "O Local NLU já está configurado.",
+      "single_instance_allowed": "Somente uma instância do Local NLU é permitida."
+    },
+    "error": {
+      "cannot_connect": "Não foi possível conectar ao add-on local."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "endpoint": "Endpoint local do add-on"
+        },
+        "description": "Informe o endpoint HTTP interno exposto pelo add-on Local NLU.",
+        "title": "Conectar Local NLU"
+      }
+    }
+  },
+  "title": "Local NLU"
+}

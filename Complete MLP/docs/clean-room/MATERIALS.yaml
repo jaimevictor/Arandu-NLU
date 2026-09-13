@@ -1,0 +1,1022 @@
+schema_version: 1
+as_of: "2026-08-29"
+
+materials:
+  - id: steering-v3
+    status: SEED_USER_SPECIFICATION
+    provider: user
+    location: ignored_local_file_and_verified_out_of_tree_backup
+    version: "3.0"
+    sha256: 15196e479bee08f117cdf92094381bf8423546a251c5c67e47c76c0a3dbf5539
+    license: NOASSERTION
+    allowed_use: requirements_and_process_only
+    prohibited_use: current_tracked_tree_distribution_linguistic_data_or_runtime
+
+  - id: sophia-public-claims
+    status: EXTERNAL_CLAIM_ONLY
+    provider: nlu.to_and_Cicero_public_websites
+    resources:
+      - canonical_url: https://nlu.to/
+        retrieved_body_size: 15231
+        retrieved_body_sha256: a624151273212f4822d755c5f3e386b514df5f7fdc460755fd170c2d9589f8d9
+      - canonical_url: https://nlu.to/ha/
+        retrieved_body_size: 20072
+        retrieved_body_sha256: 398525ac83ad7d88812be27864a672042a7e5c43cc3a872676148fff548517c8
+      - canonical_url: https://nlu.to/ha/tests
+        retrieved_body_size: 14756
+        retrieved_body_sha256: 46189f84c0fc0878e631a2c4839e9330c97e6d9febec9deecdc019490abecbb5
+      - canonical_url: https://nlu.to/ha/faq
+        retrieved_body_size: 20330
+        retrieved_body_sha256: 72dbf59d0e51825414d00caea7d00ae61c9077861368b49285158de2ba5e3b7a
+      - canonical_url: https://nlu.to/r/ha_v20000
+        retrieved_body_size: 21892
+        retrieved_body_sha256: fecf9988b6c519327a7729daaef20526bc804e3fc755641d190e0096bfde371f
+      - canonical_url: https://cicero.sh/sophia/specs
+        retrieved_body_size: 17784
+        retrieved_body_sha256: 1e06404fd211801916320cfedd2b72f5d1f3ba1a3d0c13e5a109cce3635ec461
+    retrieved: "2026-08-24"
+    license: NOT_APPLICABLE_FACTUAL_REFERENCE
+    allowed_use: unverified_non_gating_comparison_claims
+    prohibited_use: code_data_vocabulary_rules_oracle_or_gold
+
+  - id: aquila-ha-voice-test-suite
+    status: EXTERNAL_CLAIM_ONLY
+    provider: Aquila_Labs
+    canonical_url: https://git.cicero.sh/aquila/ha-voice-test-suite
+    commit: c8c0de27a08a233aed5286562f5f4506d33bb857
+    license_file_sha256: c3b1b78bc8bd3ea13aa4bc9778442d16560270afa235006d816e5e88cef24db4
+    license: NOASSERTION
+    limitation: placeholder_copyright_fields_and_non_independent_english_benchmark
+    allowed_use: aggregate_methodology_audit_only
+    prohibited_use: source_adapter_dataset_translation_or_gold
+
+  - id: home-assistant-intents
+    status: REJECTED
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/intents
+    commit: 865163e0bacedda7c758f71251345853b32301ef
+    tree: d1a12ac0b099d4868937a357361a88a2cb13fae0
+    containing_tags:
+      - 2026.8.24
+      - 2026.8.25
+    license: CC-BY-4.0
+    license_file: LICENSE.md
+    license_file_sha256: 9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411
+    observed_scope: "pt-BR sentences and tests; 218 sentence files, 217 test files"
+    observed_pt_br_sentence_cases: 655
+    observed_pt_br_intent_slot_shapes: 281
+    provenance_observation: all_51_pt_br_commits_postdate_upstream_LLM_translation_workflow
+    rejection_reasons:
+      - per_entry_non_AI_origin_and_licensor_authority_unprovable
+      - mandatory_global_per_stratum_multi_intent_and_fail_closed_evaluation_coverage_missing
+    rejection_evidence: docs/evidence/sources/home-assistant-intents-865163e-rejection.md
+    allowed_use: none
+    prohibited_use: code_data_vocabulary_rules_oracle_gold_training_evaluation_contract_or_fixture
+    quarantine_removal: verified_absent_2026-08-28T01:04:06Z
+
+  - id: ud-portuguese-bosque
+    status: REJECTED
+    provider: Universal_Dependencies
+    upstream_owner: UniversalDependencies
+    canonical_url: https://github.com/UniversalDependencies/UD_Portuguese-Bosque
+    commit: 884288537f7e8e02e50f125791cf279d905d1043
+    tree: 231df45fffbfb0f721f3f32f6ff3f9fcfa3c63d5
+    artifact_format: deterministic_git_archive_tar
+    artifact_size: 37416960
+    artifact_sha256: 677fa2b94198885a1bc09061ba9833f815cd31bd1889fd16835359723e4f3a6b
+    repository_license_claim: CC-BY-SA-4.0
+    license_file: LICENSE.txt
+    license_file_sha256: ab3a36080055dd29ad2b59162e43d1368c7f15643666bea982d4e103f546e025
+    complete_license_sha256: 28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5
+    observed_sentences: 9357
+    observed_pt_br_sentences: 4207
+    observed_pt_pt_sentences: 5150
+    rejection_reasons:
+      - underlying_Folha_and_PUBLICO_content_rights_do_not_have_a_published_commercial_modification_and_redistribution_grant
+      - upstream_license_was_changed_from_CC_BY_NC_SA_3_0_without_recorded_newspaper_rightsholder_authority
+      - repository_license_file_is_only_a_pointer_not_complete_legal_text
+    rejection_evidence: docs/evidence/sources/ud-portuguese-bosque-8842885-rejection.md
+    allowed_use: none
+    prohibited_use: code_data_vocabulary_rules_oracle_gold_training_evaluation_contract_or_fixture
+    quarantine_removal: verified_absent_2026-08-28T01:10:38Z
+
+  - id: libreoffice-pt-br-dictionary
+    status: REJECTED
+    provider: The_Document_Foundation
+    upstream_owner: LibreOffice
+    canonical_url: https://github.com/LibreOffice/dictionaries
+    commit: 32b006a2c22a4ac7e8ed3f03346f7b3d85a970a4
+    tree: 3330d698e5c0e4864cf6db7dbd5a26e7cd507658
+    inspected_path: pt_BR
+    inspected_path_archive_size: 26408960
+    inspected_path_archive_sha256: 562f1c7e5a4d8b5d4e1493e1f318379c53d8541dcada28dcfb3d5ec66e141641
+    observed_dictionary_entries: 312368
+    license_claim: LGPL-3.0_with_unversioned_MPL
+    rejection_reasons:
+      - complete_source_specific_license_texts_absent
+      - conjunctive_or_alternative_license_choice_is_ambiguous
+      - no_POS_labels_contextual_cases_or_frequency_corpus_lineage
+    rejection_evidence: docs/evidence/sources/libreoffice-pt-br-dictionary-32b006a-rejection.md
+    allowed_use: none
+    prohibited_use: code_data_vocabulary_rules_oracle_gold_training_evaluation_contract_or_fixture
+    quarantine_removal: verified_absent_2026-08-28T01:20:01Z
+
+  - id: rhasspy-official-pt-br-profile
+    status: REJECTED
+    provider: Rhasspy_project
+    upstream_owner: rhasspy_and_synesthesiam
+    canonical_url: https://github.com/rhasspy/rhasspy-profile
+    commit: cd45d1ad6158e7f8113c5c75e74b9e61afa1823a
+    tree: 99af04ae708d58db4e44445fb36a982071e4cfd3
+    inspected_paths_archive_size: 112640
+    inspected_paths_archive_sha256: 7c33bf0a769a283d33c439d6f025e82a8ba00893787e0e163358a53db4dc37c3
+    license: MIT
+    license_file_sha256: 273c11fe9a995c66456f36e10ff6b4c234d104c4f175db39c8f25aa5123f70c0
+    observed_intents: 5
+    observed_surface_expansions: 32
+    observed_maximum_labeled_semantic_identities: 17
+    observed_frequency_entries: 10000
+    rejection_reasons:
+      - portuguese_language_origin_and_authority_not_declared
+      - frequency_corpus_and_transformation_lineage_absent
+      - mandatory_global_per_stratum_multi_intent_and_fail_closed_evaluation_coverage_missing
+    rejection_evidence: docs/evidence/sources/rhasspy-official-pt-br-source-family-rejection.md
+    allowed_use: none
+    prohibited_use: code_data_vocabulary_rules_oracle_gold_training_evaluation_contract_or_fixture
+    quarantine_removal: verified_absent_2026-08-28T01:20:01Z
+
+  - id: home-assistant-core-2026.8.3
+    status: OPEN_REFERENCE
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/core
+    tag: 2026.8.3
+    commit: 759e4658f40b3ccb671d418b8a0ed95224bf4561
+    license: Apache-2.0
+    license_file: LICENSE.md
+    license_file_bytes: 11357
+    license_file_sha256: c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+    contract_paths:
+      - path: homeassistant/components/wyoming/conversation.py
+        sha256: 77cf453fc91691389834f32b51b9fbad4a9c60dce51cd869f696e843a0baaf10
+      - path: homeassistant/components/wyoming/manifest.json
+        sha256: ca7ce74b695d45c98ebf8adc0020597a1861eff624de80b728955757bd30670e
+      - path: homeassistant/components/conversation/models.py
+        sha256: ab01f362b6e218ab64a1b170d505cdc2c6e9832254d5fc8236b85df639223e71
+      - path: homeassistant/helpers/intent.py
+        sha256: 8a62d1ab08d66a60a6c397bbb4d0b0ef12770c924ef8fd4ecffd690143703f9f
+      - path: homeassistant/core.py
+        sha256: 2d92d136433488735db82b7fea044908c9689e7f3b87f5f43aac6fce319473bc
+      - path: homeassistant/config_entries.py
+        sha256: 8748b55770005a478467b7c1250e6525ba8d44725a38f0b9c3a37804d78de859
+      - path: homeassistant/auth/__init__.py
+        sha256: a1299485606914b48ad58d2f5cae41ce1a2896f7d8303c70ab01ead05e364987
+      - path: homeassistant/auth/models.py
+        sha256: 976466cf9db1c7de4899444e21840edee9e1d03120a246e4200ac77984cb37bc
+      - path: homeassistant/auth/permissions/const.py
+        sha256: 3e442c30f9cbb03ad968af90168205e06178593324bc260dbf01174a1e6be773
+      - path: homeassistant/auth/permissions/models.py
+        sha256: 386731d5e857fd67f567eacfcc9d9a5a13c75b622d5341457e82de0c5b76fe35
+      - path: homeassistant/helpers/service.py
+        sha256: ead719bd2e68445013f5ffa4d0dee83175df2683ec806fe983397e641f793438
+      - path: homeassistant/loader.py
+        sha256: ba9c2cf5e1312c2428587e87ad6ee50e71bb5eee70bb65f42b7d2de4d190e12c
+      - path: homeassistant/backup_restore.py
+        sha256: f53cf5626321e99b39e1b5ceb6bd408d0a30e1e2735ef3965f3625701d98b496
+    allowed_use: public_contract_research_and_compatibility_tests
+    prohibited_use: unlisted_repository_paths_or_linguistic_gold
+
+  - id: home-assistant-core-2026.8.3-p10-catalog
+    status: OPEN_REFERENCE
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/core
+    tag: 2026.8.3
+    commit: 759e4658f40b3ccb671d418b8a0ed95224bf4561
+    tree: f4a72534bb33abf8b5d183910a0c134b968af2f8
+    license: Apache-2.0
+    license_file: LICENSE.md
+    license_file_bytes: 11357
+    license_file_sha256: c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+    selected_path_bundle_algorithm: "sha256(sorted(path + NUL + bytes + NUL))"
+    selected_path_bundle_sha256: 4627587cd790e86e935c702e2f8e3c9dda48390ad639bb69cd7c7fba2fd0489e
+    contract_paths:
+      - path: homeassistant/components/config/area_registry.py
+        bytes: 5302
+        sha256: 356960ec6113d34a7dd8d502f11e26559f6c5ccac43563f4b467cb7c7823a031
+      - path: homeassistant/components/config/device_registry.py
+        bytes: 7399
+        sha256: a9bb2aa98cc630a237fea96421bad98c892ce425d6f61473304ac4f83638332b
+      - path: homeassistant/components/config/entity_registry.py
+        bytes: 13605
+        sha256: f1ff1de9175a7474e54691d8e716c2f68502525a7133df033c86f70f05d56eb0
+      - path: homeassistant/components/config/floor_registry.py
+        bytes: 5092
+        sha256: 2f6039a3b284b910c08adb3c667dbad652606850759986e5ebd1a5468708a7d4
+      - path: homeassistant/components/homeassistant/exposed_entities.py
+        bytes: 18197
+        sha256: b41137bde06e72f43b648ea1fbad4ac0e21640e86492ec872a35ea29f46f26ad
+      - path: homeassistant/generated/entity_platforms.py
+        bytes: 1329
+        sha256: fc8e6bbbdf4ea942dc31759142d12d805021c19eb71a1aac02438bb3fd6ad332
+      - path: homeassistant/helpers/area_registry.py
+        bytes: 21446
+        sha256: 81893d7e9c30b8906bb09496f16eee39116040986cffc2d9cd6b7abcc529a241
+      - path: homeassistant/helpers/device_registry.py
+        bytes: 146097
+        sha256: 9aa4429a2d23a4fcda33cbbf153237b1f4fa179cafaa3ba14ef26198ee0e4727
+      - path: homeassistant/helpers/entity_registry.py
+        bytes: 108162
+        sha256: 7f3238f6107c3081650483a6358b33fe9260a88787b4c774c78dbc9005e6bac7
+      - path: homeassistant/helpers/floor_registry.py
+        bytes: 11660
+        sha256: 3d11830d03f0f7bb1e1ca0389b7e80ee6e0d1492adafb52d1738ef0f874bb50f
+      - path: homeassistant/helpers/intent.py
+        bytes: 48467
+        sha256: 8a62d1ab08d66a60a6c397bbb4d0b0ef12770c924ef8fd4ecffd690143703f9f
+      - path: homeassistant/helpers/normalized_name_base_registry.py
+        bytes: 2540
+        sha256: f19655c00442efb25a479ac7a338d0730b4deffda6c8febdd65cac9dfa78d0cf
+      - path: homeassistant/util/__init__.py
+        bytes: 6848
+        sha256: f615e88bfb040f1b83538da590ac1aad4b8170d3dd687c670ff8ff64fd4ef967
+      - path: pyproject.toml
+        bytes: 41098
+        sha256: 2618b6f740c5f55e48eeb2204661f841ea53ff9bf99edd0632879b0edf693642
+    observed_generated_entity_platform_domains: 45
+    observed_built_in_intent_constants: 20
+    source_evidence: docs/evidence/P10-SOURCES.yaml
+    allowed_use: public_catalog_contract_coverage_and_compatibility_research
+    prohibited_use: copied_source_dependency_unlisted_paths_linguistic_gold_or_action_authority
+
+  - id: wyoming-protocol
+    status: OPEN_REFERENCE
+    provider: Rhasspy_Open_Home_Foundation
+    upstream_owner: rhasspy
+    canonical_url: https://github.com/rhasspy/wyoming
+    commit: bf65f4e645770909a87c0e59010e0cc71631e4a5
+    license: MIT
+    license_rightsholder: Michael_Hansen
+    license_file: LICENSE.md
+    license_file_bytes: 1071
+    license_file_sha256: 13746d509d74e55ea2265fbef204bb7cdbf84a8315b0207e988326cb54387028
+    contract_paths:
+      - path: wyoming/event.py
+        sha256: bb7955ac580116f44b0526bc17c2d1a4a55f5d67283798879cf6b65bc6711c7b
+      - path: wyoming/info.py
+        sha256: 1c2d8aa9d4b5ad9a61c6979cb8de7c32c04c81019a68331291bf711c2ffd538b
+      - path: wyoming/intent.py
+        sha256: f4f1f571c4830380b14aa89bd84dc949d2bbceedee007d8a26abd77306f51cdb
+      - path: wyoming/handle.py
+        sha256: a9464d80806cb54733d3eec5aa80ccfc9d895e79b9cd2d69c7bced4146754248
+    allowed_use: protocol_contract_research
+    prohibited_use: dependency_until_dependency_admission
+
+  - id: cpython-3.14.6-p13-transport
+    status: REJECTED_SOURCE_PORTFOLIO
+    provider: Python_Software_Foundation
+    upstream_owner: Python_Software_Foundation
+    canonical_url: https://www.python.org/downloads/release/python-3146/
+    version: 3.14.6
+    supplied_commit: c63aec69bd59c55314c06c23f4c22c03de76fe45
+    source_archive_bytes: 23921184
+    source_archive_sha256: 143b1dddefaec3bd2e21e3b839b34a2b7fb9842272883c576420d605e9f30c63
+    extracted_tree_sha256: b7e662cf62918c5746d04f6e26103a3ba185502b468cfc8c5218f970c96949e5
+    license: MIXED_INELIGIBLE_NONEXHAUSTIVE
+    license_file: LICENSE
+    license_file_bytes: 13804
+    license_file_sha256: b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231
+    source_evidence: docs/evidence/P13-EXACT-SOURCES.yaml
+    bundle_admission: REJECTED_NO_FUTURE_PRODUCT_USE
+    status_detail: nonexhaustive_rejection_witnesses_recorded_complete_bundle_not_admitted
+    allowed_use: exact_rejection_and_capability_evidence_only
+    prohibited_use: source_projection_build_runtime_dependency_package_distribution_or_transport_selection
+
+  - id: openssl-3.6.3-p13-transport
+    status: REJECTED_SOURCE_PORTFOLIO
+    provider: OpenSSL_Project
+    upstream_owner: OpenSSL_Project_Authors
+    canonical_url: https://openssl-library.org/source/
+    version: 3.6.3
+    supplied_commit: aae016bfd52fcad2bc9657c2c782cfdf73b1ed5f
+    source_archive_bytes: 54953005
+    source_archive_sha256: 243a86649cf6f23eeb6a2ff2456e09e5d77dd9018a54d3d96b0c6bdd6ba6c7f1
+    extracted_tree_sha256: ea06723083780b098e038e955cfdb1113eb38d8da833c3a84624937ede12b6ea
+    license: MIXED_INELIGIBLE_NONEXHAUSTIVE
+    license_file: LICENSE.txt
+    license_file_bytes: 10175
+    license_file_sha256: 7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a
+    bundle_licenses:
+      - Apache-2.0
+      - GPL-1.0-or-later OR Artistic-1.0-Perl
+      - CC0-1.0
+    source_evidence: docs/evidence/P13-EXACT-SOURCES.yaml
+    bundle_admission: REJECTED_NO_FUTURE_PRODUCT_USE
+    status_detail: nonexhaustive_rejection_witnesses_recorded_complete_bundle_not_admitted
+    allowed_use: exact_rejection_and_capability_evidence_only
+    prohibited_use: source_projection_build_runtime_dependency_package_distribution_or_transport_selection
+
+  - id: noise-protocol-revision-34-p13-transport
+    status: QUARANTINED_CANDIDATE
+    provider: Noise_Protocol_Framework
+    upstream_owner: Trevor_Perrin
+    canonical_url: https://github.com/noiseprotocol/noise_spec
+    version: revision_34
+    commit: ecdf084ece2bf92b16b1201b6ae5c99d23fb4151
+    tree: 7ae97cd53c41891afca8fd1c1fe6c74945845c16
+    selected_blob: 874aec33e8ee8b431be2733a24b619e863687802
+    selected_path: noise.md
+    selected_path_bytes: 136496
+    selected_path_sha256: 44f249557aa2a21f819ba3dde54a677476d585660036e4a52f83a8a781eddcf6
+    license: PUBLIC_DOMAIN_DEDICATION_NON_SOFTWARE_SPECIFICATION
+    rights_statement_path: noise.md
+    rights_statement_sha256: 44f249557aa2a21f819ba3dde54a677476d585660036e4a52f83a8a781eddcf6
+    transformations: none
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    candidate_scope: exact_P13_standardized_transport_capability_contract
+    allowed_use: P13_source_admission_review_and_isolated_candidate_probe_only
+    prohibited_use: linguistic_data_gold_or_product_runtime_admission
+
+  - id: snow-0.10.0-p13-transport-closure
+    status: QUARANTINED_CANDIDATE
+    provider: crates.io_packages
+    upstream_owner: Snow_RustCrypto_Dalek_Rust_and_listed_package_contributors
+    canonical_url: https://crates.io/crates/snow/0.10.0
+    version: "0.10.0"
+    vcs_commit: 4bb43f50370bdb3e8b1b57814ac662864db2704f
+    source_archive_bytes: 899770
+    source_archive_sha256: 599b506ccc4aff8cf7844bc42cf783009a434c1e26c964432560fb6d6ad02d82
+    compile_projection_selected_package_count: 23
+    compile_projection_archive_file_count: 435
+    compile_projection_projected_file_count: 194
+    compile_projection_deleted_file_count: 243
+    compile_projection_replacement_file_count: 2
+    compile_projection_added_notice_file_count: 2
+    compile_projection_inventory_sha256: aa2d6283dc6ee572cc4aa812efef48a9cbbd422f7a2ce00ef4aab733f9ef5f4e
+    compile_projection_mixed_file_byte_range_edits: 0
+    lock_package_count_including_probe: 46
+    lock_package_count_excluding_probe: 45
+    external_package_count: 23
+    resolver_only_technical_fixture_count: 22
+    lock_sha256: 1df5045c3d81fcbe8a77ca7532cbb74ae31b825a5170452f873de07d64866abd
+    license: MULTIPLE_OSI_APPROVED_SEE_P13_NOISE_SOURCE_LEDGER
+    license_apache_sha256: 25a9014ab0838dec94e22f7598e115e9e55b8360044ef6e30dcda5679d268275
+    license_mit_sha256: dd6a6177e441f98b36c8e0e92e399a90e94fe09c3fed92d8bf21fe00a840a6ed
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    candidate_scope: exact_offline_P13_capability_source_portfolio_only
+    runtime_admission: NOT_GRANTED
+    allowed_use: P13_source_admission_review_and_isolated_candidate_probe_only
+    prohibited_use: unreviewed_projection_change_or_product_runtime_package_or_channel_until_P14_admission
+
+  - id: cacophony-vector-p13-snow-projection-removal
+    status: VERIFIED_REMOVED_NOT_ADMITTED
+    provider: Cacophony_project
+    upstream_owner: Cacophony_contributors
+    canonical_url: https://github.com/haskell-cryptography/cacophony
+    commit: 18b7348c54fd61fcd0c220298883de0d09c8364d
+    tree: 3352eabffc931f8b9192c34d7c76d9fb39da5ac0
+    path: vectors/cacophony.txt
+    git_blob: b8a271ed1aba8b4a56bf429e559d7947827123b4
+    bytes: 1709817
+    sha256: 3bde7c09a6f349ee11c825c50fcc02649f8f02a47c857a459206b357f9386cae
+    license: Unlicense
+    license_file: LICENSE
+    license_git_blob: cf1ab25da0349f84a3fdd40032f0ce99db813b8b
+    license_file_bytes: 1210
+    license_file_sha256: 88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: provenance_and_exact_projection_deletion_verification_only
+    prohibited_use: product_runtime_package_linguistic_data_training_gold_or_evaluation
+
+  - id: project-poly1305-soft-p13
+    status: PROJECT_AUTHORED_QUARANTINED_CANDIDATE
+    provider: NLU_project
+    upstream_owner: none_project_authored
+    replaces_package: poly1305
+    replaces_version: "0.8.0"
+    source_path: tools/p13-noise-probe/projected/poly1305-soft.rs
+    source_bytes: 4410
+    source_sha256: 7f1e2f737fcc4966b0553a692da7355f942f3c02c8e8e45c30220d74c81733fb
+    replacement_input_sha256: fd77a8c9b0b35bb1514d8ce812caa2c89b8a1ccccb2394558e8471fb3201bf74
+    license_replacement_input_sha256: 520a3d1c97ba2b3ce028a4f95615052f0f69622c00642bed52de3b8fc3eb2c31
+    license_replacement_sha256: b080899b8d17577ac460d1d6d1bdffe6698309b691e280637c00ccaeb05b9cde
+    projected_file_count: 6
+    projected_tree_sha256: a48ddcc0596e51b3d28c39463992affa7a068e04a03b2dfb0c8b02523db20f14
+    arithmetic: three_radix_limbs_44_44_42
+    license: Apache-2.0
+    external_implementation_bytes_used: false
+    artifact_classification: PROJECT_AUTHORED_TECHNICAL_SOFTWARE_NOT_LINGUISTIC_OR_EVALUATION_DATA
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: P13_source_admission_review_and_isolated_candidate_probe_only
+    prohibited_use: product_runtime_package_or_channel_until_P14_admission
+
+  - id: rust-num-pow-origin-p13
+    status: QUARANTINED_SOURCE_REVIEW_EVIDENCE
+    provider: rust_num_contributors
+    upstream_owner: rust_num_contributors
+    canonical_url: https://github.com/rust-num/num
+    commit: 4bbc34b083c72290781d68649dfbeb6629fa8e54
+    tree: e90377e2cfe3b783515a5e108e64ec4fe004cb66
+    source_path: src/lib.rs
+    source_git_blob: 23116b8849b8a8570110008ebccaec4224bddcfa
+    source_bytes: 6260
+    source_sha256: 74d34812d6fd0b3033b6c70d192b6c4c3515abfcfbf75d9fe711fd8abf4c7ddf
+    origin_function: num::pow
+    copied_into_package: typenum-1.18.0
+    copied_into_commit: 67584b536d97c5503fa0f8d6ea1162eb4d9b8383
+    copied_into_path: src/type_operators.rs
+    license: MIT OR Apache-2.0
+    license_apache_sha256: a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2
+    license_mit_sha256: 6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb
+    acquisition: exact_Git_commit_and_tree
+    transformations: exact_first_nine_source_header_lines_then_LF_then_exact_LICENSE-MIT
+    redistribution: LICENSE-RUST-NUM-MIT_in_P13_projection
+    projected_notice_path: LICENSE-RUST-NUM-MIT
+    projected_notice_bytes: 1543
+    projected_notice_sha256: 7322a1dfa7b9dda5cfa6392af9ca56e9a6a7a653fbae06920cabe65d83c26de7
+    commercial_use_and_modification: permitted
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: P13_typenum_source_origin_notice_and_license_review_only
+    prohibited_use: linguistic_data_gold_evaluation_or_unreviewed_product_dependency
+
+  - id: rust-pr49000-array-origin-p13
+    status: QUARANTINED_SOURCE_REVIEW_EVIDENCE
+    provider: Rust_Project_contributors
+    upstream_owner: Rust_Project_contributors
+    contributor: Josh_Stone
+    canonical_url: https://github.com/rust-lang/rust/pull/49000
+    source_repository: https://github.com/cuviper/rust
+    commit: 032f93bd83b97b3480864e472ada1f5a34bfe806
+    tree: 80bd752a5ff7e6a6fb67e30d038cfd4637190590
+    source_path: src/libcore/array.rs
+    source_git_blob: 364fe105791b6a18ce79170ae13208d60b33ed47
+    source_bytes: 15381
+    source_sha256: d8155118a7c69f3e28ca33be5c064afc463832a29e1d26bf2f27f4a9d09d68cd
+    copied_into_package: generic-array-0.14.7
+    copied_into_path: src/iter.rs
+    origin_region_start_line: 385
+    origin_region_end_line: 413
+    origin_region_sha256: 5ea02025afa0c7cc369d8bae6a63fe3925740df33af4c61db576f816e1ff9d54
+    package_region_start_line: 63
+    package_region_end_line: 115
+    package_region_sha256: fcbdf0e8af4c44e8b280c5528a05c3d8829884b06912ea24c46881c128aa1cef
+    license: MIT OR Apache-2.0
+    license_apache_sha256: a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2
+    license_mit_sha256: 23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3
+    copyright_git_blob: 9bc018d983d7d7822cda2149245cc5eb08e3292b
+    copyright_bytes: 10859
+    copyright_sha256: 990e70fdb6433cefbaec95737b8d2f96b11f0900a35e0786875031a9e916dce2
+    acquisition: exact_Git_commit_tree_and_blobs
+    transformations: exact_first_nine_source_header_lines_then_LF_then_exact_LICENSE-MIT
+    redistribution: LICENSE-RUST-MIT_in_generic-array_P13_projection
+    projected_notice_path: LICENSE-RUST-MIT
+    projected_notice_bytes: 1490
+    projected_notice_sha256: 1033900d9c351261128fcfb3778d4fceab84848e6e4809c5a842a58ab61904ec
+    commercial_use_and_modification: permitted
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: P13_generic-array_source_origin_notice_and_license_review_only
+    prohibited_use: linguistic_data_gold_evaluation_or_unreviewed_product_dependency
+
+  - id: pulldown-redwood-relicense-origin-p13
+    status: QUARANTINED_SOURCE_REVIEW_EVIDENCE
+    provider: Benjamin_Richner_and_Redwood_Wiki_contributors
+    upstream_owner: Benjamin_Richner_and_Redwood_Wiki_contributors
+    canonical_url: https://github.com/BenjaminRi/Redwood-Wiki.git
+    commit: dfa58152b41d7eb5bcdd7563e30e5373692f8a3b
+    tree: 0edb66853a506e3aa459e51656f2f8d9b5155a35
+    source_path: src/markdown_utils.rs
+    source_git_blob: 80744dc359bd77ffa43960d2f8fc14a636944c86
+    source_bytes: 11030
+    source_sha256: f8c9c3d9f3df36637e27c1914c833244896d584f8a1486bde043d8fb81e510c5
+    original_license: GPL-3.0-only
+    license_git_blob: f288702d2fa16d3cdf0035b15a9fcbc552cd88e7
+    license_sha256: 3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986
+    permission_url: https://github.com/pulldown-cmark/pulldown-cmark/issues/507#issuecomment-1596190824
+    permission_request_url: https://github.com/pulldown-cmark/pulldown-cmark/issues/507?timeline_page=1
+    permission_acquired_at_utc: '2026-08-30T19:46:38Z'
+    permission_request_authentication: NONE
+    permission_artifact_provenance: HASH_PINNED_MUTABLE_UPSTREAM_RESPONSE
+    permission_artifact_path: data/quarantine/pulldown-cmark-issue-507-timeline-1.html
+    permission_artifact_bytes: 284687
+    permission_artifact_sha256: d4e75acafc782eb43a746ca6b519bc7eb32126361f745002283bbb476aea27fb
+    permission_author: Benjamin_Richner
+    permission_actions:
+      - use
+      - modify
+      - redistribute
+      - relicense
+    copied_into_package: pulldown-cmark-0.11.3
+    copied_into_path: vendor/pulldown-cmark-0.11.3/src/utils.rs
+    copied_into_sha256: 80ed2dd07ad11bd752df74c30b482d4f49637d3f74f9af5fbf923c616573e3a9
+    elected_license: MIT
+    acquisition: exact_Git_commit_tree_blobs_and_immutable_issue_comment_artifact
+    transformations: exact_region_comparison_after_ASCII_whitespace_deletion
+    redistribution: source_archive_not_redistributed
+    commercial_use_and_modification: permitted_by_exact_author_permission
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: P13_pulldown_copied_source_rights_review_only
+    prohibited_use: linguistic_data_gold_evaluation_or_unreviewed_product_dependency
+
+  - id: tracing-hyperium-origin-p13
+    status: QUARANTINED_SOURCE_REVIEW_EVIDENCE
+    provider: Hyperium_contributors
+    upstream_owner: Hyperium_contributors
+    canonical_url: https://github.com/hyperium/http.git
+    commit: ab2ca71ead2a07e861a30637dc3fe1c300701a4e
+    tree: 30b1db16ae5b2f4403aa6f9605d60bd9548d009b
+    source_path: src/extensions.rs
+    source_git_blob: 6cbf1e3ae2f5c04134116c4502bdd7ec24922ee4
+    source_bytes: 5542
+    source_sha256: 7e57d0ff5251bb8fb212c36168849a3f9b14ee8aa1aeed8483153908562aa07a
+    license: MIT OR Apache-2.0
+    license_mit_git_blob: 0cbc550492304b54320d9320d475c9f067adcebd
+    license_mit_sha256: dc91f8200e4b2a1f9261035d4c18c33c246911a6c0f7b543d75347e61b249cff
+    license_apache_git_blob: 80176c2b2399dd0827805600dd7422c96c662484
+    license_apache_sha256: 8bb1b50b0e5c9399ae33bd35fab2769010fa6c14e8860c729a52295d84896b7a
+    copied_into_package: tracing-subscriber-0.3.20
+    copied_into_path: vendor/tracing-subscriber-0.3.20/src/registry/extensions.rs
+    copied_into_sha256: 0418b39287bbc06cc95b8cecd6a25aa808b8e04714d842340ff75db458cafe5b
+    elected_license: MIT
+    acquisition: exact_Git_commit_tree_and_blobs
+    transformations: exact_byte_region_comparison
+    redistribution: source_archive_not_redistributed
+    commercial_use_and_modification: permitted
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    allowed_use: P13_tracing_copied_source_rights_review_only
+    prohibited_use: linguistic_data_gold_evaluation_or_unreviewed_product_dependency
+
+  - id: chacha20-0.9.1-p13-source-projection
+    status: QUARANTINED_CANDIDATE
+    provider: RustCrypto_Developers
+    upstream_owner: RustCrypto_Developers
+    canonical_url: https://crates.io/crates/chacha20/0.9.1
+    version: "0.9.1"
+    vcs_commit: b5d39c45c45df97335f4b6effb853cde97810de1
+    source_archive_bytes: 23424
+    source_archive_sha256: c3613f74bd2eac03dad61bd53dbe620703d4371614fe0bc3b9f04dd36fe4e818
+    projected_file_count: 8
+    deleted_file_count: 11
+    projected_tree_sha256: f4c65b7ddc0c67d9815de333f19b07980cb457764cffd89b66746a3882827067
+    deleted_tree_sha256: 8e7155a5698542c915abcbb52ac9f0c20bb3aa2e5c5a03a5a065dc05e5bbb650
+    action_inventory_sha256: 3b262dadd8a5525042ae8750a068c47de69ec86610657cd51e1adee59d9365d6
+    mixed_file_byte_range_edits: 0
+    license: MIT
+    license_apache_sha256: a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5
+    license_mit_sha256: b6f6f01b03ee7e93c0ae96d62ed39527e98a120fb951afc9de456a741ef3f204
+    source_evidence: docs/evidence/P13-NOISE-SOURCES.yaml
+    candidate_scope: exact_compile_only_P13_capability_projection_only
+    allowed_use: P13_source_admission_review_and_isolated_candidate_probe_only
+    prohibited_use: deleted_archive_files_unreviewed_projection_change_or_product_runtime_before_P14
+
+  - id: home-assistant-official-addons
+    status: OPEN_REFERENCE
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/addons
+    commit: 1351491102b124645e368da782bcb6cfa18d27da
+    license: Apache-2.0
+    license_file_sha256: 0725193bbe0486af72e364ca0d9bc8e706a5d84093adec456144cb5937cbbf58
+    contract_paths:
+      - path: piper/config.yaml
+        sha256: b7c457260f4aa34c0e09582cd39e539a058b196b1ed88b878c8c853c1c61db68
+      - path: configurator/config.yaml
+        sha256: a6c4a4a434aa51417b3862cd0354f98fbc3dd7641f213e4795ff22267ce96648
+      - path: speech_to_phrase/config.yaml
+        sha256: aa2c85e63ca0adeab457cd6eecad8009a50a60a7418696d7af363b7720c6fd51
+    allowed_use: add_on_contract_research
+    prohibited_use: base_image_or_dependency_until_admission
+
+  - id: home-assistant-addon-example
+    status: OPEN_REFERENCE
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/addons-example
+    commit: 4bf7cc6f1253118979dcd052eefee39eb55b54f4
+    license: Apache-2.0
+    license_file_sha256: b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1
+    contract_paths:
+      - path: repository.yaml
+        sha256: e7433722b93d481174f468bdf6bdc6a5dfef8e088d423c652a02deda9e2c414c
+      - path: example/config.yaml
+        sha256: 797f63a809e09ebbf5f320909704dd7798f062dc03ceeef47430a3b3d2a4ea19
+      - path: example/Dockerfile
+        sha256: 48b90c4f3591251c37f4104072c682734b4aa4ea0074238eb3e13999cc855ec6
+      - path: example/rootfs/etc/services.d/example/run
+        sha256: f2a6f2606c2de1157283184791fe8bf069bf42486bbf49b1be21217175e53c2b
+    allowed_use: add_on_manifest_contract_research
+
+  - id: home-assistant-developer-docs
+    status: EXPOSURE_REJECTED
+    provider: Home_Assistant_project
+    canonical_url: https://github.com/home-assistant/developers.home-assistant
+    commit: 16c7d9bb4c4b1e2b11685df53c59906e480c3899
+    license: CC-BY-NC-SA-4.0
+    license_file_sha256: bc1227c4b8a873b1a18a5f1ad0b901cff1533b479ad2ea5a24942fdeae307be3
+    rejection_reason: non_commercial_license_is_not_open
+    allowed_use: none
+    prohibited_use: copying_derivation_bundling_training_or_data
+
+  - id: rust-stable-manifest-mutable
+    status: REJECTED
+    provider: Rust_Project
+    canonical_url: https://static.rust-lang.org/dist/channel-rust-stable.toml
+    retrieved: "2026-08-24"
+    license: MIT OR Apache-2.0
+    rejection_reason: mutable_channel_url
+    allowed_use: none
+
+  - id: rust-1.98.0-manifest
+    status: QUARANTINED_CANDIDATE
+    provider: Rust_Project
+    canonical_url: https://static.rust-lang.org/dist/2026-08-20/channel-rust-1.98.0.toml
+    manifest_date: "2026-08-20"
+    version: "1.98.0"
+    artifact_size: 898637
+    artifact_sha256: 3f7d139b73bbbd0004ef6e58b430831c68cdad2b1f64ee2eb35d54c09199489a
+    source_commit: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+    target: aarch64-apple-darwin
+    target_archive_url: https://static.rust-lang.org/dist/2026-08-20/rust-1.98.0-aarch64-apple-darwin.tar.xz
+    target_archive_sha256: 5395f380bd220890b89b7e8ce137f3965cf0625b6f561af11e97c8d5c8743c3b
+    license: MIT OR Apache-2.0
+    allowed_use: toolchain_selection_only
+    prohibited_use: project_code_until_archive_hash_and_install_validation
+
+  - id: rust-source-license-review
+    status: OPEN_REFERENCE
+    provider: Rust_Project
+    canonical_url: https://github.com/rust-lang/rust
+    inspected_commit: 0a3fa2af35783dcd1b4206a85fe7811297eea0bf
+    selected_release_commit: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+    license: MIT OR Apache-2.0
+    license_mit_sha256: b71bd43a069ca0641a9ecfe585ca7b3c53b5cc1608f8b68321168698e28b5ea1
+    license_apache_sha256: 62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a
+    allowed_use: toolchain_license_review
+
+  - id: rustc-1.98.0-source-p13
+    status: QUARANTINED_CANDIDATE
+    provider: Rust_Project
+    owner: Rust_Project_and_bundled_upstream_rightsholders
+    canonical_url: https://static.rust-lang.org/dist/2026-08-20/rustc-1.98.0-src.tar.xz
+    channel_manifest_material_id: rust-1.98.0-manifest
+    version: "1.98.0"
+    source_commit: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+    artifact_size: 244440040
+    artifact_sha256: 271fa73d8174f53d713c46a8310da7bf7cfdcfb8b7cfd1c2b74b84a83ae9fb1e
+    local_path: /private/tmp/p13-rust-source/rustc-1.98.0-src.tar.xz
+    license: MULTIPLE_OSI_APPROVED_WITH_EXPLICIT_REJECTED_FILE
+    root_license: MIT OR Apache-2.0
+    llvm_license: Apache-2.0 WITH LLVM-exception
+    loongarch_license: GPL-3.0-or-later WITH GCC-exception-3.1
+    loongarch_gpl_path: src/etc/third-party/COPYING3
+    loongarch_gpl_sha256: 8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903
+    loongarch_exception_path: src/etc/third-party/COPYING.RUNTIME
+    loongarch_exception_sha256: 28e85c5aa4af9b4f1dfe6b4817aa3eefb3eaaee7fd735045016f29ccf50276a1
+    license_metadata_path: license-metadata.json
+    license_metadata_sha256: 7bed295fb8d5ddc54ef9e7c795b18207d8da747513ae83fce9748e840200b40c
+    compiler_and_clippy_registry_package_count: 535
+    compiler_and_clippy_registry_tuple_sha256: 501587445a47f940c2c61b9ccb95bbfeacbe94109b30d14391786db7c40a2ab9
+    selected_root_lock_graph_package_count: 397
+    selected_root_lock_graph_registry_package_count: 317
+    selected_root_lock_graph_registry_tuple_sha256: 400397c713e3937e4885a40d44342468d65ada48b5475c79c02c531053b38980
+    reviewed_inactive_packages:
+      - capstone-0.14.0
+      - capstone-sys-0.18.0
+      - curl-sys-0.4.87+curl-8.19.0
+      - libgit2-sys-0.18.2+1.9.1
+      - lzma-sys-0.1.20
+    compiler_and_clippy_legal_file_count: 990
+    compiler_and_clippy_legal_file_inventory_sha256: 5640f6001a58534d4311222e2a3c67d6a8c6011dec9f69f06b75689f588f5691
+    reviewed_non_osi_legal_identifiers:
+      - BSD-4-Clause-UC
+      - curl
+    reviewed_non_osi_disposition: UNREACHABLE_FROM_SELECTED_ROOTS_AND_REJECTED_FROM_SELECTED_SOURCE
+    rejected_path_source_files:
+      - path: library/stdarch/ci/docker/x86_64-unknown-linux-gnu/cpuid.def
+        bytes: 3737
+        sha256: d94d3493cbcfc5d07acc5c315e4b2b3c340e292325bbab41a172f285b0eb6371
+        owner: Intel_Corporation
+        license_status: RESTRICTIVE_TERMS_WITHOUT_ELIGIBLE_LICENSE
+        disposition: REJECTED_FROM_PRODUCT_SOURCE_CLOSURE_P14_MUST_PROVE_UNREACHABLE
+    sysroot_registry_package_count: 30
+    sysroot_registry_tuple_sha256: 484a12bee10d6b350d061897ac1afb64596f09be3543ede4c83c2cfe74663ad3
+    sysroot_legal_file_count: 61
+    sysroot_legal_file_inventory_sha256: 081ea34739d789d536dc338ba60cd7239e7fcd5b2c9cbe7b36dd9923f9a1b6e2
+    osi_approval_material_id: spdx-license-list-xml-p13
+    complete_notice_path: .tools/rust-1.98.0/share/doc/rust/COPYRIGHT.html
+    sole_cc0_only_package: notify-8.2.0
+    sole_cc0_only_package_disposition: EXCLUDED_RUST_ANALYZER_LOCK_PACKAGE_NOT_SELECTED_INSTALLED_OR_EXECUTED
+    installed_unselected_helper: .tools/rust-1.98.0/libexec/rust-analyzer-proc-macro-srv
+    installed_unselected_helper_disposition: NOT_SELECTED_OR_EXECUTED_AND_CONTAINS_NO_NOTIFY_PATH
+    intended_use: exact_source_and_license_review_for_selected_P13_Rust_inputs_with_restricted_Intel_file_rejected
+    transformations: exact_bounded_metadata_and_checksum_bound_selected_source_observation_only
+    redistribution: source_archive_not_redistributed
+    obligations: retain_applicable_MIT_Apache_2_0_LLVM_GPL_3_or_later_GCC_exception_3_1_and_selected_third_party_notices_if_eligible_source_is_redistributed
+    commercial_use_and_modification: permitted_for_selected_eligible_source_only_Intel_cpuid_file_rejected
+    independent_reviews_required:
+      - source-discovery
+      - source-license
+      - source-provenance
+      - source-quality-security
+      - source-defensive-adversarial
+    allowed_use: P13_offline_toolchain_source_review_and_verification_only
+    prohibited_use: Intel_cpuid_notify_rust_analyzer_other_unselected_source_product_dependency_runtime_linguistic_data_gold_or_distribution
+
+  - id: spdx-license-list-xml-p13
+    status: QUARANTINED_CANDIDATE
+    provider: SPDX_Legal_Team
+    owner: SPDX_Workgroup_and_contributors
+    canonical_url: https://github.com/spdx/license-list-XML
+    commit: 24b4ed8996b5f8d3f91e51961b46803e9e356814
+    tree: b96913f1e33b03c3da8666514f67452c657e0a17
+    local_origin_repository: /private/tmp/p13-spdx-license-list-XML
+    selected_license_record_count: 9
+    selected_exception_record_count: 2
+    rejected_non_osi_license_record_count: 2
+    rejected_non_osi_license_ids:
+      - BSD-4-Clause-UC
+      - curl
+    selected_rights_file_count: 2
+    license: CC0-1.0
+    license_evidence_path: schema/ListedLicense.xsd
+    license_evidence_sha256: 14cb0133bdf26c6c16944e44ae3da2d7dcb3b5ed20d2ce75d21e7c9cea546531
+    intended_use: exact_OSI_approval_LLVM_exception_and_non_OSI_rejection_metadata_for_selected_Rust_license_elections
+    transformations: none_exact_commit_tree_path_and_blob_reads
+    redistribution: not_redistributed
+    obligations: none_for_unmodified_facts_and_metadata_under_CC0_1_0
+    commercial_use_and_modification: permitted
+    independent_reviews_required:
+      - source-license
+      - source-provenance
+    allowed_use: P13_selected_Rust_source_license_classification_only
+    prohibited_use: linguistic_data_gold_runtime_dependency_or_unpinned_license_conclusion
+
+  - id: p01-rust-protocol-dependency-closure
+    status: ADMITTED_AUTONOMOUS
+    provider: crates.io_packages_from_dtolnay_BurntSushi_and_serde-rs
+    canonical_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    lockfile: Cargo.lock
+    package_count: 11
+    license: MULTIPLE_OSI_APPROVED_SEE_DEPENDENCY_LEDGER
+    allowed_use: exact_vendored_build_and_runtime_dependency_closure_for_protocol_v1
+    prohibited_use: linguistic_data_gold_evaluation_or_unversioned_dependency_resolution
+
+  - id: rustsec-advisory-db-p01
+    status: ADMITTED_AUTONOMOUS
+    provider: RustSec
+    upstream_owner: RustSec
+    canonical_url: https://github.com/RustSec/advisory-db
+    commit: 6420e39260b3d771b049954cf5d52b57e2118da4
+    tree: 01794d45488a521b322b760b6bfdcd6e9f28932b
+    advisory_file_count: 1206
+    advisory_bytes: 1256065
+    advisory_path_nul_bytes_sha256: 26b7afd8690bdd0a743d7405a39e643ca95c05e1529a4c5c59f0e6ae9751eb67
+    digest_format: sorted_relative_path_NUL_file_bytes_without_separator
+    license: CC0-1.0 WITH CC-BY-4.0-exceptions
+    root_license_sha256: b342fe896e158b8c5a83e707446113f3a149fa0104d834afa78cd2a48eaf1906
+    license_cc0_sha256: a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499
+    explicit_cc_by_advisory_count: 21
+    bundled_cc_by_path: LICENSES/CC-BY-4.0.txt
+    bundled_cc_by_sha256: 28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5
+    bundled_cc_by_disposition: REJECTED_MISLABELLED_CC_BY_SA_4_0_TEXT
+    authoritative_cc_by_material_id: creative-commons-by-4.0-legalcode-p13
+    license_resolution: root_grant_names_CC_BY_4_0_and_authoritative_CC_BY_4_0_legal_code_is_bound_separately
+    acquisition: shallow_Git_clone_of_the_named_immutable_commit
+    transformations: none
+    redistribution: not_redistributed
+    commercial_use_and_modification: permitted
+    allowed_use: P01_and_P13_locked_Rust_package_advisory_name_and_version_scan
+    prohibited_use: runtime_dependency_linguistic_data_gold_or_claim_of_no_undisclosed_vulnerabilities
+
+  - id: creative-commons-by-4.0-legalcode-p13
+    status: QUARANTINED_CANDIDATE
+    provider: Creative_Commons
+    owner: Creative_Commons
+    canonical_url: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+    version: "4.0"
+    local_path: /private/tmp/p13-cc-by-4.0-legalcode.txt
+    bytes: 18657
+    sha256: 9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411
+    license_text_rights: CC0-1.0_public_domain_dedication
+    acquisition: HTTPS_from_the_named_versioned_official_Creative_Commons_endpoint
+    transformations: none
+    redistribution: not_redistributed
+    commercial_use_and_modification: permitted
+    allowed_use: authoritative_terms_for_RustSec_CC_BY_4_0_exception_resolution
+    prohibited_use: linguistic_data_gold_evaluation_or_runtime_dependency
+
+  - id: rustup-1.29.0
+    status: REJECTED
+    provider: Rust_Project
+    canonical_url: https://github.com/rust-lang/rustup
+    tag: "1.29.0"
+    commit: e10ffbdbb807c47fdd208119de99e7baae3e0dfe
+    installer_target: aarch64-apple-darwin
+    installer_sha256: aeb4105778ca1bd3c6b0e75768f581c656633cd51368fa61289b6a71696ac7e1
+    license: MIT OR Apache-2.0
+    rejection_reason: selected_source_contains_Amazon_specific_aws_lc_dependencies
+    allowed_use: none
+
+  - id: ruby-2.6.10-source
+    status: OPEN_REFERENCE
+    provider: Apple_open_source_distribution_of_Ruby_Project
+    canonical_url: https://github.com/apple-oss-distributions/ruby
+    tag: ruby-175
+    commit: 4b150aa904ded9fa254bb353bd1feec3c1b72c39
+    upstream_tag: v2_6_10
+    observed_version: 2.6.10p210
+    license: Ruby OR BSD-2-Clause
+    license_file_sha256: dc3a475d5d6d1541d85647c0161e485d3e22eea5ec47e6efe204a642c84f24dc
+    allowed_use: P00_validator_runtime_provenance
+
+  - id: psych-3.1.0-source
+    status: OPEN_REFERENCE
+    provider: Ruby_Psych_project_via_Apple_open_source_distribution
+    canonical_url: https://github.com/ruby/psych
+    tag: v3.1.0
+    tag_commit: e5813b4409b5f17270d09b515ad41ab28904dfae
+    commit: 8726508191a91377fa7c4b3f39352e319aa0e390
+    distributed_in_commit: 4b150aa904ded9fa254bb353bd1feec3c1b72c39
+    distributed_path: ruby/ext/psych
+    license: MIT
+    license_file_sha256: 8027993cc422e64ff22c88592a9bdb9808041220bdd45dc71bc18e6fe3a24a13
+    allowed_use: P00_strict_YAML_parser_provenance
+
+  - id: libyaml-0.2.1-source
+    status: OPEN_REFERENCE
+    provider: LibYAML_Project_via_Psych
+    canonical_url: https://github.com/yaml/libyaml
+    tag: 0.2.1
+    commit: f6e09f829b606ca0d0adf774236fa8cdd5e2a7d1
+    vendored_in_commit: 8726508191a91377fa7c4b3f39352e319aa0e390
+    vendored_path: ext/psych/yaml
+    license: MIT
+    vendored_license_file_sha256: d0d8b09800a45cd982e9568fc7669d9c1a4c330e275a821bbe24d54366d16fe9
+    allowed_use: P00_Psych_native_parser_dependency_provenance
+
+  - id: git-2.50.1-source
+    status: OPEN_REFERENCE
+    provider: Apple_open_source_distribution_of_Git_Project
+    canonical_url: https://github.com/apple-oss-distributions/Git
+    tag: Git-155
+    commit: 6b2f9bfe72d6d4b5c9bcc1c2d0236c026d321cba
+    upstream_version: 2.50.1
+    license: GPL-2.0-only
+    license_file_sha256: 5b2198d1645f767585e8a88ac0499b04472164c0d2da22e75ecf97ef443ab32e
+    allowed_use: P00_validator_repository_operations
+
+  - id: shell-cmds-329-env
+    status: OPEN_REFERENCE
+    provider: Apple_open_source_distribution_of_FreeBSD_env
+    canonical_url: https://github.com/apple-oss-distributions/shell_cmds
+    tag: shell_cmds-329
+    tag_object: 43bc8e2405f73db9100a8c1631ab622404dc968d
+    commit: 298787009e5432c5e4c378a077f98267077e3495
+    source_paths: [env/env.c, env/envopts.c, env/envopts.h]
+    source_files_sha256: aa6e355a99be1bbc2024ebd96fb7a6b72412d00fe71f37b2d1cac2711c168809
+    source_files_hash_format: concatenated_file_bytes_in_source_path_order
+    license: BSD-2-Clause AND BSD-3-Clause
+    license_header_bundle_sha256: 05be61b0ccf215ddeb3f1ce075ac1ae5fb8ca082e7cbaf9c55d7e466c33b4c0a
+    license_evidence_format: path_NUL_license_header_NUL_in_source_path_order
+    allowed_use: P00_pre_Ruby_environment_sanitization
+
+  - id: unicode-character-database-17.0.0
+    status: ADMITTED_AUTONOMOUS
+    provider: Unicode_Inc
+    canonical_url: https://www.unicode.org/Public/17.0.0/ucd/UCD.zip
+    version: "17.0.0"
+    artifact_size: 9101877
+    artifact_sha256: 2066d1909b2ea93916ce092da1c0ee4808ea3ef8407c94b4f14f5b7eb263d28e
+    license: Unicode-3.0
+    license_file_sha256: e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96
+    source_evidence: docs/evidence/P04-SOURCES.yaml
+    allowed_use: test_only_Unicode_17_normalization_grapheme_and_word_boundary_conformance
+    prohibited_use: linguistic_gold_training_vocabulary_or_accuracy_claim
+
+  - id: unicode-character-database-17.0.0-p05-punctuation
+    status: ADMITTED_AUTONOMOUS
+    provider: Unicode_Inc
+    canonical_url: https://www.unicode.org/Public/17.0.0/ucd/UnicodeData.txt
+    containing_archive_url: https://www.unicode.org/Public/17.0.0/ucd/UCD.zip
+    containing_archive_sha256: 2066d1909b2ea93916ce092da1c0ee4808ea3ef8407c94b4f14f5b7eb263d28e
+    version: "17.0.0"
+    source_sha256: 2e1efc1dcb59c575eedf5ccae60f95229f706ee6d031835247d843c11d96470c
+    license: Unicode-3.0
+    license_file_sha256: e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    allowed_use: P05_exact_ASCII_P_general_category_punctuation_allowlist
+    proposed_use: P05_exact_ASCII_P_general_category_punctuation_allowlist
+    prohibited_use: runtime_build_package_or_shipping_before_admission
+
+  - id: p04-unicode-dependency-closure
+    status: ADMITTED_AUTONOMOUS
+    provider: crates.io_packages_from_unicode_rs_Lokathor_and_Soveu
+    canonical_url: https://crates.io/
+    canonical_evidence: docs/evidence/P01-DEPENDENCIES.yaml
+    lockfile: Cargo.lock
+    package_count: 4
+    license: MULTIPLE_OSI_APPROVED_SEE_DEPENDENCY_LEDGER
+    allowed_use: exact_vendored_Unicode_17_normalization_and_segmentation_runtime_closure
+    prohibited_use: network_process_linguistic_gold_or_unversioned_dependency_resolution
+
+  - id: ud-portuguese-docs-bdd95cf
+    status: ADMITTED_AUTONOMOUS
+    provider: Universal_Dependencies
+    upstream_owner: UniversalDependencies
+    canonical_url: https://github.com/UniversalDependencies/docs
+    commit: bdd95cf20660e21a3f60bb84e2c93d1f3efcd74b
+    tree: 135fab3f7da3052c4951568a416dca7b6a2bdd87
+    source_path: _pt/index.md
+    source_git_blob: cfbb97a50509f0a8e4b3ca605520741956dcc1ac
+    source_sha256: 3dd5d99753e26737a2711e8b2ec692120d1b6c807b51ddb37bd73f33d9e71557
+    clitic_source_path: _pt/pos/PRON.md
+    clitic_source_git_blob: 06a85d790fed94a42312a315d96935bb483a3dc3
+    clitic_source_sha256: 85167e5613c5645ea0aaf7ed8d2058266afd857ef3bfb688ced525a7f04f3604
+    identified_file_contributors:
+      - Alexandre_Rademaker
+      - Dan_Zeman
+      - Valeria_de_Paiva
+      - Waldir_Pimenta
+    license: Apache-2.0
+    license_git_blob: ad410e11302107da9aa47ce3d46bd5ad011c4c43
+    license_file_sha256: 6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    allowed_use: P05_exact_allowlisted_Portuguese_tokenization_examples_only
+    proposed_use: P05_exact_allowlisted_Portuguese_tokenization_examples_only
+    prohibited_use: runtime_before_admission_linked_corpora_morphology_syntax_hyphen_generalization_training_or_evaluation
+
+  - id: spacy-portuguese-exceptions-26b4d1d
+    status: REJECTED
+    rejection_phase: P05_convergence_pass_1
+    provider: Explosion
+    upstream_owner: explosion
+    canonical_url: https://github.com/explosion/spaCy
+    commit: 26b4d1dc04a812f426e4bef3e8a1b6f159d6f048
+    tree: 84b6a710fe40e594b0827c794dc8db05091785be
+    source_paths:
+      - spacy/lang/pt/tokenizer_exceptions.py
+      - spacy/lang/pt/punctuation.py
+    source_sha256:
+      - c2676c3afc71e3fd86abc3a653cbe273e8929e564f9f72efcfed27c9b416cd91
+      - daba4c5d1e614a63d81ed3b27aa18b8e3cbe249ad42f1d08df89bcbfece6aac8
+    license: MIT
+    license_git_blob: 6cb7810c6ee4ca32c79e68b9f39fbbce2183243a
+    license_file_sha256: 3f4378e67708fecacd3e27651c8bc0f977cf20789e19da0d81a2840e7cf573a2
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    rejection_reasons:
+      - source_history_referenced_rejected_Bosque_material
+      - exception_membership_did_not_prove_assigned_semantic_classes
+      - no_unique_rule_remained_necessary_after_CLDR_selection
+    retained_bytes: removed
+    allowed_use: none
+    prohibited_use: all_project_rules_tests_data_training_evaluation_or_gold
+
+  - id: cldr-48-acd6d88
+    status: ADMITTED_AUTONOMOUS
+    provider: Unicode_CLDR
+    upstream_owner: unicode-org
+    canonical_url: https://github.com/unicode-org/cldr
+    release_tag: release-48
+    commit: acd6d88ae493633240e19a87a721076a8a75c310
+    tree: bafae8fc919257506cb84327781ce4912b9b0c0b
+    source_paths:
+      - common/main/pt.xml
+      - common/supplemental/numberingSystems.xml
+    source_sha256:
+      - 0c27d3da189672618048c2fdb20659fa99b28509dde3cc8720d7331a32723bdf
+      - c5b9b208c6fe7bd3ce4e1c6cbb8f3337480aca620c9cf703ef3b6c74d4258c16
+    license: Unicode-3.0
+    license_git_blob: 861b74f3c812088755fd185d964e82a244503bbd
+    license_file_sha256: b4c0ae8ef04f7059f96ce5bbe0467f9fe6f6d81bbe13517701dfeb961fb4d0b6
+    source_evidence: docs/evidence/P05-SOURCES.yaml
+    allowed_use: P05_exact_bounded_decimal_time_unit_and_multiunit_rules_only
+    proposed_use: P05_exact_bounded_decimal_time_unit_and_multiunit_rules_only
+    prohibited_use: runtime_before_admission_inherited_unresolved_values_other_locale_data_vocabulary_training_evaluation_or_gold
+
+  - id: home-assistant-core-2026.9.1-p15-candidate
+    status: QUARANTINED_CANDIDATE
+    provider: Home_Assistant_project
+    upstream_owner: home-assistant
+    canonical_url: https://github.com/home-assistant/core
+    latest_release_endpoint: https://github.com/home-assistant/core/releases/latest
+    latest_release_resolved_url: https://github.com/home-assistant/core/releases/tag/2026.9.1
+    latest_release_response_bytes: 220191
+    latest_release_response_sha256: 1bd9c88c4175b5ef72767adaf2ac9449384117bd5f0dd4d7d89d24ce9737b195
+    retrieved: "2026-09-10"
+    tag: 2026.9.1
+    commit: fc034572d0216a04ed40a07154394908a594dfed
+    tree: 4b2a1cd29e3d85c43d791e03eb82a17244956fec
+    deterministic_git_archive_prefix: home-assistant-core-2026.9.1/
+    deterministic_git_archive_size: 215511040
+    deterministic_git_archive_sha256: ef440c5b9809036416901238c5fff4f9139acd9814fc142c1998bfd1fc572ea4
+    license: Apache-2.0
+    license_file: LICENSE.md
+    license_file_bytes: 11357
+    license_file_sha256: c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+    pyproject_sha256: e4d4e9f4a275e9c7e738f4be38514cefdc76205303b6b810e3d444b453482047
+    package_constraints_path: homeassistant/package_constraints.txt
+    package_constraints_sha256: d8dd403ea5b7ad91ebae51f1483bc0111ec866f503eba5cc4c644f8222559863
+    declared_python_requirement: ">=3.14.2"
+    source_evidence: docs/evidence/P15-SOURCE-DISCOVERY.md
+    allowed_use: P15_source_and_license_admission_review_only
+    prohibited_use: runtime_validation_build_package_distribution_linguistic_gold_or_release_claim_before_full_admission

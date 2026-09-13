@@ -1,0 +1,11 @@
+#!/usr/bin/env -S -i HOME=/var/empty PATH=/usr/bin:/bin LC_ALL=C LANG=C TZ=UTC GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_ATTR_NOSYSTEM=1 /usr/bin/ruby --disable-gems
+# frozen_string_literal: true
+
+require_relative "validate-p15"
+
+begin
+  P15Validation.run(ARGV)
+rescue P15Validation::Failure => error
+  warn "P15_GATE_FAIL[#{error.code}]: #{error.message}"
+  exit 1
+end

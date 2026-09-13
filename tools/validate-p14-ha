@@ -1,0 +1,157 @@
+#!/usr/bin/env -S -i HOME=/var/empty PATH=/usr/bin:/bin LC_ALL=C LANG=C TZ=UTC /usr/bin/ruby --disable-gems
+# frozen_string_literal: true
+
+require "digest"
+require "json"
+require "open3"
+
+module P14HomeAssistantValidation
+  ROOT = File.expand_path("..", __dir__)
+  HA_SOURCE = "/private/tmp/p14-ha-core-2026.8.3"
+  LATEST_RELEASE = "/private/tmp/p14-home-assistant-latest-release.html"
+  BUILD_CONTRACT = File.join(ROOT, "addon/build-contract.json")
+  GIT = "/Library/Developer/CommandLineTools/usr/bin/git"
+  EXPECTED_VERSION = "2026.8.3"
+  EXPECTED_COMMIT = "759e4658f40b3ccb671d418b8a0ed95224bf4561"
+  EXPECTED_TREE = "f4a72534bb33abf8b5d183910a0c134b968af2f8"
+  EXPECTED_RELEASE_BYTES = 222_222
+  EXPECTED_RELEASE_SHA256 =
+    "92f5039c48d086adafd9de0f5a56bf5c9c8596b578cf88fd4ef631ea2fbac9d7"
+  BASE_ENVIRONMENT = {
+    "HOME" => "/var/empty",
+    "LANG" => "C",
+    "LC_ALL" => "C",
+    "PATH" => "/usr/bin:/bin",
+    "TZ" => "UTC",
+    "GIT_CONFIG_NOSYSTEM" => "1",
+    "GIT_CONFIG_GLOBAL" => "/dev/null",
+    "GIT_ATTR_NOSYSTEM" => "1",
+    "GIT_NO_REPLACE_OBJECTS" => "1"
+  }.freeze
+
+  class DuplicateJsonKey < StandardError; end
+
+  class UniqueJsonObject < Hash
+    def []=(key, value)
+      raise DuplicateJsonKey, key if key?(key)
+
+      super
+    end
+  end
+
+  module_function
+
+  def fail!(message)
+    warn("P14_HA_GATE_FAIL: #{message}")
+    exit(1)
+  end
+
+  def git(*arguments)
+    stdout, _stderr, status = Open3.capture3(
+      BASE_ENVIRONMENT,
+      GIT,
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.untrackedCache=false",
+      "-C",
+      HA_SOURCE,
+      *arguments,
+      unsetenv_others: true
+    )
+    fail!("Home Assistant Git identity command failed") unless status.success?
+
+    stdout
+  rescue SystemCallError
+    fail!("Home Assistant Git identity command could not execute")
+  end
+
+  def source_version
+    path = File.join(HA_SOURCE, "pyproject.toml")
+    lines = File.readlines(path, chomp: true).select do |line|
+      line.start_with?("version = ")
+    end
+    expected = "version = \"#{EXPECTED_VERSION}\""
+    fail!("installed version mismatch") unless lines == [expected]
+
+    EXPECTED_VERSION
+  rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+    fail!("Home Assistant version metadata cannot be read")
+  end
+
+  def release_identity
+    fail!("missing frozen latest-release response") unless
+      File.file?(LATEST_RELEASE)
+    bytes = File.binread(LATEST_RELEASE)
+    versions = bytes.scan(
+      /<title>Release ([0-9]+\.[0-9]+\.[0-9]+) /
+    ).flatten
+    fail!("latest stable version mismatch") unless versions.length == 1
+    [
+      bytes.bytesize,
+      Digest::SHA256.hexdigest(bytes),
+      versions.fetch(0)
+    ]
+  rescue Errno::EACCES, Errno::ELOOP
+    fail!("frozen latest-release response cannot be read")
+  end
+
+  def build_disabled?
+    bytes = File.binread(BUILD_CONTRACT)
+    build = JSON.parse(
+      bytes,
+      object_class: UniqueJsonObject,
+      max_nesting: 32
+    )
+    architectures = build.fetch("architectures")
+    build.fetch("artifact_build_allowed") == false &&
+      architectures.is_a?(Array) &&
+      !architectures.empty? &&
+      architectures.all? do |architecture|
+        architecture.fetch("status") == "disabled_pending_admission"
+      end
+  rescue DuplicateJsonKey, JSON::ParserError, KeyError, TypeError,
+         Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+    false
+  end
+
+  def run(arguments)
+    fail!("usage: tools/validate-p14-ha") unless arguments.empty?
+    fail!("missing admitted Git executable") unless File.executable?(GIT)
+    fail!("missing pinned Home Assistant checkout") unless
+      File.directory?(File.join(HA_SOURCE, ".git"))
+    fail!("missing add-on build contract") unless File.file?(BUILD_CONTRACT)
+
+    actual_commit = git("rev-parse", "HEAD^{commit}").strip
+    actual_tree = git("rev-parse", "HEAD^{tree}").strip
+    actual_status = git("status", "--porcelain")
+    actual_tag = git("describe", "--tags", "--exact-match", "HEAD").strip
+    actual_version = source_version
+    release_bytes, release_sha256, release_version = release_identity
+
+    fail!("source commit mismatch") unless actual_commit == EXPECTED_COMMIT
+    fail!("source tree mismatch") unless actual_tree == EXPECTED_TREE
+    fail!("Home Assistant source checkout is modified") unless
+      actual_status.empty?
+    fail!("source tag mismatch") unless actual_tag == EXPECTED_VERSION
+    fail!("installed version mismatch") unless
+      actual_version == EXPECTED_VERSION
+    fail!("latest-release byte count mismatch") unless
+      release_bytes == EXPECTED_RELEASE_BYTES
+    fail!("latest-release SHA-256 mismatch") unless
+      release_sha256 == EXPECTED_RELEASE_SHA256
+    fail!("latest stable version mismatch") unless
+      release_version == EXPECTED_VERSION
+    fail!("artifact disablement contract mismatch") unless build_disabled?
+
+    puts(
+      "P14_HA_SOURCE_IDENTITY_PASS version=#{EXPECTED_VERSION} " \
+      "commit=#{EXPECTED_COMMIT} tree=#{EXPECTED_TREE} " \
+      "latest_stable=same_identity"
+    )
+    puts "P14_REAL_HA_RUNTIME=DEFERRED_TO_P15_UNADMITTED_RUNTIME"
+    true
+  end
+end
+
+P14HomeAssistantValidation.run(ARGV)

@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Local NLU is already configured.",
+      "single_instance_allowed": "Only one Local NLU instance is supported."
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the local add-on."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "endpoint": "Local add-on endpoint"
+        },
+        "description": "Enter the internal HTTP endpoint exposed by the Local NLU add-on.",
+        "title": "Connect Local NLU"
+      }
+    }
+  },
+  "title": "Local NLU"
+}

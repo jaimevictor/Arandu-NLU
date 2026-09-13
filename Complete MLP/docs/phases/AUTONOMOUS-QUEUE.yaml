@@ -1,0 +1,9 @@
+active_item: MLP
+next_action: implement_vertical_slice
+queued_items:
+  - MLP_GATE
+  - MLP_REVIEWS
+  - MLP_PACKAGE
+  - FINAL
+waiting_internal_dependencies: []
+last_checkpoint: USR_048_CONTRACT_FREEZE
