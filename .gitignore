@@ -10,8 +10,18 @@ __pycache__/
 *.so
 .Python
 
-# Cargo
+# Cargo (lockfiles are ignored by default; these three are required for
+# hermetic offline distribution builds and are explicitly re-included)
 Cargo.lock
+!Cargo.lock
+!addon/engine/Cargo.lock
+!ptbr_nlu/engine/Cargo.lock
+# Vendored crates ship their own Cargo.toml.orig/Cargo.lock, which cargo
+# checksum-verifies; re-include exactly those (nothing else *.orig)
+!addon/vendor/**/Cargo.toml.orig
+!addon/vendor/**/Cargo.lock
+!ptbr_nlu/vendor/**/Cargo.toml.orig
+!ptbr_nlu/vendor/**/Cargo.lock
 **/*.rs.bk
 *.orig
 
