@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
 from .client import ClientError, LocalNluClient, normalize_endpoint
-from .const import CONF_ENDPOINT, DEFAULT_ENDPOINT, DOMAIN
+from .const import (
+    CONF_ENDPOINT,
+    CONF_SHADOW_ENABLED,
+    CONF_V2_ENABLED,
+    DEFAULT_ENDPOINT,
+    DOMAIN,
+)
 
 
 class LocalNluConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,3 +61,35 @@ class LocalNluConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+class LocalNluOptionsFlow(config_entries.OptionsFlow):
+    """Toggle v2 interpretation and residential shadow (both default off)."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+        options = self.config_entry.options
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_V2_ENABLED,
+                        default=bool(options.get(CONF_V2_ENABLED, False)),
+                    ): bool,
+                    vol.Optional(
+                        CONF_SHADOW_ENABLED,
+                        default=bool(options.get(CONF_SHADOW_ENABLED, False)),
+                    ): bool,
+                }
+            ),
+        )
+
+
+async def async_get_options_flow(
+    config_entry: ConfigEntry,
+) -> LocalNluOptionsFlow:
+    return LocalNluOptionsFlow(config_entry)

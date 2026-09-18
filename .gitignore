@@ -29,6 +29,29 @@ Thumbs.db
 # Logs
 *.log
 
+# Credentials and secrets (never commit; see DISTRIBUTION checklist)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials.json
+secrets.yaml
+secrets.yml
+
+# Home Assistant runtime state and residential data (never publish)
+*.sqlite*
+*.db
+home-assistant*.log
+.storage/
+
+# Private scratch and non-product siblings (never publish)
+work/
+baseline_*.txt
+test_baseline_output.txt
+sophia*
+
 # Archives
 archive/
 

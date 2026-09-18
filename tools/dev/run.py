@@ -16,10 +16,14 @@ if task == 'versions':
 
 # A fresh container supplies an empty Linux workspace. Copy bytes, not NTFS modes.
 # Restore archive modes; the existing exact-tree verifier still validates them.
-for relative in ('.cargo', 'addon', 'custom_components', 'data/mlp', 'tests/mlp', 'tools'):
+for relative in ('addon', 'custom_components', 'data/mlp', 'tests/mlp', 'tools', 'evaluation'):
     shutil.copytree(source / relative, workspace / relative,
                     copy_function=shutil.copyfile,
                     ignore=shutil.ignore_patterns('__pycache__', '__MACOSX', '.DS_Store', 'target'))
+shutil.copytree(source / '.git', workspace / '.git', copy_function=shutil.copyfile,
+                ignore=shutil.ignore_patterns('__pycache__', '*.lock'))
+if (source / '.cargo').is_dir():
+    shutil.copytree(source / '.cargo', workspace / '.cargo', copy_function=shutil.copyfile)
 for name in ('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE'):
     shutil.copyfile(source / name, workspace / name)
 # Only executable vendor file in the current frozen dependency set. Verified from
@@ -39,6 +43,30 @@ commands = {
     'corpus': ['ruby', 'tools/generate-mlp-corpus.rb'],
     'corpus-check': ['ruby', 'tools/generate-mlp-corpus.rb', '--check'],
 }
+
+evaluation = Path('/workspace/evaluation/ptbr-independent')
+if task == 'evaluation-check':
+    subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(evaluation), '-p', 'test_*.py'], check=True)
+    subprocess.run([sys.executable, '-m', 'py_compile', *map(str, evaluation.glob('*.py'))], check=True)
+    subprocess.run([sys.executable, str(evaluation / 'freeze_v2.py'), '--check'], check=True)
+    subprocess.run([sys.executable, str(evaluation / 'phase_a_manifest.py'), '--check'], check=True)
+    raise SystemExit(0)
+if task == 'evaluation-freeze':
+    subprocess.run([sys.executable, str(evaluation / 'freeze_v2.py')], check=True)
+    raise SystemExit(0)
+if task == 'evaluation-run':
+    subprocess.run(['cargo', 'build', '--workspace', '--release', '--locked', '--offline'], check=True)
+    binary = Path('/workspace/target/release/local-nlu')
+    subprocess.run([sys.executable, str(evaluation / 'run_v2.py'), '--binary', str(binary), '--output-dir', '/output/ptbr-independent'], check=True)
+    raise SystemExit(0)
+if task == 'evaluation-benchmark':
+    subprocess.run(['cargo', 'build', '--workspace', '--release', '--locked', '--offline'], check=True)
+    binary = Path('/workspace/target/release/local-nlu')
+    subprocess.run([sys.executable, str(evaluation / 'benchmark_v2.py'), '--binary', str(binary), '--output-dir', '/output/ptbr-independent'], check=True)
+    raise SystemExit(0)
+if task == 'evaluation-record':
+    subprocess.run([sys.executable, str(evaluation / 'record.py'), '--version', '2', '--source', '/output/ptbr-independent', '--destination', '/baseline/v2'], check=True)
+    raise SystemExit(0)
 subprocess.run(commands[task], check=True)
 if task == 'corpus':
     for name in ('project-authored-synthetic-catalog-v1.json', 'project-authored-synthetic-v1.jsonl'):

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('check', 'build', 'corpus', 'corpus-check', 'versions', 'image')]
+    [ValidateSet('check', 'build', 'corpus', 'corpus-check', 'versions', 'image', 'evaluation-check', 'evaluation-freeze', 'evaluation-run', 'evaluation-benchmark', 'evaluation-record')]
     [string]$Task = 'check'
 )
 $ErrorActionPreference = 'Stop'
@@ -21,10 +21,16 @@ if ($Task -eq 'image') {
 }
 $output = Join-Path $root 'target'
 New-Item -ItemType Directory -Path $output -Force | Out-Null
+$outputMount = if ($Task -eq 'evaluation-record') { "type=bind,source=$output,target=/output,readonly" } else { "type=bind,source=$output,target=/output" }
 $mounts = @('--mount', "type=bind,source=$root,target=/source,readonly",
-    '--mount', "type=bind,source=$output,target=/output")
+    '--mount', $outputMount)
 if ($Task -eq 'corpus') {
     $mounts += @('--mount', "type=bind,source=$(Join-Path $root 'data/mlp'),target=/corpus-output")
+}
+if ($Task -eq 'evaluation-record') {
+    $baseline = Join-Path $root 'evaluation/ptbr-independent/baselines'
+    New-Item -ItemType Directory -Path $baseline -Force | Out-Null
+    $mounts += @('--mount', "type=bind,source=$baseline,target=/baseline")
 }
 & $docker.Source run --rm --network none @mounts $image python3 /source/tools/dev/run.py $Task
 if ($LASTEXITCODE -ne 0) { throw "MLP task '$Task' failed (exit $LASTEXITCODE)." }
