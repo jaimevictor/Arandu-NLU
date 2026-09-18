@@ -4,9 +4,13 @@ DOMAIN = "local_nlu"
 PLATFORMS = ("conversation",)
 
 CONF_ENDPOINT = "endpoint"
+CONF_V2_ENABLED = "v2_enabled"
+CONF_SHADOW_ENABLED = "shadow_enabled"
 DEFAULT_ENDPOINT = "http://local-ptbr-nlu:11555"
 
 PROTOCOL_VERSION = 1
+RESOLVE_VERSION = 2
+ER_CATALOG_ID = "ha-entity-resolution-v1"
 MAX_REQUEST_BYTES = 65_536
 MAX_RESPONSE_BYTES = 65_536
 MAX_CATALOG_ENTITIES = 1_024

@@ -95,6 +95,15 @@ class EndpointTests(unittest.TestCase):
             "http://nlu.home.arpa:11555",
         )
 
+    def test_accepts_store_assigned_hostname_form(self) -> None:
+        # 18b0d50a is SHA-1("https://github.com/jaimevictor/Arandu-NLU",
+        # lower)[:8]: the Supervisor hostname for this repository's store.
+        # A repo rename/transfer changes it; this test fails loudly then.
+        self.assertEqual(
+            normalize_endpoint("http://18B0D50A-PTBR-NLU:11555/"),
+            "http://18b0d50a-ptbr-nlu:11555",
+        )
+
     def test_rejects_public_credentials_paths_and_tls(self) -> None:
         rejected = (
             "https://local-ptbr-nlu:11555",
@@ -105,6 +114,14 @@ class EndpointTests(unittest.TestCase):
             "http://local-ptbr-nlu",
             "http://134744072:11555",
             "http://169.254.169.254:11555",
+            "http://bad_host:11555",
+            "http://-bad:11555",
+            "http://" + "a" * 64 + ":11555",
+            "http://ptbr-nlu:11555",
+            "http://my-addon123:11555",
+            "http://ab-ptbr-nlu:11555",
+            "http://xyz-ptbr-nlu:11555",
+            "http://3283f0a1-ptbr-nlu.evil.com:11555",
         )
         for endpoint in rejected:
             with self.subTest(endpoint=endpoint), self.assertRaises(ClientError):

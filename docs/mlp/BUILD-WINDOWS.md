@@ -1,10 +1,18 @@
 # Build and test on Windows
 
-Run these commands in PowerShell from `Complete MLP`:
+Run these commands in PowerShell from project root:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 check
+powershell -NoProfile -File tools/mlp-dev.ps1 check
 ```
+
+Do not pass `evaluation/ptbr-independent/*.py` directly to `python -m py_compile`: PowerShell does not expand that wildcard for Python. Use explicit PowerShell expansion when compiling locally:
+
+```powershell
+python -m py_compile @(Get-ChildItem evaluation/ptbr-independent -Filter '*.py' | ForEach-Object { $_.FullName })
+```
+
+`evaluation-check` performs this expansion inside the Linux staging container and is preferred for project validation.
 
 The developer script uses Docker Desktop in Linux-container mode. It builds a
 local tool image from the project's exact Rust 1.98.0 Alpine image, installs
@@ -27,13 +35,26 @@ separate scratch add-on image is a distributable runtime artifact.
 | Regenerate corpus | `corpus` | The two existing files in `data/mlp` |
 | Tool versions | `versions` | Rust, Cargo, Ruby, and Python versions |
 | Build add-on image | `image` | Docker image `local-nlu:0.1.0-amd64` |
+| Evaluation tooling gate | `evaluation-check` | Unit tests, compile checks, freeze checks |
+| Evaluation freeze | `evaluation-freeze` | Explicit freeze creation; existing freeze refuses overwrite |
+| Evaluation run | `evaluation-run` | Release binary, JSON/Markdown report in `target/ptbr-independent` |
+| Evaluation benchmark | `evaluation-benchmark` | Release binary, benchmark reports in `target/ptbr-independent` |
+| Evaluation record | `evaluation-record` | Reviewed v2 reports promoted to `evaluation/ptbr-independent/baselines/v2` |
 
 For example:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 corpus
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 image
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 evaluation-check
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 evaluation-run
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 evaluation-benchmark
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 evaluation-record
 ```
+
+Run `evaluation-check` first. Review `target/ptbr-independent/run-v2.json` and
+`benchmark-v2.json` before `evaluation-record`. `evaluation-record` writes only
+under `evaluation/ptbr-independent/baselines/v2` through the restricted baseline
+mount and refuses an existing destination. The `--endpoint` runner mode remains
+diagnostic; workflow commands use `--binary` only.
 
 The frozen corpus is project-authored Apache-2.0 internal conformance data,
 not independent linguistic evaluation. Regeneration runs the existing Ruby

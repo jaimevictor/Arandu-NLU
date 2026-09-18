@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
     from .client import ClientError, LocalNluClient, normalize_endpoint
-    from .const import CONF_ENDPOINT, PLATFORMS
+    from .const import CONF_ENDPOINT, CONF_SHADOW_ENABLED, CONF_V2_ENABLED, PLATFORMS
     from .runtime import LocalNluRuntime
 
     try:
@@ -25,7 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (KeyError, ClientError):
         return False
     client = LocalNluClient(async_get_clientsession(hass), endpoint)
-    entry.runtime_data = LocalNluRuntime(hass, client)
+    entry.runtime_data = LocalNluRuntime(
+        hass,
+        client,
+        lambda: bool(entry.options.get(CONF_V2_ENABLED, False)),
+        lambda: bool(entry.options.get(CONF_SHADOW_ENABLED, False)),
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

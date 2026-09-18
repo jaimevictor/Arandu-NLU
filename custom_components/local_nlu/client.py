@@ -52,11 +52,34 @@ def _hostname_is_local(host: str) -> bool:
         for label in labels
     ):
         return False
+    # Local installs resolve as local-<slug>; store installs resolve as
+    # <repo-hash>-<slug> where the hash is the first 8 hex digits of
+    # SHA-1 over the lowercased repository URL (Supervisor store rule:
+    # internal name {REPO}_{SLUG} with _ mapped to - for DNS). Locality
+    # itself is enforced later by DNS pinning, which rejects every
+    # resolved address outside local ranges; these checks are charset
+    # hygiene plus exact shape. All-numeric labels are rejected: they
+    # read as IP literals, which belong to the address branch above,
+    # and must never reach DNS.
+    if len(labels) == 1 and host.isdigit():
+        return False
     return (
         host == "localhost"
         or (len(labels) == 1 and host.startswith("local-"))
+        or (len(labels) == 1 and _is_store_hostname(host))
         or host.endswith(".local")
         or host.endswith(".home.arpa")
+    )
+
+
+def _is_store_hostname(host: str) -> bool:
+    """Match <8-hex-repo-hash>-ptbr-nlu exactly, nothing else."""
+    prefix, separator, slug = host.partition("-")
+    return (
+        separator == "-"
+        and slug == "ptbr-nlu"
+        and len(prefix) == 8
+        and all(character in "0123456789abcdef" for character in prefix)
     )
 
 
@@ -139,6 +162,12 @@ class LocalNluClient:
 
     async def async_interpret(self, payload: dict[str, Any]) -> Any:
         return await self._async_json("POST", "/v1/interpret", payload)
+
+    async def async_resolve(self, payload: dict[str, Any]) -> Any:
+        return await self._async_json("POST", "/v2/resolve", payload)
+
+    async def async_interpret_v2(self, payload: dict[str, Any]) -> Any:
+        return await self._async_json("POST", "/v2/interpret", payload)
 
     async def _async_json(
         self,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -9,18 +11,33 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry, entity_registry
 
-from .catalog import CatalogError, CatalogSnapshot, build_catalog
+from .catalog import (
+    CatalogError,
+    CatalogSnapshot,
+    ErSnapshot,
+    build_catalog,
+    build_er_snapshot,
+)
 from .client import ClientError, LocalNluClient
 from .const import (
     FAN_FEATURE_SET_SPEED,
     FAN_FEATURE_TURN_OFF,
     FAN_FEATURE_TURN_ON,
+    MAX_NAME_BYTES,
     MAX_QUERY_RESPONSE_BYTES,
     MAX_STATE_BYTES,
     MAX_UNIT_BYTES,
     SUPPORTED_DOMAINS,
 )
-from .protocol import Outcome, PlanOperation, ProtocolError, parse_response
+from .protocol import (
+    Outcome,
+    PlanOperation,
+    PlanV2,
+    ProtocolError,
+    parse_response,
+    parse_v2_plan,
+    parse_v2_response,
+)
 
 
 ResultCode = Literal[
@@ -72,14 +89,114 @@ class _PreflightError(Exception):
         self.code = code
 
 
+_LOGGER = logging.getLogger(__name__)
+
+_QUERY_PREFIXES = ("qual ", "como ", "quanto ")
+_SHADOW_PROBE_LIMIT = 4
+_SHADOW_UNKNOWN_MENTION = "zxqv_wo_projetor_zz"
+_SHADOW_STALE_GENERATION = "gen-000"
+SHADOW_COUNTERS = (
+    "probes",
+    "matched",
+    "resolved",
+    "ambiguous",
+    "no_match",
+    "errors",
+)
+
+
+def _route_v1_first(text: Any) -> bool:
+    """Return True when v2 must not be attempted (conservative default)."""
+    if type(text) is not str:
+        return True
+    lowered = text.casefold().strip()
+    return lowered.startswith(_QUERY_PREFIXES) or " e " in lowered
+
+
+def _valid_snapshot_identifier(value: Any) -> bool:
+    return (
+        type(value) is str
+        and 1 <= len(value) <= 128
+        and all(
+            character.isascii() and (character.isalnum() or character in "_-")
+            for character in value
+        )
+    )
+
+
+def _er_allowed_row(row: Any) -> dict[str, Any]:
+    """Adapt one ER snapshot row to the preflight view (validated)."""
+    try:
+        registry_id = row["registry_id"]
+        entity_id = row["entity_id"]
+        display_name = row["display_name"]
+        domain = row["domain"]
+        capabilities = row["capabilities"]
+    except (KeyError, TypeError) as error:
+        raise CatalogError("er") from error
+    if (
+        not _valid_snapshot_identifier(registry_id)
+        or type(entity_id) is not str
+        or not entity_id
+        or len(entity_id.encode("utf-8")) > 255
+        or any(ord(character) < 32 or ord(character) == 127 for character in entity_id)
+        or type(display_name) is not str
+        or not display_name
+        or len(display_name.encode("utf-8")) > MAX_NAME_BYTES
+        or any(ord(character) < 32 or ord(character) == 127 for character in display_name)
+        or domain not in SUPPORTED_DOMAINS
+        or type(capabilities) is not list
+        or not capabilities
+        or any(
+            type(capability) is not str or capability not in (
+                "get_state", "set_fan_percentage", "turn_off", "turn_on",
+            )
+            for capability in capabilities
+        )
+        or any(
+            not _action_supports_domain(capability, domain)
+            for capability in capabilities
+        )
+    ):
+        raise CatalogError("er")
+    return {
+        "actions": sorted(set(capabilities)),
+        "entity_id": entity_id,
+        "names": [display_name],
+        "registry_id": registry_id,
+    }
+
+
 class LocalNluRuntime:
     """Create a request snapshot, validate the returned plan, and execute it."""
 
-    def __init__(self, hass: Any, client: LocalNluClient) -> None:
+    def __init__(
+        self,
+        hass: Any,
+        client: LocalNluClient,
+        v2_enabled: Callable[[], bool] | None = None,
+        shadow_enabled: Callable[[], bool] | None = None,
+    ) -> None:
         self._hass = hass
         self._client = client
+        self._v2_enabled = v2_enabled if v2_enabled is not None else (lambda: False)
+        self._shadow_enabled = (
+            shadow_enabled if shadow_enabled is not None else (lambda: False)
+        )
+        self._shadow_counters = {key: 0 for key in SHADOW_COUNTERS}
 
     async def async_process(self, user_input: Any) -> RuntimeResult:
+        if self._v2_enabled() and not _route_v1_first(
+            getattr(user_input, "text", None)
+        ):
+            result = await self._async_process_v2(user_input)
+        else:
+            result = await self._async_process_v1(user_input)
+        if self._shadow_enabled():
+            await self._observe_shadow()
+        return result
+
+    async def _async_process_v1(self, user_input: Any) -> RuntimeResult:
         try:
             initial = build_catalog(self._hass)
             raw = await self._client.async_interpret(
@@ -146,6 +263,149 @@ class LocalNluRuntime:
         except Exception:
             return RuntimeResult(code="execution_failed", operation_count=completed)
         return RuntimeResult(code="success", operation_count=completed)
+
+    async def _async_process_v2(self, user_input: Any) -> RuntimeResult:
+        try:
+            initial = build_er_snapshot(self._hass)
+            raw = await self._client.async_interpret_v2(
+                {
+                    "catalog": initial.payload,
+                    "generation": initial.payload["generation"],
+                    "text": user_input.text,
+                }
+            )
+            outcome = parse_v2_plan(raw)
+        except (CatalogError, ClientError, ProtocolError):
+            return RuntimeResult(code="unavailable")
+        except Exception:
+            return RuntimeResult(code="unavailable")
+        if any(
+            operation.action == "get_state" for operation in outcome.operations
+        ):
+            return RuntimeResult(code="unavailable")
+        if outcome.status != "plan":
+            return RuntimeResult(code=outcome.status)
+
+        user_id = getattr(user_input.context, "user_id", None)
+        if type(user_id) is not str:
+            return RuntimeResult(code="denied")
+        try:
+            user = await self._hass.auth.async_get_user(user_id)
+        except Exception:
+            return RuntimeResult(code="denied")
+        if user is None or user.is_active is not True:
+            return RuntimeResult(code="denied")
+
+        try:
+            current = build_er_snapshot(self._hass)
+            if current.payload["generation"] != initial.payload["generation"]:
+                return RuntimeResult(code="stale")
+            allowed = [
+                _er_allowed_row(row) for row in current.payload["entities"]
+            ]
+            prepared = self._preflight(
+                outcome, user, CatalogSnapshot(payload={"entities": allowed})
+            )
+        except CatalogError:
+            return RuntimeResult(code="stale")
+        except _PreflightError as error:
+            return RuntimeResult(code=error.code)
+        except Exception:
+            return RuntimeResult(code="unavailable")
+
+        completed = 0
+        try:
+            for operation in prepared:
+                await self._async_execute(
+                    operation,
+                    user_id,
+                    user_input.context,
+                )
+                completed += 1
+        except _PreflightError as error:
+            return RuntimeResult(code=error.code, operation_count=completed)
+        except Exception:
+            return RuntimeResult(code="execution_failed", operation_count=completed)
+        return RuntimeResult(code="success", operation_count=completed)
+
+    async def _observe_shadow(self) -> None:
+        try:
+            await self._run_shadow_probes()
+        except Exception:
+            self._shadow_counters["errors"] += 1
+        _LOGGER.debug(
+            "local_nlu shadow aggregates: %s", dict(self._shadow_counters)
+        )
+
+    async def _run_shadow_probes(self) -> None:
+        try:
+            snapshot = build_er_snapshot(self._hass)
+        except CatalogError:
+            self._shadow_counters["errors"] += 1
+            return
+        generation = snapshot.payload["generation"]
+        probes: list[dict[str, Any]] = []
+        for row in sorted(
+            snapshot.payload["entities"], key=lambda item: item["registry_id"]
+        )[:_SHADOW_PROBE_LIMIT]:
+            probes.append(
+                {
+                    "mention": row["entity_id"],
+                    "constraints": {},
+                    "generation": generation,
+                    "expect": ("identity", row["registry_id"]),
+                }
+            )
+        probes.append(
+            {
+                "mention": _SHADOW_UNKNOWN_MENTION,
+                "constraints": {},
+                "generation": generation,
+                "expect": ("no_match", None),
+            }
+        )
+        probes.append(
+            {"mention": "", "constraints": {}, "generation": generation,
+             "expect": ("no_match", None)}
+        )
+        first_id = snapshot.payload["entities"][0]["entity_id"]
+        probes.append(
+            {
+                "mention": first_id,
+                "constraints": {},
+                "generation": _SHADOW_STALE_GENERATION,
+                "expect": ("no_match", None),
+            }
+        )
+        for probe in probes:
+            try:
+                raw = await self._client.async_resolve(
+                    {
+                        "catalog": snapshot.payload,
+                        "constraints": probe["constraints"],
+                        "generation": probe["generation"],
+                        "mention": probe["mention"],
+                        "text": "shadow",
+                    }
+                )
+                outcome = parse_v2_response(raw)
+            except (CatalogError, ClientError, ProtocolError):
+                self._shadow_counters["errors"] += 1
+                continue
+            kind, target = probe["expect"]
+            self._shadow_counters["probes"] += 1
+            self._shadow_counters[outcome.status] += 1
+            if kind == "no_match":
+                if outcome.status == "no_match":
+                    self._shadow_counters["matched"] += 1
+            elif outcome.status == "resolved" and outcome.registry_id == target:
+                self._shadow_counters["matched"] += 1
+            elif (
+                outcome.status == "ambiguous"
+                and outcome.candidates is not None
+                and target in outcome.candidates
+            ):
+                self._shadow_counters["matched"] += 1
 
     def _preflight(
         self,
