@@ -33,6 +33,10 @@ REQUIRED_TOP = [
 ]
 REQUIRED_TREES = [".cargo", "engine", "vendor"]
 
+# Files inside engine/ without which `cargo build --locked` fails closed
+# instead of resolving (a missing lockfile broke Supervisor installs).
+REQUIRED_ENGINE_FILES = ["Cargo.toml", "Cargo.lock"]
+
 STORE_NAME = "Arandu NLU"
 ADDON_DIR = "ptbr_nlu"
 
@@ -75,6 +79,11 @@ def main() -> None:
     for name in REQUIRED_TREES:
         if not (ADDON / name).is_dir():
             raise SystemExit(f"missing add-on tree: {name}")
+    for name in REQUIRED_ENGINE_FILES:
+        if not (ADDON / "engine" / name).is_file():
+            raise SystemExit(
+                f"missing engine input (locked builds fail without it): {name}"
+            )
     for source in dockerfile_copies():
         if not (ADDON / source).exists():
             raise SystemExit(f"Dockerfile COPY source missing: {source}")
