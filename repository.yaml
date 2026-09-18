@@ -5,6 +5,6 @@
 # - ptbr_nlu/ — Local PT-BR NLU add-on (config, recipe, engine sources,
 #   vendored crates). Built locally by the Supervisor from the pinned
 #   recipe; no remote image is referenced.
-name: Arandu NLU
+name: ARANDU NLU
 url: https://github.com/jaimevictor/Arandu-NLU
 maintainer: Arandu NLU

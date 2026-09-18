@@ -12,7 +12,7 @@ tags remotely, or publishes anything.
 | Integration (HA custom component) | `custom_components/local_nlu/` | `manifest.json` (`version`) |
 | Engine crate (built into the image) | `addon/engine/` | `Cargo.toml` + `Cargo.lock` (`local-nlu`) |
 
-All four carry the same version (currently `0.1.0`). A release sets all
+All four carry the same version (currently `0.2.0`). A release sets all
 four, never a subset.
 
 ## Add-on installation

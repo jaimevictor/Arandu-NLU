@@ -46,7 +46,7 @@ class LocalNluConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(DOMAIN)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title="Local NLU",
+                    title="ARANDU NLU",
                     data={CONF_ENDPOINT: endpoint},
                 )
         return self.async_show_form(

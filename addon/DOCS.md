@@ -1,4 +1,4 @@
-# Local PT-BR NLU
+# ARANDU NLU
 
 Install and start this app, then install the `local_nlu` companion integration
 and enter the app's internal HTTP origin. No app options are required.
