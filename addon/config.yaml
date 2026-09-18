@@ -1,5 +1,5 @@
-name: Local PT-BR NLU
-version: 0.1.0
+name: ARANDU NLU
+version: 0.2.0
 slug: ptbr_nlu
 description: Local deterministic PT-BR commands for Home Assistant
 arch:

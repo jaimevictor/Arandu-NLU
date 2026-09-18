@@ -15,7 +15,7 @@ if ($LASTEXITCODE -ne 0) {
 & $docker.Source build --tag $image --file (Join-Path $root 'tools/dev/Dockerfile') (Join-Path $root 'tools/dev')
 if ($LASTEXITCODE -ne 0) { throw 'Developer image build failed.' }
 if ($Task -eq 'image') {
-    & $docker.Source build --network none --platform linux/amd64 --tag 'local-nlu:0.1.0-amd64' --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.1.0 (Join-Path $root 'addon')
+    & $docker.Source build --network none --platform linux/amd64 --tag 'local-nlu:0.2.0-amd64' --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.2.0 (Join-Path $root 'addon')
     if ($LASTEXITCODE -ne 0) { throw 'Add-on image build failed.' }
     exit 0
 }

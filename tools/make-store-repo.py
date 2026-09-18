@@ -37,7 +37,7 @@ REQUIRED_TREES = [".cargo", "engine", "vendor"]
 # instead of resolving (a missing lockfile broke Supervisor installs).
 REQUIRED_ENGINE_FILES = ["Cargo.toml", "Cargo.lock"]
 
-STORE_NAME = "Arandu NLU"
+STORE_NAME = "ARANDU NLU"
 ADDON_DIR = "ptbr_nlu"
 
 
@@ -70,7 +70,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--store-url", default="https://github.com/OWNER/arandu-nlu-store")
-    parser.add_argument("--maintainer", default="Arandu NLU")
+    parser.add_argument("--maintainer", default="ARANDU NLU")
     arguments = parser.parse_args()
 
     for name in REQUIRED_TOP:

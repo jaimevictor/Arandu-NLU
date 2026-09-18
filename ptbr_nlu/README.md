@@ -1,4 +1,4 @@
-# Local PT-BR NLU app
+# ARANDU NLU app
 
 This Home Assistant app exposes only a passive internal HTTP interpretation
 service on TCP port 11555. It has no Home Assistant API access, credentials,

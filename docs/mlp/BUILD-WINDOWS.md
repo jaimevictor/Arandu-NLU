@@ -34,7 +34,7 @@ separate scratch add-on image is a distributable runtime artifact.
 | Check corpus | `corpus-check` | Exact comparison with the frozen generator |
 | Regenerate corpus | `corpus` | The two existing files in `data/mlp` |
 | Tool versions | `versions` | Rust, Cargo, Ruby, and Python versions |
-| Build add-on image | `image` | Docker image `local-nlu:0.1.0-amd64` |
+| Build add-on image | `image` | Docker image `local-nlu:0.2.0-amd64` |
 | Evaluation tooling gate | `evaluation-check` | Unit tests, compile checks, freeze checks |
 | Evaluation freeze | `evaluation-freeze` | Explicit freeze creation; existing freeze refuses overwrite |
 | Evaluation run | `evaluation-run` | Release binary, JSON/Markdown report in `target/ptbr-independent` |
@@ -85,7 +85,7 @@ the Home Assistant build recipe described in `INSTALL.md`.
 To move a locally built image to another amd64 Docker host:
 
 ```powershell
-docker save --output target/local-nlu-0.1.0-amd64.tar local-nlu:0.1.0-amd64
+docker save --output target/local-nlu-0.2.0-amd64.tar local-nlu:0.2.0-amd64
 ```
 
 Load that archive with `docker load --input ...` on the destination. Home
