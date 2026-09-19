@@ -1,6 +1,0 @@
-#!/usr/bin/env -S -i HOME=/var/empty PATH=/usr/bin:/bin LC_ALL=C LANG=C TZ=UTC /usr/bin/ruby --disable-gems
-# frozen_string_literal: true
-
-require_relative "materialize-p14-resolver-fixtures"
-
-P14ResolverFixtures.run(ARGV)

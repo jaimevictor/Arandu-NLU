@@ -1,9 +1,0 @@
-#!/bin/sh
-set -eu
-
-python="${P13_PYTHON:-/opt/homebrew/bin/python3.14}"
-script_directory=${0%/*}
-if [ "$script_directory" = "$0" ]; then
-    script_directory=.
-fi
-exec "$python" "$script_directory/p13-transport-probe.py" "$@"
