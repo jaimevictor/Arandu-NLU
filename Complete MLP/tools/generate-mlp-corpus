@@ -1,3 +1,0 @@
-#!/bin/sh
-set -eu
-exec ruby "$(dirname "$0")/generate-mlp-corpus.rb" "$@"
