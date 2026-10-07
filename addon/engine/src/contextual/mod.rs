@@ -178,7 +178,18 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
                 }
             }
         }
+        index.normalize_area_control(&mut command);
         inherited = Some(command.clone());
+        if command.mention.as_deref().is_some_and(|mention| {
+            mention.split_whitespace().any(|word| {
+                matches!(
+                    word,
+                    "ventiladores" | "luzes" | "lampadas" | "todos" | "todas"
+                )
+            })
+        }) {
+            command.plural = true;
+        }
         if command.action == "calendar_create"
             && !command
                 .parameters
@@ -219,6 +230,21 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
             return Response::status(&command.action);
         }
         let resolution_start = Instant::now();
+        if matches!(command.action.as_str(), "turn_on" | "turn_off")
+            && command.area.is_none()
+            && command.domains.is_empty()
+            && !command.plural
+            && !command.origin
+            && command.mention.as_deref().is_none_or(|mention| {
+                mention
+                    .split_whitespace()
+                    .all(|word| matches!(word, "a" | "o" | "as" | "os"))
+            })
+        {
+            let mut failure = Response::failure("clarification", &command.intent, "missing_target");
+            failure.command = Some(command);
+            return failure;
+        }
         let resolution = index.resolve(&command, request);
         *response.timings.entry("resolution_ms".into()).or_default() +=
             resolution_start.elapsed().as_secs_f64() * 1_000.0;
@@ -237,6 +263,23 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
                     }
                 }
                 let mut parameters = command.parameters;
+                if evidence.iter().any(|item| item == "bulk_area") {
+                    parameters.scope = Some(
+                        if parameters.scope.as_deref() == Some("floor_group") {
+                            "bulk_floor_group"
+                        } else if area_id.is_none() {
+                            "bulk_global"
+                        } else {
+                            "bulk_area"
+                        }
+                        .into(),
+                    );
+                }
+                if parameters.scope.is_none()
+                    && area_id.as_deref().is_some_and(|id| index.is_group(id))
+                {
+                    parameters.scope = Some("floor_group".into());
+                }
                 if parameters.scope.as_deref() == Some("floor_group")
                     && area_id.as_deref().is_none_or(|id| !index.is_group(id))
                 {

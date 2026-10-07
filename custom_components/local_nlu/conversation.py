@@ -71,6 +71,9 @@ class LocalNluConversationEntity(
 def _render(
     result: RuntimeResult,
 ) -> tuple[str, intent.IntentResponseErrorCode | None, bool]:
+    from .contextual_errors import speech as failure_speech
+    if result.response_text is None and (message := failure_speech(result.code, result.reason)) is not None:
+        return message, intent.IntentResponseErrorCode.UNKNOWN, False
     if result.response_text is not None:
         error = None if result.code in ("success", "query_success", "missing_slot", "confirmation_required", "cancelled") else intent.IntentResponseErrorCode.UNKNOWN
         return result.response_text, error, result.code == "query_success"

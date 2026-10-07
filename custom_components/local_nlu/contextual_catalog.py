@@ -31,6 +31,30 @@ def build(hass: Any, user: Any, options: dict) -> Snapshot:
     registry = entity_registry.async_get(hass)
     areas = area_registry.async_get(hass)
     devices = device_registry.async_get(hass)
+    sensor_bindings = options.get("device_sensor_bindings", {})
+    if type(sensor_bindings) is not dict or len(sensor_bindings) > 128:
+        raise CatalogError("device_sensor_bindings")
+    for device_id, binding in sensor_bindings.items():
+        allowed = {"battery", "location", "observed_at_entity", "observed_at_attribute", "area_attribute", "max_age_seconds"}
+        if type(device_id) is not str or not 1 <= len(device_id) <= 128 or type(binding) is not dict or not set(binding) <= allowed:
+            raise CatalogError("device_sensor_binding")
+        for key, value in binding.items():
+            if key == "max_age_seconds":
+                if type(value) not in (int, float) or not finite(value) or not 1 <= value <= 3600:
+                    raise CatalogError("location_max_age")
+            elif type(value) is not str or not 1 <= len(value) <= 255 or (key.endswith("attribute") and (not value.isidentifier() or len(value) > 64)):
+                raise CatalogError("device_sensor_reference")
+    bindings = options.get("person_device_bindings", {})
+    bulk_domains = options.get("bulk_domains", ["light", "switch", "fan", "climate", "media_player", "humidifier"])
+    exclusions = options.get("excluded_from_bulk_actions", [])
+    if type(bulk_domains) is not list or any(domain not in ("light", "switch", "fan", "climate", "media_player", "humidifier") for domain in bulk_domains) or type(exclusions) is not list or len(exclusions) > 8192 or any(type(item) is not str or len(item) > 255 for item in exclusions):
+        raise CatalogError("bulk_policy")
+    exclusions = _bulk_exclusions(hass, exclusions)
+    if type(bindings) is not dict or len(bindings) > 128:
+        raise CatalogError("person_device_bindings")
+    for alias, ids in bindings.items():
+        if type(alias) is not str or not _bounded_names((alias,)) or type(ids) is not list or not 1 <= len(ids) <= 8 or any(type(item) is not str or not 1 <= len(item) <= 128 for item in ids):
+            raise CatalogError("person_device_binding")
     candidates = dict(registry.entities)
     # YAML scenes/scripts/helpers may legitimately have no entity-registry entry.
     if hasattr(hass.states, "async_all"):
@@ -68,6 +92,37 @@ def build(hass: Any, user: Any, options: dict) -> Snapshot:
         attrs["ambient_temperature"] = finite(state.attributes.get("current_temperature"))
         attrs["available"] = available
         overrides = options.get("entity_preferences", {}).get(entity_id, {})
+        if type(overrides) is dict and "measurement_kind" in overrides:
+            if overrides["measurement_kind"] not in ("ambient", "equipment", "outdoor"):
+                raise CatalogError("measurement_kind")
+            attrs["measurement_kind"] = overrides["measurement_kind"]
+        reference_ids = [did for did, binding in sensor_bindings.items() if entity_id in (binding.get("battery"), binding.get("location"))]
+        if len(reference_ids) > 1:
+            raise CatalogError("ambiguous_device_binding")
+        reference_id = reference_ids[0] if reference_ids else device_id
+        if reference_id is not None:
+            attrs["reference_device_id"] = reference_id
+        binding = sensor_bindings.get(reference_id, {})
+        reference_device = devices.async_get(reference_id) if reference_id else None
+        reference_name = getattr(reference_device, "name_by_user", None) or getattr(reference_device, "name", None)
+        if type(reference_name) is str and _bounded_names((reference_name,)):
+            attrs["reference_device_name"] = reference_name
+        provider = getattr(entry, "platform", None)
+        original_name = getattr(entry, "original_name", None) or getattr(entry, "name", None)
+        dynamic = (entity_id == binding.get("location") or (type(overrides) is dict and overrides.get("semantic_category") == "dynamic_location") or
+                   (provider == "bermuda" and state.attributes.get("device_class") == "bermuda__custom_device_class" and original_name == "Area"))
+        attrs["dynamic_location"] = dynamic
+        if dynamic:
+            attrs["location_provider"] = provider if provider == "bermuda" else "configured"
+        attrs["bulk_eligible"] = domain in bulk_domains and entity_id not in exclusions and getattr(entry, "entity_category", None) not in ("config", "diagnostic") and not (type(overrides) is dict and (overrides.get("excluded_from_bulk_actions") is True or overrides.get("critical") is True))
+        aliases = list(getattr(entry, "aliases", ()) or ())
+        if type(overrides) is dict and "aliases" in overrides:
+            if type(overrides["aliases"]) is not list or len(overrides["aliases"]) > 8 or any(type(alias) is not str or not _bounded_names((alias,)) for alias in overrides["aliases"]):
+                raise CatalogError("entity_aliases")
+            aliases.extend(overrides["aliases"])
+        aliases.extend(alias for alias, ids in bindings.items() if reference_id is not None and reference_id in ids)
+        if len(set(aliases)) > 8:
+            raise CatalogError("entity_alias_limit")
         if type(overrides) is dict and overrides.get("semantic_category") in ("tank_level", "people_count", "remaining_time"):
             attrs["semantic_category"] = overrides["semantic_category"]
         rows.append({
@@ -75,7 +130,7 @@ def build(hass: Any, user: Any, options: dict) -> Snapshot:
             "entity_id": entity_id, "domain": domain, "area_id": area_id,
             "device_id": device_id, "name": name,
             "device_name": device_name if type(device_name) is str and device_name in _bounded_names((device_name,)) else None,
-            "aliases": _bounded_names(tuple(getattr(entry, "aliases", ()) or ())),
+            "aliases": _bounded_names(tuple(aliases)),
             "device_class": state.attributes.get("device_class"),
             "actions": actions, "attributes": attrs,
             "preferred": type(overrides) is dict and overrides.get("preferred") is True,
@@ -113,6 +168,32 @@ def _bounded_attribute(value: Any) -> bool:
     if isinstance(value, (list, tuple, set)):
         return len(value) <= 64 and all(type(item) is str and len(item.encode()) <= 128 for item in value)
     return type(value) is bool
+
+
+def _bulk_exclusions(hass: Any, configured: list[str]) -> set[str]:
+    excluded = set(configured)
+    queue = list(configured)
+    visited = set()
+    while queue:
+        entity_id = queue.pop()
+        if entity_id in visited:
+            continue
+        visited.add(entity_id)
+        state = hass.states.get(entity_id)
+        if state is None:
+            if entity_id.startswith("group."):
+                raise CatalogError("bulk_exclusion_group_missing")
+            continue
+        members = state.attributes.get("entity_id")
+        if members is None:
+            continue
+        if type(members) is not list or len(members) > 8192 or any(type(member) is not str or len(member) > 255 or "." not in member for member in members):
+            raise CatalogError("bulk_exclusion_group")
+        excluded.update(members)
+        if len(excluded) > 8192 or len(visited) > 8192:
+            raise CatalogError("bulk_exclusion_limit")
+        queue.extend(member for member in members if member not in visited)
+    return excluded
 
 
 class CatalogCache:

@@ -15,6 +15,8 @@ import re
 from pathlib import Path
 import sys
 import time
+from datetime import timedelta
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / "tests/mlp")]
@@ -24,6 +26,7 @@ from custom_components.local_nlu.contextual_runtime import ContextualRuntime, Se
 from custom_components.local_nlu.contextual_catalog import build  # noqa: E402
 from custom_components.local_nlu.contextual_protocol import normalize  # noqa: E402
 from custom_components.local_nlu.contextual_protocol import parse as parse_response  # noqa: E402
+from custom_components.local_nlu.queries import now  # noqa: E402
 
 
 def slot_checks(row: dict, spec: dict, operations: list) -> tuple[bool, int]:
@@ -81,11 +84,16 @@ def fixture(row: dict, spec: dict):
     hass.exposed.clear()
     hass.area_registry.areas.clear()
     slots = dict(item.split("=", 1) for item in row["slots_exemplo"].split("|") if "=" in item)
-    area = slots.get("area", slots.get("floor_group", slots.get("media_destination", "sala")))
+    area = slots.get("area", slots.get("media_destination", "sala"))
     room_names = {"sala", "quarto", "cozinha", "banheiro", "varanda", "escritório", area}
     for i, name in enumerate(sorted(room_names)):
         hass.area_registry.areas[f"room_{i}"] = type("Area", (), {"name": name, "aliases": set()})()
     area_id = next(aid for aid, item in hass.area_registry.areas.items() if item.name == area)
+    hass.floor_registry = SimpleNamespace(floors={})
+    if "floor_group" in slots:
+        hass.floor_registry.floors["floor_fixture"] = SimpleNamespace(name=slots["floor_group"], aliases=set())
+        hass.area_registry.areas[area_id].floor_id = "floor_fixture"
+    sys.modules["homeassistant.helpers.floor_registry"] = SimpleNamespace(async_get=lambda current: current.floor_registry)
     domains = spec.get("domains", [])
     domain = domains[0] if domains else "script" if spec["operation"] == "binding" else "light"
     if "group_type" in slots:
@@ -138,7 +146,8 @@ def fixture(row: dict, spec: dict):
         if service == "get_events":
             return {entity_id: {"events": []}}
         if service == "get_forecasts":
-            return {entity_id: {"forecast": [{"datetime": data.get("date", "2026-10-06T12:00:00-03:00"), "condition": "sunny", "temperature": 25}]}}
+            # HA get_forecasts returns a horizon, not the requested NLU date.
+            return {entity_id: {"forecast": [{"datetime": (now(hass) + timedelta(days=offset)).isoformat(), "condition": "sunny", "temperature": 25} for offset in range(8)]}}
         if service == "search":
             kind = data["media_type"][0]
             return {kind + "s": [{"uri": "spotify://" + kind + "/fixture", "name": data["name"]}]}
@@ -187,11 +196,14 @@ async def evaluate(rows: list[dict], mapping: dict, endpoint: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stt-root", type=Path, required=True)
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--stt-root", type=Path)
+    inputs.add_argument("--corpus-csv", type=Path, help="Frozen corpus CSV; avoids requiring a sibling checkout")
     parser.add_argument("--output", type=Path, default=ROOT / "target/contextual-coverage.json")
     parser.add_argument("--representative", action="store_true")
     args = parser.parse_args()
-    with (args.stt_root / "arandu_stt/datasets/commands/arandu_comandos_comuns_ptbr_v2.csv").open(encoding="utf-8-sig", newline="") as file:
+    source = args.corpus_csv or args.stt_root / "arandu_stt/datasets/commands/arandu_comandos_comuns_ptbr_v2.csv"
+    with source.open(encoding="utf-8-sig", newline="") as file:
         rows = list(csv.DictReader(file, strict=True))
     if args.representative:
         rows = list({row["intent"]: row for row in reversed(rows)}.values())

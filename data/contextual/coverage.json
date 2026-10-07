@@ -4993,8 +4993,8 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": "no_compatible_capability",
-      "result_category": "test_limitation",
+      "reason": "no_accessible_sensor",
+      "result_category": "hardware_or_integration",
       "row_id": "207",
       "runtime_status": "unavailable",
       "semantic": false,
@@ -5058,8 +5058,8 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": "no_compatible_capability",
-      "result_category": "test_limitation",
+      "reason": "no_accessible_sensor",
+      "result_category": "hardware_or_integration",
       "row_id": "210",
       "runtime_status": "unavailable",
       "semantic": false,
@@ -5171,8 +5171,8 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": "no_compatible_capability",
-      "result_category": "test_limitation",
+      "reason": "no_accessible_sensor",
+      "result_category": "hardware_or_integration",
       "row_id": "215",
       "runtime_status": "unavailable",
       "semantic": false,
@@ -6264,22 +6264,18 @@
       "verified_slots": 1
     },
     {
-      "actions": [
-        "binding"
-      ],
+      "actions": [],
       "intent": "device.phone_find",
       "linguistic": true,
-      "nlu_status": "plan",
-      "operational_simulated": true,
-      "parameters": [
-        {}
-      ],
-      "planning": true,
-      "reason": null,
-      "result_category": "completed_simulated",
+      "nlu_status": "unavailable",
+      "operational_simulated": false,
+      "parameters": [],
+      "planning": false,
+      "reason": "device_not_identified",
+      "result_category": "hardware_or_integration",
       "row_id": "262",
-      "runtime_status": "success",
-      "semantic": true,
+      "runtime_status": "unavailable",
+      "semantic": false,
       "slots_correct": true,
       "targets_correct": true,
       "verified_slots": 0
@@ -11488,7 +11484,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "no_match",
       "result_category": "interpretation_failure",
       "row_id": "487",
       "runtime_status": "no_match",
@@ -11505,7 +11501,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "no_match",
       "result_category": "interpretation_failure",
       "row_id": "488",
       "runtime_status": "no_match",
@@ -17225,7 +17221,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "no_match",
       "result_category": "inherent_ambiguity",
       "row_id": "734",
       "runtime_status": "no_match",
@@ -21344,9 +21340,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21451,9 +21445,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21495,9 +21487,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21539,9 +21529,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21562,9 +21550,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21669,9 +21655,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21713,9 +21697,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21757,9 +21739,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21864,9 +21844,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21908,9 +21886,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -21952,9 +21928,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -25766,9 +25740,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -25831,9 +25803,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -25898,9 +25868,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -25944,9 +25912,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -26011,9 +25977,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -26078,9 +26042,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -26145,9 +26107,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -26210,9 +26170,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -27658,7 +27616,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4"
+          "area": "room_4",
+          "scope": "bulk_area"
         }
       ],
       "planning": true,
@@ -27681,7 +27640,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4"
+          "area": "room_4",
+          "scope": "bulk_area"
         }
       ],
       "planning": true,
@@ -27704,7 +27664,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4"
+          "area": "room_4",
+          "scope": "bulk_area"
         }
       ],
       "planning": true,
@@ -27744,7 +27705,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4"
+          "area": "room_4",
+          "scope": "bulk_area"
         }
       ],
       "planning": true,
@@ -29420,7 +29382,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29428,10 +29390,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1271",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29444,7 +29406,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29452,10 +29414,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1272",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29468,7 +29430,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29476,10 +29438,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1273",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29492,7 +29454,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29500,10 +29462,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1274",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29516,7 +29478,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29524,10 +29486,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1275",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29540,7 +29502,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29548,10 +29510,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1276",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29588,7 +29550,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29596,10 +29558,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1278",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29612,7 +29574,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29620,10 +29582,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1279",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29660,7 +29622,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29668,10 +29630,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1281",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29684,7 +29646,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29692,10 +29654,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1282",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29732,7 +29694,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29740,10 +29702,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1284",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29756,7 +29718,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29764,10 +29726,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1285",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29804,7 +29766,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29812,10 +29774,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1287",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29828,7 +29790,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29836,10 +29798,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1288",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -29852,7 +29814,7 @@
       "intent": "weather.forecast",
       "linguistic": true,
       "nlu_status": "plan",
-      "operational_simulated": false,
+      "operational_simulated": true,
       "parameters": [
         {
           "area": "room_4",
@@ -29860,10 +29822,10 @@
         }
       ],
       "planning": true,
-      "reason": "forecast_date_unavailable",
-      "result_category": "test_limitation",
+      "reason": null,
+      "result_category": "completed_simulated",
       "row_id": "1289",
-      "runtime_status": "unavailable",
+      "runtime_status": "query_success",
       "semantic": true,
       "slots_correct": true,
       "targets_correct": true,
@@ -30823,7 +30785,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -30847,7 +30808,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -30871,7 +30831,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -30918,7 +30877,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -30942,7 +30900,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -30989,7 +30946,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -31013,7 +30969,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -31060,7 +31015,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -31130,7 +31084,6 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_4",
           "metric": "area"
         }
       ],
@@ -31931,7 +31884,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "stale",
       "result_category": "missing_context",
       "row_id": "1377",
       "runtime_status": "stale",
@@ -31948,7 +31901,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "stale",
       "result_category": "missing_context",
       "row_id": "1378",
       "runtime_status": "stale",
@@ -36006,7 +35959,7 @@
       "operational_simulated": false,
       "parameters": [],
       "planning": false,
-      "reason": null,
+      "reason": "no_match",
       "result_category": "inherent_ambiguity",
       "row_id": "1556",
       "runtime_status": "no_match",
@@ -40447,7 +40400,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40470,7 +40424,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40493,7 +40448,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40516,7 +40472,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40539,7 +40496,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40562,7 +40520,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40585,7 +40544,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40608,7 +40568,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40631,7 +40592,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40654,7 +40616,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40677,7 +40640,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40700,7 +40664,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40723,7 +40688,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40746,7 +40712,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "bulk_floor_group"
         }
       ],
       "planning": true,
@@ -40769,7 +40736,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "bulk_floor_group"
         }
       ],
       "planning": true,
@@ -40792,7 +40760,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40815,7 +40784,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40838,7 +40808,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40861,7 +40832,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40884,7 +40856,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40907,7 +40880,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_1"
+          "area": "floor_fixture",
+          "scope": "bulk_floor_group"
         }
       ],
       "planning": true,
@@ -40930,7 +40904,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40953,7 +40928,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_0"
+          "area": "floor_fixture",
+          "scope": "floor_group"
         }
       ],
       "planning": true,
@@ -40976,7 +40952,8 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "area": "room_6"
+          "area": "floor_fixture",
+          "scope": "bulk_floor_group"
         }
       ],
       "planning": true,
@@ -41000,7 +40977,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_6",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41025,7 +41003,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_6",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41050,7 +41029,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_1",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41075,7 +41055,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_0",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41099,8 +41080,9 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "aggregate": "filter",
-          "area": "room_0",
+          "aggregate": "any",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41124,8 +41106,9 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "aggregate": "filter",
-          "area": "room_6",
+          "aggregate": "any",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41149,8 +41132,9 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "aggregate": "filter",
-          "area": "room_6",
+          "aggregate": "any",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41174,8 +41158,9 @@
       "operational_simulated": true,
       "parameters": [
         {
-          "aggregate": "filter",
-          "area": "room_1",
+          "aggregate": "any",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41200,7 +41185,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_1",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41225,7 +41211,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_0",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41250,7 +41237,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_0",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41275,7 +41263,8 @@
       "parameters": [
         {
           "aggregate": "filter",
-          "area": "room_6",
+          "area": "floor_fixture",
+          "scope": "floor_group",
           "state_filter": "on"
         }
       ],
@@ -41674,9 +41663,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41718,9 +41705,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41764,9 +41749,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41787,9 +41770,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41831,9 +41812,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41875,9 +41854,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41898,9 +41875,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41942,9 +41917,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -41986,9 +41959,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42009,9 +41980,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42032,9 +42001,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42055,9 +42022,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42099,9 +42064,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42143,9 +42106,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42187,9 +42148,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42210,9 +42169,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42256,9 +42213,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42300,9 +42255,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42344,9 +42297,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42367,9 +42318,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42390,9 +42339,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -42413,9 +42360,7 @@
       "nlu_status": "plan",
       "operational_simulated": true,
       "parameters": [
-        {
-          "area": "room_4"
-        }
+        {}
       ],
       "planning": true,
       "reason": null,
@@ -45225,9 +45170,7 @@
     }
   ],
   "intent_summary": {
-    "all_cases_without_simulated_completion": 4,
     "completed_at_least_one_simulated_case": 161,
-    "explicit_conditional_dependencies": 24,
     "inventoried": 165,
     "planned_at_least_one_case": 158,
     "recognized_at_least_one_case": 165,
@@ -45368,7 +45311,9 @@
         "missing_context": 2
       },
       "planning": 0,
-      "reasons": [],
+      "reasons": [
+        "stale"
+      ],
       "semantic": 2,
       "statuses": {
         "stale": 2
@@ -45665,7 +45610,9 @@
         "inherent_ambiguity": 1
       },
       "planning": 3,
-      "reasons": [],
+      "reasons": [
+        "no_match"
+      ],
       "semantic": 3,
       "statuses": {
         "no_match": 1,
@@ -45843,15 +45790,19 @@
     "device.phone_find": {
       "cases": 11,
       "linguistic": 11,
-      "operational_simulated": 11,
+      "operational_simulated": 10,
       "outcome_categories": {
-        "completed_simulated": 11
+        "completed_simulated": 10,
+        "hardware_or_integration": 1
       },
-      "planning": 11,
-      "reasons": [],
-      "semantic": 11,
+      "planning": 10,
+      "reasons": [
+        "device_not_identified"
+      ],
+      "semantic": 10,
       "statuses": {
-        "success": 11
+        "success": 10,
+        "unavailable": 1
       }
     },
     "device.status": {
@@ -45863,7 +45814,9 @@
         "interpretation_failure": 2
       },
       "planning": 18,
-      "reasons": [],
+      "reasons": [
+        "no_match"
+      ],
       "semantic": 18,
       "statuses": {
         "no_match": 2,
@@ -46697,7 +46650,9 @@
         "inherent_ambiguity": 1
       },
       "planning": 4,
-      "reasons": [],
+      "reasons": [
+        "no_match"
+      ],
       "semantic": 4,
       "statuses": {
         "no_match": 1,
@@ -46920,11 +46875,11 @@
       "operational_simulated": 17,
       "outcome_categories": {
         "completed_simulated": 17,
-        "test_limitation": 3
+        "hardware_or_integration": 3
       },
       "planning": 17,
       "reasons": [
-        "no_compatible_capability"
+        "no_accessible_sensor"
       ],
       "semantic": 17,
       "statuses": {
@@ -47539,19 +47494,15 @@
     "weather.forecast": {
       "cases": 20,
       "linguistic": 20,
-      "operational_simulated": 5,
+      "operational_simulated": 20,
       "outcome_categories": {
-        "completed_simulated": 5,
-        "test_limitation": 15
+        "completed_simulated": 20
       },
       "planning": 20,
-      "reasons": [
-        "forecast_date_unavailable"
-      ],
+      "reasons": [],
       "semantic": 20,
       "statuses": {
-        "query_success": 5,
-        "unavailable": 15
+        "query_success": 20
       }
     },
     "window.status": {
@@ -47571,19 +47522,20 @@
   },
   "kind": "diagnostic internal STT corpus conformance, HA simulated; not live HA or independent accuracy",
   "outcome_categories": {
-    "completed_simulated": 1894,
+    "completed_simulated": 1908,
     "continuation_required": 22,
+    "hardware_or_integration": 4,
     "inherent_ambiguity": 2,
     "interpretation_failure": 2,
     "missing_context": 6,
-    "safety_refusal": 2,
-    "test_limitation": 18
+    "safety_refusal": 2
   },
-  "source_digest": "18909fef2fd43649bb6412f63b40a36309c73634d5f41ecf64956505ff1ef02f",
+  "source_digest": "04165cf4af8fc290edd7ff015dfd5358c24f0dd6cc9c99b242a2f0ec61fbb87c",
   "totals": {
     "linguistic": 1942,
-    "operational_simulated": 1894,
-    "planning": 1902,
-    "semantic": 1911
-  }
+    "operational_simulated": 1908,
+    "planning": 1901,
+    "semantic": 1910
+  },
+  "version": "0.4.0"
 }

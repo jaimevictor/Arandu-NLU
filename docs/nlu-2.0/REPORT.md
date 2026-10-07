@@ -1,5 +1,9 @@
 # Relatório NLU 2.0.0
 
+Esta evidência é histórica, anterior à missão contextual 0.4.0. Os resultados
+atuais, incluindo arquivos data/contextual atualizados, estão em
+[CONTEXTUAL_IMPLEMENTATION_REPORT.md](CONTEXTUAL_IMPLEMENTATION_REPORT.md).
+
 A correção de distribuição atual está documentada em
 [DISTRIBUTION-0.3.2.md](DISTRIBUTION-0.3.2.md), com builds e testes próprios.
 

@@ -2,11 +2,18 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
-**Versão 0.3.2 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+**Versão 0.4.0 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
 
 Distribuição: somente `addon/` é publicado na loja, com slug `ptbr_nlu`.
 A integração Python é instalada e atualizada separadamente. Consulte
 [instalação, migração de versões antigas e pacotes ZIP](INSTALL.md).
+
+Capacidades contextuais 0.4.0: desligar um cômodo inteiro com exclusões,
+comparar grupos por nome e área, esclarecer escolhas em conversa, consultar
+medições e listar equipamentos ligados, bateria baixa e aparelhos pessoais.
+Localização de aparelho exige uma fonte HA dinâmica com observação recente.
+Consulte [cobertura e limitações](docs/nlu-2.0/CONTEXTUAL_GAP_COVERAGE.md) e
+[relatório de implementação](docs/nlu-2.0/CONTEXTUAL_IMPLEMENTATION_REPORT.md).
 
 Local, deterministic Brazilian Portuguese conversation agent for Home Assistant.
 

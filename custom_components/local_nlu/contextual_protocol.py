@@ -42,10 +42,11 @@ class Outcome:
     command: dict | None = None
     reason: str | None = None
     timings: dict | None = None
+    options: tuple[dict, ...] = ()
 
 
 PARAMETERS = frozenset(("value", "relative", "metric", "aggregate", "state_filter", "threshold", "area", "date", "provider", "secondary_targets", "scope"))
-AGGREGATES = frozenset(("count", "any", "all", "min", "max", "sum", "average", "compare", "filter"))
+AGGREGATES = frozenset(("count", "any", "all", "none", "min", "max", "sum", "average", "compare", "filter"))
 METRICS = frozenset(("temperature", "target_temperature", "device_temperature", "humidity", "co2", "illuminance", "noise", "air_quality", "presence", "location", "opening", "power", "energy", "battery", "leak", "tank_level", "people_count", "remaining_time", "media", "inventory", "area", "remaining", "weather", "sunrise", "sunset", "next_event", "position", "speed"))
 
 
@@ -63,7 +64,7 @@ def validate_parameters(value: Any) -> dict:
             if item not in METRICS:
                 raise ProtocolError(key)
         elif key == "scope":
-            if item != "floor_group":
+            if item not in ("floor_group", "bulk_area", "bulk_floor_group", "bulk_global", "device_location"):
                 raise ProtocolError(key)
         elif key == "secondary_targets":
             if type(item) is not list or len(item) > 32 or any(not identifier(target) for target in item):
@@ -86,7 +87,7 @@ def validate_parameters(value: Any) -> dict:
 
 
 def parse(value: Any) -> Outcome:
-    allowed = {"version", "status", "operations", "candidates", "command", "reason", "intent", "generation", "timings"}
+    allowed = {"version", "status", "operations", "candidates", "command", "reason", "intent", "generation", "timings", "options"}
     if type(value) is not dict or type(value.get("version")) is not int or value["version"] != 4 or not set(value) <= allowed:
         raise ProtocolError("v4_response")
     status = value.get("status")
@@ -135,4 +136,19 @@ def parse(value: Any) -> Outcome:
     timings = value.get("timings", {})
     if type(timings) is not dict or len(timings) > 16 or any(not text(key, 64) or type(item) not in (int, float) or not math.isfinite(item) or item < 0 for key, item in timings.items()):
         raise ProtocolError("timings")
-    return Outcome(status, tuple(parsed), tuple(candidates), command, value.get("reason"), timings)
+    options = value.get("options", [])
+    if type(options) is not list or len(options) > 2 or (options and status != "clarification"):
+        raise ProtocolError("selection_options")
+    for option in options:
+        if type(option) is not dict or set(option) != {"key", "targets", "area", "evidence"} or option["key"] not in ("name", "area"):
+            raise ProtocolError("selection_option")
+        targets = option["targets"]
+        if type(targets) is not list or not 1 <= len(targets) <= 32 or targets != sorted(set(targets)) or any(not identifier(target) for target in targets):
+            raise ProtocolError("selection_targets")
+        if option["area"] is not None and not identifier(option["area"]):
+            raise ProtocolError("selection_area")
+        if type(option["evidence"]) is not list or not 1 <= len(option["evidence"]) <= 8 or any(not text(item, 64) for item in option["evidence"]):
+            raise ProtocolError("selection_evidence")
+    if options and ({option["key"] for option in options} != {"name", "area"} or command is None):
+        raise ProtocolError("selection_command")
+    return Outcome(status, tuple(parsed), tuple(candidates), command, value.get("reason"), timings, tuple(options))

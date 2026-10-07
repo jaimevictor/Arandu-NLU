@@ -40,6 +40,10 @@ class Session:
     response: str | None = None
     signature: str | None = None
     last_execution: float = 0.0
+    pending_generation: str | None = None
+    pending_origin: str | None = None
+    pending_options: str | None = None
+    selection: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -65,9 +69,22 @@ class ContextualRuntime:
 
     def result(self, code: str, user_input: Any, *, speech: str | None = None, count: int = 0, followup: bool = False, reason: str | None = None, timings: dict | None = None) -> Any:
         from .runtime import RuntimeResult
+        from .contextual_errors import speech as failure_speech
+        reason = reason or {"denied": "permission_denied", "stale": "stale", "invalid_request": "invalid_request", "no_match": "no_match", "unsupported_intent": "unsupported_intent", "partial_failure": "partial_failure"}.get(code)
+        self.last_outcome = {"code": code, "reason": reason}
+        speech = speech or failure_speech(code, reason)
         return RuntimeResult(code=code, operation_count=count, response_text=speech,
                              continue_conversation=followup, conversation_id=user_input.conversation_id,
                              reason=reason, timings=timings or {})
+
+    async def diagnostics(self) -> dict:
+        from pathlib import Path
+        integration_version = json.loads(Path(__file__).with_name("manifest.json").read_text())["version"]
+        service = await self.client.async_diagnostics()
+        return {**service, "integration_version": integration_version, "protocol": 4,
+                "contextual_enabled": True, "route": "/v4/interpret",
+                "compatible": service["service_version"] == integration_version and 4 in service["protocols"],
+                "last_outcome": getattr(self, "last_outcome", None)}
 
     async def user(self, context: Any) -> tuple[str, Any]:
         user_id = getattr(context, "user_id", None)
@@ -125,6 +142,24 @@ class ContextualRuntime:
                 self.sessions[key] = Session(current_time + _ttl(options))
             session = self.sessions[key]
             text = normalize(user_input.text)
+            independent = _independent_command(text)
+            if not independent and (session.selection or session.pending or session.confirmation) and text not in ("sim", "não", "nao", "confirmo", "pode", "pode confirmar", "isso"):
+                # Rust remains the grammar authority for command families without verbs.
+                # This probe has no effects and never renders a catalog or candidates.
+                from .contextual_catalog import build
+                probe = build(self.hass, user, options)
+                await self._send(probe)
+                recognized = parse(await self.client.async_interpret_v4({"version": 4, "generation": probe.payload["generation"], "text": user_input.text, "origin_area": origin_area(self.hass, user_input, options), "last_area": None, "last_targets": [], "pending": None}))
+                independent = recognized.status == "plan"
+            if expired and not independent:
+                return self.result("stale", user_input, reason="dialogue_expired")
+            if independent:
+                session.selection = None
+                session.pending = None
+                session.candidates = ()
+                session.confirmation = ()
+            elif session.selection is not None:
+                return await self.choose_set(text, user_input, session, user_id, user, options)
             if text in ("cancela", "cancela isso", "nao", "nao pode", "esquece", "deixa pra la"):
                 session.pending = None
                 session.confirmation = ()
@@ -147,12 +182,18 @@ class ContextualRuntime:
             if session.confirmation:
                 # Any new utterance invalidates sensitive pending authorization.
                 session.confirmation = ()
+            if session.pending is not None:
+                self.catalog.invalidate()
             snapshot = self.catalog.get(user_id, user, options)
             generation = snapshot.payload["generation"]
             if generation not in self.sent_generations:
                 await self._send(snapshot)
             area = origin_area(self.hass, user_input, options)
             pending = session.pending
+            if pending is not None and (generation != session.pending_generation or area != session.pending_origin or _options_hash(options) != session.pending_options):
+                session.pending = None
+                session.candidates = ()
+                raise ExecutionError("stale", "dialogue_changed")
             # New commands replace a clarification; only a short target answer fills it.
             if text.split()[0] in ("liga", "desliga", "coloca", "aumenta", "diminui", "qual", "quanto", "onde", "ativa", "abre", "fecha"):
                 pending = None
@@ -165,15 +206,39 @@ class ContextualRuntime:
                 outcome = parse(await self.client.async_interpret_v4(payload))
             self.validate_options(options)
             if outcome.status == "clarification":
+                # Interpretation awaits I/O; cached names are not permission authority.
+                from .contextual_catalog import build
+                _, current_user = await self.user(user_input.context)
+                self.validate_options(options)
+                current_snapshot = build(self.hass, current_user, options)
+                if current_snapshot.payload["generation"] != generation or origin_area(self.hass, user_input, options) != area:
+                    session.pending = None
+                    session.selection = None
+                    session.candidates = ()
+                    raise ExecutionError("stale", "clarification_catalog_changed")
+                snapshot = current_snapshot
                 # No partial plan is retained across a compound clarification.
                 session.pending = outcome.command
                 session.candidates = outcome.candidates
+                session.pending_generation = generation
+                session.pending_origin = area
+                session.pending_options = _options_hash(options)
                 session.expires = current_time + min(30, _ttl(options))
-                labels = [snapshot.by_id[item]["name"] for item in outcome.candidates if item in snapshot.by_id]
+                if outcome.options:
+                    question = self.set_question(outcome.options, snapshot)
+                    session.selection = {"options": outcome.options, "command": outcome.command,
+                                         "text": user_input.text, "generation": generation, "origin": area,
+                                         "options_hash": _options_hash(options), "question": question,
+                                         "confirmation_semantics": {"sim": "area", "nao": "name"}}
+                    return self.result("missing_slot", user_input, speech=question, followup=True, reason=outcome.reason)
+                labels = [(snapshot.by_id[item].get("attributes", {}).get("reference_device_name") or snapshot.by_id[item].get("device_name") or snapshot.by_id[item]["name"]) if outcome.command and outcome.command["parameters"].get("metric") in ("battery", "location") else snapshot.by_id[item]["name"] for item in outcome.candidates if item in snapshot.by_id]
                 speech = "Qual alvo você quer usar?"
                 if labels:
                     speech = "Encontrei " + ", ".join(labels[:4]) + ". Qual deles?"
-                elif outcome.reason == "missing_origin_area":
+                    if outcome.reason == "ambiguous_source":
+                        kind = "aparelho" if outcome.command and outcome.command["parameters"].get("metric") in ("battery", "location") else "sensor"
+                        speech = "Encontrei " + ", ".join(labels[:4]) + f". Qual {kind} você quer consultar?"
+                elif outcome.reason in ("missing_origin_area", "unknown_area", "ambiguous_area"):
                     speech = "Em qual cômodo?"
                 elif outcome.reason == "missing_media_query":
                     speech = "O que você quer ouvir?"
@@ -184,7 +249,7 @@ class ContextualRuntime:
             if outcome.status in ("cancel", "confirm", "repeat_response"):
                 return self.result("cancelled", user_input, speech="Nenhuma ação executada.")
             if outcome.status != "plan":
-                return self.result(outcome.status, user_input, speech="Essa operação não está disponível para os dispositivos expostos." if outcome.status == "unavailable" else None, reason=outcome.reason)
+                return self.result(outcome.status, user_input, reason=outcome.reason)
             if origin_area(self.hass, user_input, options) != area:
                 raise ExecutionError("stale", "origin_area_changed")
             if pending is not None and session.candidates:
@@ -199,13 +264,85 @@ class ContextualRuntime:
             return replace(result, timings=timings)
         except ExecutionError as error:
             return self.result(error.code, user_input, reason=error.reason)
-        except (CatalogError, ClientError, ProtocolError, CapabilityError, QueryError):
-            return self.result("unavailable", user_input)
+        except QueryError as error:
+            return self.result("unavailable", user_input, reason=str(error))
+        except ClientError:
+            return self.result("unavailable", user_input, reason="backend_unavailable")
+        except (CatalogError, ProtocolError, CapabilityError):
+            return self.result("unavailable", user_input, reason="invalid_request")
         except asyncio.CancelledError:
             raise
         except Exception:
             # Exception messages can include user data or authenticated URLs.
             return self.result("unavailable", user_input)
+
+    def set_question(self, options: tuple[dict, ...], snapshot: Snapshot) -> str:
+        nominal = next(option for option in options if option["key"] == "name")
+        spatial = next(option for option in options if option["key"] == "area")
+        from homeassistant.helpers import area_registry
+        room = area_registry.async_get(self.hass).areas.get(spatial["area"])
+        room_name = room.name if room is not None else "cômodo indicado"
+        domain = snapshot.by_id[spatial["targets"][0]]["domain"]
+        category = {"fan": "ventiladores", "light": "luzes", "switch": "interruptores"}.get(domain, "dispositivos")
+        return (f"Quer usar todos os {len(spatial['targets'])} {category} de {room_name}? "
+                f"Responda sim para todos do cômodo, ou não para apenas os {len(nominal['targets'])} que correspondem ao nome.")
+
+    async def choose_set(self, text: str, user_input: Any, session: Session, user_id: str, user: Any, options: dict) -> Any:
+        pending = session.selection
+        if text in ("cancela", "cancela isso", "esquece", "deixa pra la"):
+            session.selection = None
+            session.pending = None
+            return self.result("cancelled", user_input, speech="Cancelado.")
+        from .contextual_catalog import build
+        snapshot = build(self.hass, user, options)
+        area = origin_area(self.hass, user_input, options)
+        if snapshot.payload["generation"] != pending["generation"] or area != pending["origin"] or _options_hash(options) != pending["options_hash"]:
+            session.selection = None
+            session.pending = None
+            raise ExecutionError("stale", "dialogue_changed")
+        choice = pending["confirmation_semantics"].get(text)
+        number_words = {1: "um", 2: "dois", 3: "tres", 4: "quatro", 5: "cinco", 6: "seis"}
+        if choice is None:
+            spatial = next(option for option in pending["options"] if option["key"] == "area")
+            from homeassistant.helpers import area_registry
+            room = area_registry.async_get(self.hass).areas.get(spatial["area"])
+            scope = next((text.split(marker, 1)[1] for marker in (" do ", " da ") if marker in text), None)
+            if scope is None and text.startswith(("do ", "da ")):
+                scope = text[3:]
+            valid_scope = scope == "comodo" or (scope is not None and room is not None and any(set(scope.split()) <= set(normalize(label).split()) for label in (room.name, *getattr(room, "aliases", ()))))
+            base = text if scope is None else text[:text.index(scope)].removesuffix("do ").removesuffix("da ").strip()
+            nominal_words = set(normalize(pending["command"].get("mention") or "").split())
+            name_reply = text.startswith("so os que tem ") and text.endswith(" no nome") and set(text.removeprefix("so os que tem ").removesuffix(" no nome").split()) <= nominal_words
+            if text in ("todos", "opcao 2", "segunda opcao") or (valid_scope and base in ("", "todos")):
+                choice = "area"
+            elif name_reply or text in ("opcao 1", "primeira opcao", "por nome", "so por nome"):
+                choice = "name"
+            else:
+                matches = [option["key"] for option in pending["options"] if (scope is None or valid_scope) and base.removeprefix("so ") in (f"os {len(option['targets'])}", f"os {number_words.get(len(option['targets']), len(option['targets']))}")]
+                if len(matches) == 1:
+                    choice = matches[0]
+        if choice is None:
+            return self.result("missing_slot", user_input, speech=pending["question"], followup=True, reason="invalid_set_choice")
+        # Re-run the original interpretation against a fresh authorized snapshot.
+        await self._send(snapshot)
+        outcome = parse(await self.client.async_interpret_v4({"version": 4, "generation": snapshot.payload["generation"],
+                      "text": pending["text"], "origin_area": area, "last_area": session.last_area, "last_targets": list(session.last_targets), "pending": None}))
+        current = next((option for option in outcome.options if option["key"] == choice), None)
+        expected = next(option for option in pending["options"] if option["key"] == choice)
+        if current != expected or outcome.command != pending["command"]:
+            session.selection = None
+            session.pending = None
+            raise ExecutionError("stale", "dialogue_changed")
+        command = pending["command"]
+        params = dict(command["parameters"])
+        if current["area"] is not None:
+            params["area"] = current["area"]
+        operation = Operation(command["intent"], command["action"], tuple(current["targets"]), params)
+        session.selection = None
+        session.pending = None
+        session.candidates = ()
+        session.expires = time.monotonic() + _ttl(options)
+        return await self.execute((operation,), snapshot, user_input, session, options)
 
     async def _send(self, snapshot: Snapshot) -> None:
         response = await self.client.async_catalog_v4(snapshot.payload)
@@ -268,6 +405,12 @@ class ContextualRuntime:
             if row is None:
                 raise ExecutionError("stale", "target_not_in_snapshot")
             state = self.live(row, operation.action, user, options)
+            if operation.parameters.get("scope") in ("bulk_area", "bulk_floor_group", "bulk_global"):
+                defaults = ["light", "switch", "fan", "climate", "media_player", "humidifier"]
+                preferences = options.get("entity_preferences", {}).get(row["entity_id"], {})
+                from .contextual_catalog import _bulk_exclusions
+                if operation.action != "turn_off" or row["domain"] not in defaults or row["domain"] not in options.get("bulk_domains", defaults) or row["entity_id"] in _bulk_exclusions(self.hass, options.get("excluded_from_bulk_actions", [])) or row.get("attributes", {}).get("bulk_eligible") is not True or (type(preferences) is dict and (preferences.get("excluded_from_bulk_actions") is True or preferences.get("critical") is True)):
+                    raise ExecutionError("denied", "bulk_policy")
             self.validate_scope(row, operation)
             rows.append(row)
             is_sensitive = sensitive(row["domain"], operation.action, state)
@@ -321,7 +464,7 @@ class ContextualRuntime:
         return Prepared(operation, tuple(rows), tuple(calls), needs_confirmation)
 
     def validate_scope(self, row: dict, operation: Operation) -> None:
-        if operation.parameters.get("scope") == "floor_group":
+        if operation.parameters.get("scope") in ("floor_group", "bulk_floor_group"):
             from homeassistant.helpers import area_registry
             area = area_registry.async_get(self.hass).areas.get(row.get("area_id"))
             if area is None or getattr(area, "floor_id", None) != operation.parameters.get("area"):
@@ -366,6 +509,7 @@ class ContextualRuntime:
         self.validate_options(options)
         prepared = tuple(self.prepare(operation, snapshot, user, options) for operation in operations)
         self.validate_plan(prepared)
+        self.validate_bulk_snapshot(operations, snapshot, user, options)
         if any(item.needs_confirmation for item in prepared) and not confirmed:
             session.confirmation = operations
             session.confirmation_generation = snapshot.payload["generation"]
@@ -406,6 +550,7 @@ class ContextualRuntime:
                         _, user = await self.user(user_input.context)
                         self.validate_options(options)
                         current_calls = self.prepare(item.operation, snapshot, user, options).calls
+                        self.validate_bulk_snapshot(operations, snapshot, user, options)
                         if len(current_calls) != len(item.calls) or current_calls[call_index] != call:
                             raise ExecutionError("stale", "parameters_changed")
                         if call.get("backend_row"):
@@ -453,9 +598,37 @@ class ContextualRuntime:
                     raise ExecutionError("invalid_request", "contradictory_plan")
                 affected.add(key)
 
+    def validate_bulk_snapshot(self, operations: tuple[Operation, ...], snapshot: Snapshot, user: Any, options: dict) -> None:
+        if any(operation.parameters.get("scope") in ("bulk_area", "bulk_floor_group", "bulk_global") for operation in operations):
+            from .contextual_catalog import build
+            if build(self.hass, user, options).payload["generation"] != snapshot.payload["generation"]:
+                raise ExecutionError("stale", "bulk_catalog_changed")
+
     def read_live(self, row: dict, state: Any, params: dict, snapshot: Snapshot, user: Any, options: dict) -> dict:
+        if params.get("metric") == "location" and (row["domain"] == "sensor" or params.get("scope") == "device_location"):
+            from .device_location import read_location
+            return read_location(self.hass, row, state, snapshot, user, options, self.live)
         if params.get("metric") != "location":
-            return read(self.hass, row, state, params)
+            value = read(self.hass, row, state, params)
+            if params.get("metric") == "battery":
+                value["label"] = row.get("attributes", {}).get("reference_device_name") or row.get("device_name") or row["name"]
+                preference = options.get("entity_preferences", {}).get(row["entity_id"], {})
+                if "max_age_seconds" in preference:
+                    from .device_location import observation_age
+                    attribute = preference.get("observed_at_attribute", "last_seen")
+                    if attribute in ("last_changed", "last_updated", "last_reported"):
+                        raise QueryError("measurement_stale")
+                    try:
+                        observation_age(self.hass, state.attributes.get(attribute), preference["max_age_seconds"])
+                    except QueryError:
+                        raise QueryError("measurement_stale") from None
+            from homeassistant.helpers import area_registry
+            room = area_registry.async_get(self.hass).areas.get(row.get("area_id"))
+            if room is not None:
+                value["area_name"] = room.name
+                if params.get("area") == row.get("area_id"):
+                    value["scope_label"] = room.name
+            return value
         preferences = options.get("entity_preferences", {}).get(row["entity_id"], {})
         tracker = preferences.get("indoor_tracker") if type(preferences) is dict else None
         if tracker is None:
@@ -576,6 +749,15 @@ class ContextualRuntime:
 
 def _options_hash(options: dict) -> str:
     return hashlib.sha256(json.dumps(options, sort_keys=True, allow_nan=False).encode()).hexdigest()
+
+
+def _independent_command(text: str) -> bool:
+    if text in ("pode", "pode confirmar", "confirmo", "sim", "isso"):
+        return False
+    words = text.split()
+    while words and words[0] in ("por", "favor", "arandu"):
+        words.pop(0)
+    return bool(words) and (words[0] in ("liga", "ligue", "ligar", "aciona", "acione", "desliga", "desligue", "desligar", "apaga", "apague", "apagar", "acende", "acenda", "acender", "coloca", "coloque", "colocar", "bota", "deixa", "ajusta", "ajuste", "aumenta", "aumentar", "diminui", "diminuir", "qual", "quanto", "quantas", "quantos", "quais", "onde", "tem", "ativa", "ative", "desativa", "desative", "abre", "abra", "abrir", "fecha", "feche", "fechar", "tranca", "tranque", "trancar", "destranca", "destranque", "destrancar", "finaliza", "acabar", "toca", "toque", "quero", "pode", "poderia", "me") or " qual " in text or " quanto " in text)
 
 
 def _ttl(options: dict) -> float:

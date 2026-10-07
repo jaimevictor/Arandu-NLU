@@ -1,5 +1,5 @@
 use super::{
-    contract::{ACTIONS, Catalog, Command, ContextRequest, Response},
+    contract::{ACTIONS, Catalog, Command, ContextRequest, Response, SelectionOption},
     grammar, slots,
 };
 use crate::model::valid_identifier;
@@ -12,6 +12,7 @@ pub(super) struct Index {
     actions: BTreeMap<String, Vec<usize>>,
     ids: BTreeMap<String, usize>,
     groups: BTreeMap<String, Vec<(String, BTreeSet<String>)>>,
+    tokens: BTreeMap<String, BTreeSet<usize>>,
 }
 type Resolved = (Vec<String>, Vec<String>, Option<String>);
 
@@ -33,10 +34,38 @@ fn clean(value: &str) -> String {
                     | "das"
                     | "no"
                     | "na"
+                    | "em"
+                    | "nos"
+                    | "nas"
+                    | "todo"
+                    | "toda"
+                    | "todos"
+                    | "todas"
             )
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+fn lexical_tokens(value: &str) -> BTreeSet<String> {
+    clean(value)
+        .split_whitespace()
+        .map(|word| {
+            match word {
+                "ventiladores" => "ventilador",
+                "luzes" => "luz",
+                "lampadas" => "lampada",
+                "telefones" | "celular" | "celulares" => "telefone",
+                "tablets" => "tablet",
+                "notebooks" => "notebook",
+                "sensores" => "sensor",
+                "interruptores" => "interruptor",
+                "tomadas" => "tomada",
+                _ => word,
+            }
+            .to_owned()
+        })
+        .collect()
 }
 
 fn type_names(domain: &str, class: Option<&str>) -> Vec<&'static str> {
@@ -58,8 +87,8 @@ fn type_names(domain: &str, class: Option<&str>) -> Vec<&'static str> {
         },
         "lock" => vec!["fechadura", "porta"],
         "switch" => match class {
-            Some("outlet") => vec!["tomada"],
-            _ => vec!["interruptor"],
+            Some("outlet") => vec!["tomada", "tomadas"],
+            _ => vec!["interruptor", "interruptores", "tomada", "tomadas"],
         },
         "humidifier" => {
             if class == Some("dehumidifier") {
@@ -115,6 +144,7 @@ impl Index {
         let mut actions: BTreeMap<String, Vec<usize>> = BTreeMap::new();
         let mut ids = BTreeMap::new();
         let mut entity_ids = BTreeSet::new();
+        let mut tokens: BTreeMap<String, BTreeSet<usize>> = BTreeMap::new();
         let mut area_ids = BTreeSet::new();
         let mut total_names = 0;
         for area in &catalog.areas {
@@ -162,6 +192,11 @@ impl Index {
             }
             let mut add = |name: &str, rank: u16, evidence: &'static str| {
                 total_names += name.len();
+                if rank >= 70 {
+                    for token in lexical_tokens(name) {
+                        tokens.entry(token).or_default().insert(i);
+                    }
+                }
                 names
                     .entry(clean(name))
                     .or_default()
@@ -188,6 +223,16 @@ impl Index {
                     return None;
                 }
                 add(name, 70, "device_name");
+            }
+            if let Some(name) = entity
+                .attributes
+                .get("reference_device_name")
+                .and_then(serde_json::Value::as_str)
+            {
+                if !valid_name(name) {
+                    return None;
+                }
+                add(name, 85, "configured_device_relation");
             }
             let synonyms = if entity.domain == "climate"
                 && !clean(&entity.name).contains("ar condicionado")
@@ -246,7 +291,33 @@ impl Index {
             actions,
             ids,
             groups,
+            tokens,
         })
+    }
+
+    pub fn normalize_area_control(&self, command: &mut Command) {
+        if !matches!(command.action.as_str(), "turn_off" | "vacuum_stop") {
+            return;
+        }
+        let mention = command.mention.as_deref().map(clean).unwrap_or_default();
+        let bare_room = self.areas.contains_key(&mention)
+            || mention
+                .strip_prefix("tudo ")
+                .is_some_and(|name| self.areas.contains_key(name));
+        let explicit_bulk = command
+            .area
+            .as_deref()
+            .map(clean)
+            .is_some_and(|name| self.areas.contains_key(&name))
+            && matches!(
+                mention.as_str(),
+                "tudo" | "aparelhos" | "dispositivos" | "equipamentos"
+            );
+        if bare_room || explicit_bulk {
+            command.action = "turn_off".into();
+            command.domains.clear();
+            command.plural = true;
+        }
     }
 
     pub fn domain_hint(&self, text: &str) -> Option<String> {
@@ -294,6 +365,7 @@ impl Index {
         let mut explicit = false;
         let mut group_id = None;
         let mut group_areas = None;
+        let mut bare_area = false;
         if let Some(name) = explicit_area {
             if command.parameters.scope.as_deref() == Some("floor_group")
                 && let Some(groups) = self.groups.get(&name)
@@ -308,6 +380,12 @@ impl Index {
                 group_id = Some(groups[0].0.clone());
                 group_areas = Some(groups[0].1.clone());
                 explicit = true;
+            } else if self.areas.get(&name).is_some_and(|ids| ids.len() > 1) {
+                return Err(Response::failure(
+                    "clarification",
+                    &command.intent,
+                    "ambiguous_area",
+                ));
             } else if let Some(id) = self.area(&name) {
                 area = Some(id);
                 explicit = true;
@@ -328,6 +406,25 @@ impl Index {
                 }
             }
         }
+        // Aggregate questions may use a registered floor name without a room.
+        if area.is_none()
+            && group_areas.is_none()
+            && command.action == "query"
+            && command.plural
+            && let Some(groups) = self.groups.get(&mention)
+        {
+            if groups.len() != 1 {
+                return Err(Response::failure(
+                    "clarification",
+                    &command.intent,
+                    "ambiguous_group",
+                ));
+            }
+            group_id = Some(groups[0].0.clone());
+            group_areas = Some(groups[0].1.clone());
+            mention.clear();
+            explicit = true;
+        }
         // Longest exact area suffix wins; never infer a person's room from person state.
         if area.is_none() && group_areas.is_none() && !mention.is_empty() {
             let registered_whole = self
@@ -341,10 +438,11 @@ impl Index {
                 .collect();
             matches.sort_by_key(|name| std::cmp::Reverse(name.len()));
             if let Some(name) = matches.first() {
+                bare_area = mention == **name;
                 area = Some(self.area(name).ok_or_else(|| {
                     Response::failure("clarification", &command.intent, "ambiguous_area")
                 })?);
-                if !registered_whole {
+                if !registered_whole || (bare_area && command.action == "turn_off") {
                     mention = mention[..mention.len() - name.len()].trim().to_owned();
                 }
                 explicit = true;
@@ -378,8 +476,47 @@ impl Index {
                 .trim()
                 .clone_into(&mut mention);
         }
-        if matches!(mention.as_str(), "tudo" | "todos" | "todas") {
+        if matches!(mention.as_str(), "tudo" | "todos" | "todas")
+            || (command.action == "turn_off"
+                && area.is_some()
+                && matches!(
+                    mention.as_str(),
+                    "aparelhos" | "dispositivos" | "equipamentos"
+                ))
+        {
             mention.clear();
+        }
+        let bulk = command.action == "turn_off"
+            && (area.is_some() || group_areas.is_some() || command.intent == "home.all_off")
+            && (bare_area || (mention.is_empty() && command.domains.len() != 1));
+        if bulk
+            && self.catalog.entities.iter().any(|entity| {
+                matches!(
+                    entity.domain.as_str(),
+                    "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
+                ) && entity
+                    .attributes
+                    .get("bulk_eligible")
+                    .and_then(serde_json::Value::as_bool)
+                    .unwrap_or(true)
+                    && entity
+                        .attributes
+                        .get("available")
+                        .and_then(serde_json::Value::as_bool)
+                        == Some(false)
+                    && area
+                        .as_ref()
+                        .is_none_or(|id| entity.area_id.as_ref() == Some(id))
+                    && group_areas.as_ref().is_none_or(|ids| {
+                        entity.area_id.as_ref().is_some_and(|id| ids.contains(id))
+                    })
+            })
+        {
+            return Err(Response::failure(
+                "unavailable",
+                &command.intent,
+                "bulk_target_unavailable",
+            ));
         }
         let context_target = matches!(
             mention.as_str(),
@@ -408,12 +545,28 @@ impl Index {
                 }
             }
             if ranked.is_empty() {
-                // Measurement entities belonging to a named device may match its device name.
-                return Err(Response::failure(
-                    "clarification",
-                    &command.intent,
-                    "unknown_target_or_area",
-                ));
+                let mut words = lexical_tokens(&mention);
+                let category: BTreeSet<_> = command
+                    .domains
+                    .iter()
+                    .flat_map(|domain| type_names(domain, None))
+                    .flat_map(lexical_tokens)
+                    .collect();
+                let qualifiers: BTreeSet<_> = words.difference(&category).cloned().collect();
+                if !qualifiers.is_empty() && !command.domains.is_empty() {
+                    words = qualifiers;
+                }
+                let mut matches: Option<BTreeSet<usize>> = None;
+                for word in &words {
+                    let rows = self.tokens.get(word).cloned().unwrap_or_default();
+                    matches = Some(match matches {
+                        None => rows,
+                        Some(previous) => &previous & &rows,
+                    });
+                }
+                for i in matches.unwrap_or_default() {
+                    ranked.insert(i, (65, "compositional_name"));
+                }
             }
         } else {
             for i in self.actions.get(&command.action).into_iter().flatten() {
@@ -423,7 +576,18 @@ impl Index {
         ranked.retain(|i, _| {
             let entity = &self.catalog.entities[*i];
             entity.actions.contains(&command.action)
-                && (command.domains.is_empty() || command.domains.contains(&entity.domain))
+                && (if bulk {
+                    matches!(
+                        entity.domain.as_str(),
+                        "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
+                    ) && entity
+                        .attributes
+                        .get("bulk_eligible")
+                        .and_then(serde_json::Value::as_bool)
+                        .unwrap_or(true)
+                } else {
+                    command.domains.is_empty() || command.domains.contains(&entity.domain)
+                })
                 && area.as_ref().is_none_or(|area| {
                     command.parameters.metric.as_deref() == Some("location")
                         || entity.area_id.as_ref() == Some(area)
@@ -433,12 +597,211 @@ impl Index {
                 })
                 && class_compatible(command, entity)
         });
+        // A typed plural qualifier may denote a named set or one real room.
+        // Compare both sets; a token is lexical evidence, never ownership authority.
+        if command.plural
+            && !explicit
+            && !here
+            && !command.domains.is_empty()
+            && !mention.is_empty()
+            && !ranked.values().any(|(rank, _)| *rank >= 90)
+        {
+            let category: BTreeSet<_> = command
+                .domains
+                .iter()
+                .flat_map(|domain| type_names(domain, None))
+                .flat_map(lexical_tokens)
+                .collect();
+            let qualifiers: BTreeSet<_> = lexical_tokens(&mention)
+                .difference(&category)
+                .cloned()
+                .collect();
+            if !qualifiers.is_empty() {
+                let areas: BTreeSet<_> = self
+                    .areas
+                    .iter()
+                    .filter(|(name, _)| qualifiers.is_subset(&lexical_tokens(name)))
+                    .flat_map(|(_, ids)| ids.iter().cloned())
+                    .collect();
+                if areas.len() > 1 {
+                    return Err(Response::failure(
+                        "clarification",
+                        &command.intent,
+                        "ambiguous_area",
+                    ));
+                }
+                if let Some(id) = areas.iter().next() {
+                    let spatial: BTreeSet<_> = self
+                        .catalog
+                        .entities
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, entity)| {
+                            entity.area_id.as_ref() == Some(id)
+                                && entity.actions.contains(&command.action)
+                                && command.domains.contains(&entity.domain)
+                                && class_compatible(command, entity)
+                        })
+                        .map(|(i, _)| i)
+                        .collect();
+                    let nominal: BTreeSet<_> = ranked.keys().copied().collect();
+                    if spatial.len() > 32 || nominal.len() > 32 {
+                        return Err(Response::failure(
+                            "unavailable",
+                            &command.intent,
+                            "target_limit",
+                        ));
+                    }
+                    if !nominal.is_empty() && !spatial.is_empty() && nominal != spatial {
+                        let mut response = Response::failure(
+                            "clarification",
+                            &command.intent,
+                            "name_area_sets_differ",
+                        );
+                        for (key, set, scope, evidence) in [
+                            ("name", &nominal, None, "compositional_name"),
+                            ("area", &spatial, Some(id.clone()), "qualified_area_tokens"),
+                        ] {
+                            let mut targets: Vec<_> = set
+                                .iter()
+                                .map(|i| self.catalog.entities[*i].registry_id.clone())
+                                .collect();
+                            targets.sort();
+                            response.options.push(SelectionOption {
+                                key: key.into(),
+                                targets,
+                                area: scope,
+                                evidence: vec![evidence.into()],
+                            });
+                        }
+                        return Err(response);
+                    }
+                    if nominal.is_empty() && !spatial.is_empty() {
+                        ranked.extend(spatial.iter().map(|i| (*i, (65, "qualified_area_tokens"))));
+                    }
+                    if nominal.is_empty() || nominal == spatial {
+                        area = Some(id.clone());
+                    }
+                }
+            }
+        }
         if ranked.is_empty() {
             return Err(Response::failure(
                 "unavailable",
                 &command.intent,
-                "no_compatible_capability",
+                if command.action == "query" && command.parameters.metric.is_some() {
+                    if command.parameters.metric.as_deref() == Some("location")
+                        && !mention.is_empty()
+                    {
+                        "device_not_identified"
+                    } else {
+                        "no_accessible_sensor"
+                    }
+                } else {
+                    "no_compatible_capability"
+                },
             ));
+        }
+        // A source preference cannot disambiguate two physical devices.
+        if !command.plural
+            && matches!(
+                command.parameters.metric.as_deref(),
+                Some("battery" | "location")
+            )
+        {
+            let top = ranked.values().map(|(rank, _)| *rank).max().unwrap_or(0);
+            let devices: BTreeSet<_> = ranked
+                .iter()
+                .filter(|(_, (rank, _))| *rank == top)
+                .filter_map(|(i, _)| {
+                    let entity = &self.catalog.entities[*i];
+                    entity
+                        .attributes
+                        .get("reference_device_id")
+                        .and_then(serde_json::Value::as_str)
+                        .or(entity.device_id.as_deref())
+                })
+                .collect();
+            if devices.len() > 1 {
+                let mut response =
+                    Response::failure("clarification", &command.intent, "ambiguous_source");
+                response.candidates = ranked
+                    .iter()
+                    .filter(|(_, (rank, _))| *rank == top)
+                    .take(32)
+                    .map(|(i, _)| self.catalog.entities[*i].registry_id.clone())
+                    .collect();
+                return Err(response);
+            }
+            if let Some(device) = devices.first() {
+                ranked.retain(|i, _| {
+                    let entity = &self.catalog.entities[*i];
+                    entity
+                        .attributes
+                        .get("reference_device_id")
+                        .and_then(serde_json::Value::as_str)
+                        .or(entity.device_id.as_deref())
+                        == Some(*device)
+                });
+            }
+        }
+        if command.parameters.metric.as_deref() == Some("location")
+            && (command.parameters.scope.as_deref() == Some("device_location")
+                || ranked
+                    .keys()
+                    .any(|i| self.catalog.entities[*i].domain == "sensor"))
+        {
+            let dynamic: Vec<_> = ranked
+                .keys()
+                .filter(|i| {
+                    self.catalog.entities[**i]
+                        .attributes
+                        .get("dynamic_location")
+                        .and_then(serde_json::Value::as_bool)
+                        == Some(true)
+                })
+                .copied()
+                .collect();
+            if dynamic.is_empty()
+                && (command.parameters.scope.as_deref() == Some("device_location")
+                    || ranked
+                        .keys()
+                        .all(|i| self.catalog.entities[*i].domain == "sensor"))
+            {
+                return Err(Response::failure(
+                    "unavailable",
+                    &command.intent,
+                    "no_location_provider",
+                ));
+            }
+            if !dynamic.is_empty() {
+                ranked.retain(|i, _| dynamic.contains(i));
+            }
+        }
+        // Explicit preferences precede measured climate fallback and availability ranking.
+        if command.action == "query" && !command.plural && command.parameters.metric.is_some() {
+            let preferred: Vec<_> = ranked
+                .keys()
+                .filter(|i| self.catalog.entities[**i].preferred)
+                .copied()
+                .collect();
+            if !preferred.is_empty() {
+                ranked.retain(|i, _| preferred.contains(i));
+            } else if ranked.keys().any(|i| {
+                self.catalog.entities[*i]
+                    .attributes
+                    .get("available")
+                    .and_then(serde_json::Value::as_bool)
+                    != Some(false)
+            }) {
+                ranked.retain(|i, _| {
+                    self.catalog.entities[*i]
+                        .attributes
+                        .get("available")
+                        .and_then(serde_json::Value::as_bool)
+                        != Some(false)
+                });
+            }
         }
         // Environmental sensors outrank measured climate fallback. Setpoints never qualify.
         if command.parameters.metric.as_deref() == Some("temperature")
@@ -471,7 +834,7 @@ impl Index {
                 area = Some(origin.clone());
             }
         }
-        if !command.plural && ranked.len() > 1 {
+        if !command.plural && !bulk && ranked.len() > 1 {
             let preferred: Vec<_> = ranked
                 .keys()
                 .filter(|i| self.catalog.entities[**i].preferred)
@@ -488,9 +851,16 @@ impl Index {
                 "target_limit",
             ));
         }
-        if !command.plural && ranked.len() > 1 {
-            let mut response =
-                Response::failure("clarification", &command.intent, "ambiguous_target");
+        if !command.plural && !bulk && ranked.len() > 1 {
+            let mut response = Response::failure(
+                "clarification",
+                &command.intent,
+                if command.action == "query" && command.parameters.metric.is_some() {
+                    "ambiguous_source"
+                } else {
+                    "ambiguous_target"
+                },
+            );
             response.candidates = ranked
                 .keys()
                 .map(|i| self.catalog.entities[*i].registry_id.clone())
@@ -502,10 +872,13 @@ impl Index {
             .map(|i| self.catalog.entities[*i].registry_id.clone())
             .collect();
         targets.sort();
-        let evidence: BTreeSet<_> = ranked
+        let mut evidence: BTreeSet<_> = ranked
             .values()
             .map(|(_, kind)| (*kind).to_owned())
             .collect();
+        if bulk {
+            evidence.insert("bulk_area".into());
+        }
         Ok((targets, evidence.into_iter().collect(), area.or(group_id)))
     }
 
@@ -535,6 +908,15 @@ fn valid_name(value: &str) -> bool {
 }
 
 fn class_compatible(command: &Command, entity: &super::contract::Entity) -> bool {
+    if command.parameters.metric.as_deref() == Some("temperature")
+        && entity
+            .attributes
+            .get("measurement_kind")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|kind| matches!(kind, "equipment" | "outdoor"))
+    {
+        return false;
+    }
     if let Some(class) = command.device_class.as_deref() {
         if class == "temperature" && entity.domain == "climate" {
             return entity

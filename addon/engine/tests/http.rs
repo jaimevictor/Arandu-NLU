@@ -45,6 +45,26 @@ fn malformed_json_fails_closed() {
 }
 
 #[test]
+fn diagnostic_endpoint_identifies_passive_service_without_private_data() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+    let address = listener.local_addr().expect("address");
+    let handle = thread::spawn(move || server::serve_one(&listener).expect("serve"));
+    let mut stream = TcpStream::connect(address).expect("connect");
+    stream
+        .write_all(b"GET /diagnostics HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        .expect("write");
+    let mut response = String::new();
+    stream.read_to_string(&mut response).expect("read");
+    handle.join().expect("join");
+    let value: serde_json::Value =
+        serde_json::from_str(response.split("\r\n\r\n").nth(1).expect("body")).expect("json");
+    assert_eq!(value["service_version"], env!("CARGO_PKG_VERSION"));
+    assert_eq!(value["protocols"], serde_json::json!([1, 2, 3, 4]));
+    assert_eq!(value["execution"], "passive");
+    assert_eq!(value.as_object().expect("object").len(), 4);
+}
+
+#[test]
 fn malformed_then_duplicate_content_length_is_rejected() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
     let address = listener.local_addr().expect("address");

@@ -143,6 +143,16 @@ fn handle_connection(stream: &mut TcpStream) -> std::io::Result<()> {
     if request_line == "GET /health HTTP/1.1" {
         return write_raw(stream, 200, br#"{"status":"ok","version":1}"#);
     }
+    if request_line == "GET /diagnostics HTTP/1.1" {
+        let body = serde_json::to_vec(&serde_json::json!({
+            "service_version": env!("CARGO_PKG_VERSION"),
+            "protocols": [1, 2, 3, 4],
+            "build_id": option_env!("ARANDU_BUILD_ID").unwrap_or("unknown"),
+            "execution": "passive"
+        }))
+        .map_err(std::io::Error::other)?;
+        return write_raw(stream, 200, &body);
+    }
     let route = if request_line == "POST /v1/interpret HTTP/1.1" {
         Route::V1Interpret
     } else if request_line == "POST /v2/resolve HTTP/1.1" {

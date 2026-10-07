@@ -1,4 +1,71 @@
-# Implantação 0.3.2 — motor contextual 2.0
+# Implantação 0.4.0 — motor contextual 2.0
+
+## Capacidades contextuais 0.4.0
+
+Atualize o add-on e o diretório Python separadamente conforme INSTALL.md.
+Faça backup do componente e das opções; para rollback, restaure ambos os
+componentes da mesma versão e reinicie o HA. Nenhum deploy residencial faz
+parte da validação desta entrega.
+
+Os diagnósticos baixáveis do HA informam as versões reais, protocolos,
+contextual_enabled, rota e último code/reason, sem catálogo ou transcrições.
+`GET /diagnostics` no endpoint privado identifica o Rust; `/health` mantém
+seu JSON v1. Build ID ausente é explicitamente `unknown`.
+
+Opções declarativas (IDs abaixo são exemplos técnicos, substitua pelos reais):
+
+```yaml
+excluded_from_bulk_actions:
+  - switch.infraestrutura
+bulk_domains: [light, switch, fan, climate, media_player, humidifier]
+low_battery_threshold: 20
+person_device_bindings:
+  telefone de Pessoa A: [device_id_real]
+  meu celular: [device_id_real]
+device_sensor_bindings:
+  device_id_real:
+    battery: sensor.carga_do_aparelho
+    location: sensor.area_dinamica
+    observed_at_entity: sensor.ultima_observacao
+    area_attribute: area_id
+    max_age_seconds: 300
+entity_preferences:
+  sensor.temperatura_ambiente:
+    preferred: true
+  switch.outro_equipamento:
+    excluded_from_bulk_actions: true
+```
+
+`person_device_bindings` associa aliases a IDs de dispositivos; não atribui
+permissão nem afirma propriedade. `meu celular` só funciona com alias explícito,
+e respeita a exposição/permissão do usuário. A bateria normalmente é descoberta
+pelo device_id e device_class=battery; o binding serve para sensores externos ou
+metadados incompletos. Unidade percentual e faixa 0–100 são obrigatórias.
+
+Localização usa exclusivamente fonte dinâmica. O sensor de timestamp deve ter
+device_class=timestamp, estar exposto e ter permissão de leitura. Como alternativa,
+use `observed_at_attribute: last_seen` para um timestamp ISO com timezone ou epoch
+publicado pela própria fonte. Nunca configure last_changed/last_updated como
+frescor. Bermuda Area é descoberto por metadados; o contrato consultado publica
+area_id, mas não garante last_seen. O sensor Area Last Seen representa um cômodo,
+não um timestamp; vincule uma observação temporal confiável se necessária.
+[Contrato primário Bermuda](https://github.com/agittins/bermuda/blob/main/custom_components/bermuda/sensor.py).
+
+Sem provider, timestamp recente ou área inequívoca, o Arandu informa a ausência.
+Não usa RSSI, MAC ou área estática para estimar posição. Os testes usam fixtures;
+localização física depende de provider/hardware configurado na residência.
+
+Desligamento coletivo limita-se aos domínios da whitelist acima e a serviços
+turn_off disponíveis. Fechaduras, alarmes, sensores e controles de acesso ficam
+fora. Mais de 32 alvos gera recusa explícita sem efeito, não truncamento.
+Mudança de inventário/permissão/exposição/opções invalida o plano. Falha após
+efeito parcial interrompe o restante; timeout de efeito não é repetido.
+
+Quando nome e cômodo identificam conjuntos diferentes, a pergunta explicita
+sim=todos do cômodo e não=somente os correspondentes por nome. Também aceita
+quantidade ou escopo válidos. Pendência dura até 30 segundos (limitada pelo
+session_ttl), depende de conversation_id/usuário/origem e desaparece após
+reinício do HA/integração. Novo comando substitui a pergunta anterior.
 
 O guia atual de distribuição é [INSTALL.md](../../INSTALL.md): uma única
 fonte `addon/`, slug `ptbr_nlu` preservado, atualização do catálogo e build
@@ -6,7 +73,7 @@ pelo Supervisor, integração atualizada manualmente e dois ZIPs separados.
 O pacote combinado antigo citado em evidências não substitui esses ZIPs.
 
 1. Faça backup da integração atual e da configuração do Assist. Instale o conteúdo de `custom_components/local_nlu` no diretório de configuração do HA; reinicie o HA.
-2. Instale o add-on deste repositório, versão 0.3.2, e inicie-o. O Rust é estático, sem root, sem credenciais e sem acesso de saída necessário. Configure a integração com o endpoint privado do add-on (o slug continua `ptbr_nlu`).
+2. Instale o add-on deste repositório, versão 0.4.0, e inicie-o. O Rust é estático, sem root, sem credenciais e sem acesso de saída necessário. Configure a integração com o endpoint privado do add-on (o slug continua `ptbr_nlu`).
 3. Selecione ARANDU NLU como agente de conversa no pipeline Assist. Exponha as entidades desejadas em Assist, atribua áreas aos dispositivos/satélites e confira aliases e nomes reais.
 4. Em opções, mantenha `contextual_enabled=true`. Configure área padrão somente se quiser usá-la quando não existe origem identificável. Ajuste preferências, incrementos e políticas abaixo.
 5. Teste primeiro uma consulta, depois uma ação simples e um esclarecimento: “Qual a temperatura aqui?”, “Liga o ar”, “Coloca o ventilador em 50 por cento”. Confira o histórico HA antes de habilitar ações sensíveis.
@@ -15,11 +82,11 @@ Não há requisito de modificar STT. O áudio continua no pipeline existente; o 
 
 ## Instalar o pacote local
 
-Extraia `arandu-nlu-addon-0.3.2.zip` e confira seu SHA-256 com o `.zip.sha256`. Para uma nova instalação local com Supervisor, copie a pasta `addon` inteira para `/addons/arandu_nlu`, preservando seus arquivos internos; recarregue a loja e instale a entrada local Arandu NLU. Para atualizar uma instalação existente de loja, mantenha o mesmo repositório e siga INSTALL.md, preservando a identidade. Esse é o [fluxo oficial de apps locais do Home Assistant](https://developers.home-assistant.io/docs/apps/tutorial/). O pacote é código-fonte e o Supervisor compila a imagem.
+Extraia `arandu-nlu-addon-0.4.0.zip` e confira seu SHA-256 com o `.zip.sha256`. Para uma nova instalação local com Supervisor, copie a pasta `addon` inteira para `/addons/arandu_nlu`, preservando seus arquivos internos; recarregue a loja e instale a entrada local Arandu NLU. Para atualizar uma instalação existente de loja, mantenha o mesmo repositório e siga INSTALL.md, preservando a identidade. Esse é o [fluxo oficial de apps locais do Home Assistant](https://developers.home-assistant.io/docs/apps/tutorial/). O pacote é código-fonte e o Supervisor compila a imagem.
 
-A evidência de validação existente registra o build anterior 2.0.0. O versionamento atual é 0.3.2; gere e valide novamente o pacote antes de distribuí-lo com esse número.
+A validação da versão 0.4.0, incluindo builds amd64/aarch64 e pacotes independentes, consta em [CONTEXTUAL_IMPLEMENTATION_REPORT.md](CONTEXTUAL_IMPLEMENTATION_REPORT.md). Evidências de versões anteriores permanecem históricas.
 
-Extraia `arandu-nlu-integration-0.3.2.zip` no diretório de configuração HA para obter `/config/custom_components/local_nlu`, reinicie o HA e adicione a integração em Dispositivos e serviços. Se ela já existe, preserve sua entrada e opções. Use o hostname privado exibido pelo Supervisor para esse app e a porta interna 11555. O add-on não publica uma porta no host. Em HA Container, compile a imagem e conecte-a à mesma rede privada do HA, com o endpoint configurado para o nome desse container; use a integração da mesma forma.
+Extraia `arandu-nlu-integration-0.4.0.zip` no diretório de configuração HA para obter `/config/custom_components/local_nlu`, reinicie o HA e adicione a integração em Dispositivos e serviços. Se ela já existe, preserve sua entrada e opções. Use o hostname privado exibido pelo Supervisor para esse app e a porta interna 11555. O add-on não publica uma porta no host. Em HA Container, compile a imagem e conecte-a à mesma rede privada do HA, com o endpoint configurado para o nome desse container; use a integração da mesma forma.
 
 O pipeline precisa fornecer `context.user_id` de um usuário ativo. Se a instalação/satélite não o fornecer, a integração nega a solicitação: valide isso com uma consulta antes de habilitar o agente no pipeline principal. O motor não presume autorização administrativa de um satélite.
 

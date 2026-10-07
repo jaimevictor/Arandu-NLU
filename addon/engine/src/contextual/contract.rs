@@ -214,6 +214,14 @@ pub struct Operation {
 }
 
 #[derive(Clone, Debug, Serialize)]
+pub struct SelectionOption {
+    pub key: String,
+    pub targets: Vec<String>,
+    pub area: Option<String>,
+    pub evidence: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Response {
     pub version: u8,
     pub status: String,
@@ -231,6 +239,8 @@ pub struct Response {
     pub generation: Option<String>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub timings: BTreeMap<String, f64>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub options: Vec<SelectionOption>,
 }
 
 impl Response {
@@ -242,10 +252,12 @@ impl Response {
             operations: Vec::new(),
             candidates: Vec::new(),
             command: None,
-            reason: None,
+            reason: matches!(status, "invalid_request" | "no_match" | "stale")
+                .then(|| status.to_owned()),
             intent: None,
             generation: None,
             timings: BTreeMap::new(),
+            options: Vec::new(),
         }
     }
     #[must_use]

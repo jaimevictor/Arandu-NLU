@@ -1,5 +1,34 @@
 # Revisões NLU 2.0
 
+## Revisão contextual 0.4.0 — 2026-10-07
+
+Duas revisões read-only independentes examinaram o mesmo código congelado,
+incluindo Rust HTTP real e executor Python com Home Assistant simulado.
+Produto e segurança/privacidade/licença/pacote aprovaram a árvore final após
+as correções abaixo. Os 70 testes contextual/HTTP passaram. Fingerprint,
+gate, benchmarks e artefatos finais constam no relatório contextual; esta
+aprovação não representa teste físico de residência ou Bluetooth.
+
+| Severidade | Contraprova | Correção e regressão |
+| --- | --- | --- |
+| P1 | Aspirador chamado como o cômodo interceptava desligamento coletivo | normalize_area_control antes da adaptação de domínio; test_switch_plural_qualified_sets_and_same_named_room_device |
+| P1 | Infinitivo independente conservava seleção antiga, permitindo sim sobre fans anteriores | descarte por verbos/polidez e probe Rust passivo para frases sem verbo; test_infinitive_and_polite_new_commands_replace_old_selection; test_verb_free_query_discards_old_selection_and_acesa_synonym |
+| P2 | preferred escolhia aparelho homônimo, ou substituía aparelho identificado por alias por outro disponível | identidade antes da fonte, conjunto limitado ao device vencedor; test_preferred_source_never_selects_between_homonymous_devices; test_personal_alias_identity_is_not_replaced_by_preferred_or_available_other_device |
+| P2 | Plurais de interruptores/tomadas não resolviam conjuntos composicionais | tokens/domínios/plural normalizados; test_switch_plural_qualified_sets_and_same_named_room_device |
+| P2 | Clarificação vazava nomes cuja exposição fora revogada durante await ou em cache antigo | auth/options/origem e catálogo autorizado reconstruídos antes de guardar/renderizar; test_clarification_revalidates_names_and_sets_after_inference_or_cached_snapshot |
+| Lacuna lexical | luz acesa não era aceita pela família any | mesma semântica de luz ligada; test_verb_free_query_discards_old_selection_and_acesa_synonym |
+
+Revisor de segurança repetiu a reprodução original: stale /
+clarification_catalog_changed, fala sem nomes, continue_conversation=False,
+zero serviços; seis testes direcionados PASS. Revisor de produto repetiu
+todos os achados e a variante alias/preferred/unavailable: PASS. Nenhum
+arquivo foi editado pelos revisores.
+
+## Evidência histórica anterior à missão contextual
+
+As seções seguintes descrevem a entrega anterior e seus fingerprints. Para
+estado e limitações atuais, consulte CONTEXTUAL_IMPLEMENTATION_REPORT.md.
+
 As duas revisões read-only exigidas por AGENTS.md partiram da mesma árvore testada. O revisor de produto concluiu e reexecutou suas contraprovas no fingerprint `a4a9b7b184d6871e3de103ab2a4fafae61fe6f57ffb551e2ff32bfbcfbe2ef61`. O revisor de segurança confirmou as correções de execução e inspecionou os hashes/limites do ZIP; encerrou por limite de uso depois de apontar a licença musl ausente. O executor incorporou os notices musl e da biblioteca padrão Rust, validou novamente a imagem e o pacote e concluiu a estabilização do steering. Não se afirma uma segunda revisão independente integral da árvore final após essa interrupção.
 
 ## Achados e correções

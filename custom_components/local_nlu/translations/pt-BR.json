@@ -33,7 +33,11 @@
           "device_mappings": "Mapeamentos de TV e controle remoto",
           "intent_bindings": "Adaptadores de scripts e botões registrados",
           "v2_enabled": "Ativar v3 legado quando o modo contextual estiver desativado",
-          "shadow_enabled": "Ativar diagnóstico do resolvedor legado"
+          "shadow_enabled": "Ativar diagnóstico do resolvedor legado",
+          "person_device_bindings": "Aliases de pessoas e aparelhos vinculados",
+          "device_sensor_bindings": "Sensores vinculados a aparelhos",
+          "excluded_from_bulk_actions": "Excluir de ações coletivas",
+          "low_battery_threshold": "Limite de bateria baixa (%)"
         }
       }
     }

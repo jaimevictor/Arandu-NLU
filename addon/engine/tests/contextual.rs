@@ -132,6 +132,96 @@ fn catalog() -> Catalog {
     }
 }
 
+#[test]
+fn compositional_sets_compare_real_room_and_name_without_overfitting() {
+    for (owner, room) in [("Ana", "Estúdio de Ana"), ("João", "Laboratório de João")] {
+        let mut cat = catalog();
+        cat.generation = "10".repeat(32);
+        cat.areas[2].names = vec![room.into()];
+        cat.entities = vec![
+            entity(
+                "a",
+                "fan",
+                &format!("Ventilador de {owner}"),
+                "escritorio",
+                None,
+                &["turn_off"],
+            ),
+            entity(
+                "b",
+                "fan",
+                &format!("Ventilador da mesa de {owner}"),
+                "escritorio",
+                None,
+                &["turn_off"],
+            ),
+            entity(
+                "c",
+                "fan",
+                "Ventilador do teto",
+                "escritorio",
+                None,
+                &["turn_off"],
+            ),
+        ];
+        assert_eq!(register_catalog(cat.clone()).status, "catalog_ready");
+        let mut request = ContextRequest {
+            version: 4,
+            generation: cat.generation.clone(),
+            text: format!("desliga os ventiladores de {owner}"),
+            ..ContextRequest::default()
+        };
+        let result = interpret(&request);
+        assert_eq!(result.status, "clarification", "{owner}: {result:?}");
+        assert_eq!(result.reason.as_deref(), Some("name_area_sets_differ"));
+        assert!(result.operations.is_empty());
+        assert_eq!(result.options[0].targets, vec!["a", "b"]);
+        assert_eq!(result.options[1].targets, vec!["a", "b", "c"]);
+        request.text = format!("desliga os ventiladores do {room}");
+        let result = interpret(&request);
+        assert_eq!(result.status, "plan", "{result:?}");
+        assert_eq!(result.operations[0].targets, vec!["a", "b", "c"]);
+        cat.entities.pop();
+        let _ = register_catalog(cat);
+        request.text = format!("desliga os ventiladores de {owner}");
+        assert_eq!(interpret(&request).operations[0].targets, vec!["a", "b"]);
+        request.text = "desliga os ventiladores de Pessoa desconhecida".into();
+        assert!(interpret(&request).operations.is_empty());
+    }
+}
+
+#[test]
+fn compositional_tokens_do_not_match_substrings_or_override_aliases() {
+    let mut cat = catalog();
+    cat.generation = "11".repeat(32);
+    cat.entities = vec![
+        entity("cabinet", "switch", "Armário", "sala", None, &["turn_off"]),
+        entity(
+            "fan",
+            "fan",
+            "Ventilador da mesa de Ana",
+            "sala",
+            None,
+            &["turn_off"],
+        ),
+    ];
+    cat.entities[1].aliases = vec!["Brisa pessoal".into()];
+    let _ = register_catalog(cat);
+    let mut request = ContextRequest {
+        version: 4,
+        generation: "11".repeat(32),
+        text: "desliga ar".into(),
+        ..ContextRequest::default()
+    };
+    assert!(interpret(&request).operations.is_empty());
+    request.text = "desliga Brisa pessoal".into();
+    assert_eq!(interpret(&request).operations[0].targets, vec!["fan"]);
+    request.text = "desliga ventilador de Ana".into();
+    let result = interpret(&request);
+    assert_eq!(result.status, "plan", "{result:?}");
+    assert_eq!(result.operations[0].targets, vec!["fan"]);
+}
+
 fn request(text: &str) -> ContextRequest {
     ContextRequest {
         version: 4,

@@ -28,7 +28,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 cargo test --workspace --locked --offline
 cargo build --workspace --release --locked --offline
-ARANDU_NLU_BINARY="$ROOT/target/release/local-nlu" python3 -m unittest discover -s tests/mlp -p 'test_contextual.py'
+ARANDU_NLU_BINARY="$ROOT/target/release/local-nlu" python3 -m unittest discover -s tests/mlp -p 'test_contextual*.py'
 ./tools/mlp-smoke.py
 
 printf '%s\n' "MLP CHECK PASS"

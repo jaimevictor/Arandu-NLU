@@ -293,6 +293,100 @@ pub fn recognize(
     domain_hint: Option<&str>,
 ) -> Option<Command> {
     let mut text = canonicalize(text);
+    if let Some(device) = text
+        .strip_prefix("onde esta ")
+        .or_else(|| text.strip_prefix("em qual comodo esta "))
+        && ["telefone", "celular", "tablet", "notebook", "aparelho"]
+            .iter()
+            .any(|kind| device.split_whitespace().any(|word| word == *kind))
+    {
+        let mut result = command("query", None, Some(device));
+        result.intent = "device.location_query".into();
+        result.domains = ["sensor", "device_tracker"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        result.parameters.metric = Some("location".into());
+        result.parameters.scope = Some("device_location".into());
+        return Some(result);
+    }
+    if matches!(
+        text.as_str(),
+        "liga" | "ligue" | "acende" | "acenda" | "desliga" | "desligue" | "apaga" | "apague"
+    ) {
+        return Some(command(
+            if text.starts_with("deslig") || text.starts_with("apag") {
+                "turn_off"
+            } else {
+                "turn_on"
+            },
+            None,
+            None,
+        ));
+    }
+    if let Some(query) = contextual_query(&text) {
+        return Some(query);
+    }
+    if (text.starts_with("nenhuma luz ") || text.starts_with("nenhuma das luzes "))
+        && text
+            .split_whitespace()
+            .any(|word| matches!(word, "ligada" | "ligadas" | "acesa" | "acesas"))
+    {
+        let mut result = command("query", Some("light"), None);
+        result.plural = true;
+        result.mention = query_area_tail(&text);
+        result.parameters.aggregate = Some("none".into());
+        result.parameters.state_filter = Some("on".into());
+        return Some(result);
+    }
+    if [
+        "tem alguma luz ligada",
+        "tem alguma luz acesa",
+        "tem luz ligada",
+        "tem luz acesa",
+        "quais luzes",
+        "quantas luzes",
+        "todas as luzes",
+    ]
+    .iter()
+    .any(|prefix| text.starts_with(prefix))
+    {
+        return extended(&text, domain_hint);
+    }
+    if text.starts_with("tem alguma coisa ligada")
+        || text.starts_with("tem algum equipamento ligado")
+    {
+        let mut result = command("query", None, None);
+        result.domains = [
+            "light",
+            "switch",
+            "fan",
+            "climate",
+            "media_player",
+            "humidifier",
+        ]
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+        result.plural = true;
+        result.mention = query_area_tail(&text);
+        result.parameters.aggregate = Some("any".into());
+        result.parameters.state_filter = Some("on".into());
+        return Some(result);
+    }
+    if text.starts_with("tem algum")
+        && text.contains("bateria")
+        && (text.contains("acabando") || text.contains("baixa"))
+    {
+        let mut result = command("query", Some("sensor"), None);
+        result.intent = "battery.low_query".into();
+        result.plural = true;
+        result.device_class = Some("battery".into());
+        result.parameters.metric = Some("battery".into());
+        result.parameters.aggregate = Some("filter".into());
+        result.parameters.threshold = Some(20.0);
+        return Some(result);
+    }
     if text == "toca no spotify" {
         let mut result = command("music", Some("media_player"), None);
         result.intent = "media.spotify_play".into();
@@ -740,7 +834,16 @@ pub fn semantic_domain(text: &str) -> Option<&'static str> {
             ][..],
         ),
         ("lock", &["fechadura", "fechaduras"][..]),
-        ("switch", &["tomada", "interruptor", "cafeteira"][..]),
+        (
+            "switch",
+            &[
+                "tomada",
+                "tomadas",
+                "interruptor",
+                "interruptores",
+                "cafeteira",
+            ][..],
+        ),
         ("timer", &["timer", "temporizador", "timers"][..]),
         ("calendar", &["calendario", "agenda", "compromisso"][..]),
         ("alarm_control_panel", &["seguranca"][..]),
@@ -754,7 +857,7 @@ pub fn semantic_domain(text: &str) -> Option<&'static str> {
 }
 
 fn canonicalize(text: &str) -> String {
-    let mut text = text.to_owned();
+    let mut text = text.strip_prefix("por favor ").unwrap_or(text).to_owned();
     for (from, to) in [
         ("ligar ", "liga "),
         ("desligar ", "desliga "),
@@ -838,9 +941,92 @@ fn basic(text: &str, domain: Option<&str>) -> Option<Command> {
     result.plural = target.split_whitespace().any(|word| {
         matches!(
             word,
-            "todas" | "todos" | "tudo" | "luzes" | "ventiladores" | "cortinas" | "persianas"
+            "todas"
+                | "todos"
+                | "tudo"
+                | "luzes"
+                | "ventiladores"
+                | "cortinas"
+                | "persianas"
+                | "interruptores"
+                | "tomadas"
         )
     });
+    Some(result)
+}
+
+// Metric syntax is independent of registry names and spatial prepositions.
+fn contextual_query(text: &str) -> Option<Command> {
+    let spatial_front =
+        !text.starts_with("me ") && !text.starts_with("diga ") && !text.starts_with("fala ");
+    let (body, front_area) = if let Some((area, question)) =
+        text.split_once(" qual ").filter(|_| spatial_front)
+    {
+        (format!("qual {question}"), Some(area))
+    } else if let Some((area, question)) = text.split_once(" quanto ").filter(|_| spatial_front) {
+        (format!("quanto {question}"), Some(area))
+    } else {
+        (text.to_owned(), None)
+    };
+    let first = body.split_whitespace().next()?;
+    if !matches!(first, "qual" | "quanto")
+        || body.contains(" alvo")
+        || body.contains(" ajustada")
+        || body.contains(" dispositivo")
+        || body.contains(" mais quente")
+    {
+        return None;
+    }
+    let padded = format!(" {body} ");
+    let (name, metric, class) = [
+        ("temperatura", "temperature", "temperature"),
+        ("umidade", "humidity", "humidity"),
+        ("luminosidade", "illuminance", "illuminance"),
+        ("iluminancia", "illuminance", "illuminance"),
+        ("co2", "co2", "carbon_dioxide"),
+        ("dioxido de carbono", "co2", "carbon_dioxide"),
+        ("qualidade do ar", "air_quality", "aqi"),
+        ("bateria", "battery", "battery"),
+    ]
+    .into_iter()
+    .find(|(name, _, _)| padded.contains(&format!(" {name} ")))?;
+    let (_, tail) = body.split_once(name)?;
+    let tail = tail.trim();
+    let battery_device_tail = metric == "battery" && tail.starts_with("esta ");
+    let tail = tail.strip_prefix("ambiente ").unwrap_or(tail);
+    let tail = tail.strip_prefix("esta ").unwrap_or(tail);
+    let target = [
+        "no ", "na ", "nos ", "nas ", "do ", "da ", "dos ", "das ", "de ", "em ",
+    ]
+    .iter()
+    .find_map(|prefix| tail.strip_prefix(prefix))
+    .unwrap_or(tail);
+    if !battery_device_tail
+        && !target.is_empty()
+        && target == tail
+        && !matches!(target, "aqui" | "daqui" | "nesse comodo" | "neste comodo")
+    {
+        return None;
+    }
+    let mut result = command(
+        "query",
+        Some("sensor"),
+        (!target.is_empty()).then_some(target),
+    );
+    result.intent = format!("query.{metric}");
+    if metric == "temperature" {
+        result.domains.push("climate".into());
+    }
+    result.device_class = Some(class.into());
+    result.parameters.metric = Some(metric.into());
+    result.origin = matches!(target, "aqui" | "daqui" | "nesse comodo" | "neste comodo");
+    if let Some(area) = front_area {
+        result.mention = None;
+        result.area = Some(area.to_owned());
+    } else if tail.starts_with("no ") || tail.starts_with("na ") || tail.starts_with("em ") {
+        result.mention = None;
+        result.area = Some(target.to_owned());
+    }
     Some(result)
 }
 
@@ -857,6 +1043,10 @@ fn extended(text: &str, domain: Option<&str>) -> Option<Command> {
         return Some(result);
     }
     if text.starts_with("tem alguma luz ligada")
+        || text.starts_with("tem alguma luz acesa")
+        || text.starts_with("tem luz ligada")
+        || text.starts_with("tem luz acesa")
+        || text.starts_with("quais luzes")
         || text.starts_with("tem alguma janela aberta")
         || text.starts_with("tem alguma porta aberta")
         || text.starts_with("quantas luzes")
@@ -896,7 +1086,7 @@ fn extended(text: &str, domain: Option<&str>) -> Option<Command> {
             .into(),
         );
         result.parameters.state_filter = Some(
-            if text.contains("desligad") {
+            if text.contains("desligad") || text.contains("apagad") {
                 "off"
             } else {
                 "on"
@@ -1244,6 +1434,9 @@ fn extended(text: &str, domain: Option<&str>) -> Option<Command> {
 }
 
 fn query_area_tail(text: &str) -> Option<String> {
+    if text.contains("algum comodo") || text.contains("toda a casa") {
+        return None;
+    }
     for marker in [" no ", " na ", " do ", " da "] {
         if let Some((_, tail)) = text.rsplit_once(marker) {
             return Some(tail.into());

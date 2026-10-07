@@ -161,21 +161,34 @@ class LocalNluClient:
             raise ClientError("health")
 
     async def async_interpret(self, payload: dict[str, Any]) -> Any:
+        self._last_interpret_protocol = 1
         return await self._async_json("POST", "/v1/interpret", payload)
+
+    async def async_diagnostics(self) -> dict:
+        value = await self._async_json("GET", "/diagnostics", None)
+        if (type(value) is not dict or set(value) != {"service_version", "protocols", "build_id", "execution"}
+                or type(value["service_version"]) is not str or len(value["service_version"]) > 32
+                or type(value["protocols"]) is not list or any(type(v) is not int or v not in (1, 2, 3, 4) for v in value["protocols"])
+                or type(value["build_id"]) is not str or len(value["build_id"]) > 128 or value["execution"] != "passive"):
+            raise ClientError("diagnostics")
+        return value
 
     async def async_resolve(self, payload: dict[str, Any]) -> Any:
         return await self._async_json("POST", "/v2/resolve", payload)
 
     async def async_interpret_v2(self, payload: dict[str, Any]) -> Any:
+        self._last_interpret_protocol = 2
         return await self._async_json("POST", "/v2/interpret", payload)
 
     async def async_interpret_v3(self, payload: dict[str, Any]) -> Any:
+        self._last_interpret_protocol = 3
         return await self._async_json("POST", "/v3/interpret", payload)
 
     async def async_catalog_v4(self, payload: dict[str, Any]) -> Any:
         return await self._async_json("POST", "/v4/catalog", payload)
 
     async def async_interpret_v4(self, payload: dict[str, Any]) -> Any:
+        self._last_interpret_protocol = 4
         return await self._async_json("POST", "/v4/interpret", payload)
 
     async def _async_json(

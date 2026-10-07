@@ -133,6 +133,15 @@ def read(hass: Any, row: dict, state: Any, params: dict) -> dict:
             value = "sem timer ativo"
     if value is None or not isinstance(value, (str, int, float)) or len(str(value).encode()) > 512:
         raise QueryError("invalid_reading")
+    units = {"temperature": {"°C", "°F", "K"}, "target_temperature": {"°C", "°F", "K"}, "device_temperature": {"°C", "°F", "K"}, "humidity": {"%"}, "battery": {"%"}, "illuminance": {"lx", "lux"}, "co2": {"ppm"}, "noise": {"dB", "dBA"}, "air_quality": {"AQI"}}
+    if metric in units and unit not in units[metric]:
+        raise QueryError("incompatible_units")
+    if metric in ("humidity", "battery") and not 0 <= value <= 100:
+        raise QueryError("invalid_measurement")
+    if metric in ("illuminance", "co2", "air_quality") and value < 0:
+        raise QueryError("invalid_measurement")
+    if metric in ("temperature", "target_temperature", "device_temperature") and value < {"°C": -273.15, "°F": -459.67, "K": 0}[unit]:
+        raise QueryError("invalid_measurement")
     return {"label": row["name"], "entity_id": row["entity_id"], "domain": row["domain"], "device_class": row.get("device_class"), "device_id": row.get("device_id"), "area_id": row.get("area_id"), "value": value, "unit": unit, "metric": metric}
 
 
@@ -161,15 +170,20 @@ def render(values: list[dict], params: dict, options: dict) -> str:
     elif metric in ("opening", "presence", "leak"):
         selected = [row for row in values if row["value"] in ("on", "open")]
     elif metric == "battery" and aggregate == "filter":
-        selected = [row for row in values if number(row["value"]) < params.get("threshold", 20)]
+        threshold = options.get("low_battery_threshold", params.get("threshold", 20))
+        if type(threshold) not in (int, float) or not math.isfinite(threshold) or not 0 <= threshold <= 100:
+            raise QueryError("invalid_measurement")
+        selected = [row for row in values if number(row["value"]) < threshold]
     if aggregate == "count":
         return f"Encontrei {len(selected)}."
     if aggregate == "any":
-        return "Sim." if selected else "Não."
+        return "Sim. " + render_list(selected) if selected else "Não. Não encontrei dispositivos correspondentes ligados." if params.get("state_filter") == "on" else "Não. Nenhum dispositivo corresponde à consulta."
     if aggregate == "all":
         return "Sim, todos." if len(selected) == len(values) else "Não, nem todos."
+    if aggregate == "none":
+        return "Sim, nenhuma." if not selected else "Não. " + render_list(selected)
     if aggregate == "filter":
-        return ("; ".join(render_one(row) for row in selected) + ".") if selected else "Nenhum dispositivo corresponde à consulta."
+        return render_list(selected) if selected else "Nenhum dispositivo corresponde à consulta."
     if aggregate in ("sum", "average", "min", "max", "compare"):
         units = {row["unit"] for row in values}
         if len(units) != 1:
@@ -201,13 +215,17 @@ def render(values: list[dict], params: dict, options: dict) -> str:
 def render_one(row: dict) -> str:
     metric, value = row["metric"], row["value"]
     label = row["label"]
+    if row.get("area_name"):
+        label += f" ({row['area_name']})"
     unit = row["unit"]
     if metric in ("temperature", "target_temperature", "device_temperature"):
         prefix = "A temperatura-alvo" if metric == "target_temperature" else "A temperatura"
-        return f"{prefix} de {label} está em {decimal(number(value))} {'graus' if unit == '°C' else unit or ''}"
+        scope = f"em {row['scope_label']}" if row.get("scope_label") else f"de {label}"
+        return f"{prefix} {scope} está em {decimal(number(value))} {'graus' if unit == '°C' else unit or ''}"
     if metric == "location":
         location = {"home": "em casa", "not_home": "fora de casa"}.get(value, f"em {value}")
-        return f"{label} está {location}"
+        age = f", observado há {row['observation_age_seconds']} segundos" if "observation_age_seconds" in row else ""
+        return f"{label} está {location}{age}"
     if metric == "area":
         return f"{label} fica em {value}"
     if metric in ("opening", "presence", "leak"):
@@ -216,6 +234,12 @@ def render_one(row: dict) -> str:
         return f"{label}: {words[metric][0 if positive else 1]}"
     display = decimal(value) if type(value) in (int, float) else {"on": "ligado", "off": "desligado", "open": "aberto", "closed": "fechado", "locked": "trancado", "unlocked": "destrancado", "playing": "tocando", "paused": "pausado"}.get(value, value)
     return f"{label}: {display}{' ' + unit if type(unit) is str else ''}"
+
+
+def render_list(values: list[dict]) -> str:
+    visible = values[:6]
+    suffix = f"; e mais {len(values) - len(visible)} dispositivos" if len(values) > len(visible) else ""
+    return "; ".join(render_one(row) for row in visible) + suffix + "."
 
 
 def date_window(hass: Any, reference: str | None) -> tuple[str, str]:
