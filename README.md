@@ -2,11 +2,13 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
-**Versão 0.4.0 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+**Versão 0.4.1 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
 
-Distribuição: somente `addon/` é publicado na loja, com slug `ptbr_nlu`.
-A integração Python é instalada e atualizada separadamente. Consulte
-[instalação, migração de versões antigas e pacotes ZIP](INSTALL.md).
+Distribuição: motor Rust pelo **Home Assistant Add-on Store**, com slug `ptbr_nlu`;
+integração Python pelo **HACS**, domínio `local_nlu`. Os dois canais compartilham
+a versão do produto e precisam ser atualizados separadamente. Consulte
+[instalação pelo HACS e migração sem perder configuração](INSTALL.md#instalação-pelo-hacs)
+e [processo de releases](docs/nlu-2.0/RELEASES.md).
 
 Capacidades contextuais 0.4.0: desligar um cômodo inteiro com exclusões,
 comparar grupos por nome e área, esclarecer escolhas em conversa, consultar
@@ -59,7 +61,18 @@ No arbitrary service calls, generative model, fuzzy authorization, inferred indo
 
 ## Installation
 
-See [installation and rollback](docs/nlu-2.0/DEPLOYMENT.md) for the local source package, integration, Assist agent and optional adapters.
+### Instalação pelo HACS
+
+Instale o motor pela Add-on Store. No HACS, adicione
+`https://github.com/jaimevictor/Arandu-NLU` como **Integration**, instale
+**ARANDU NLU** e reinicie o HA. Em Dispositivos e serviços, configure a integração
+e selecione o agente no Assist. HA mínimo declarado 2025.3.0; HACS 2.0.5.
+Instalações manuais existentes mantêm entrada/opções: instale pelo HACS por cima
+dos arquivos e reinicie, sem excluir a entrada. [Passos completos](INSTALL.md).
+
+HACS usa a fonte da branch `master` antes da primeira release; releases futuras
+oferecem versões etiquetadas. Um push não atualiza os componentes já carregados.
+Veja [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md) para Assist e adaptadores.
 
 ## Development
 

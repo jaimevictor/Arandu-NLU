@@ -44,8 +44,9 @@ def content(path):
 
 def source_digest(root):
     files = product_files(root) + [root / name for name in (
-        'repository.yaml', 'tools/distribution.py', 'tools/make-store-repo.py',
-        'tools/release-package.py', 'tools/mlp-dev.ps1')]
+        'repository.yaml', 'hacs.json', 'tools/distribution.py', 'tools/make-store-repo.py',
+        'tools/hacs.py', 'tools/release-package.py', 'tools/mlp-dev.ps1',
+        '.github/workflows/hacs.yml', '.github/workflows/release-integration.yml')]
     hashes = {p.relative_to(root).as_posix(): hashlib.sha256(content(p)).hexdigest()
               for p in files}
     return hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()
@@ -136,8 +137,10 @@ def check_versions(root, version):
 
 
 def check(root=ROOT):
+    from hacs import check as check_hacs
     version = check_store(root)
     check_versions(root, version)
+    check_hacs(root, version)
     release = json.loads((root / 'release.json').read_text())
     if release != {'version': version, 'source_digest': source_digest(root)}:
         raise ValueError('distribution changed: bump version and record release.json')

@@ -1,5 +1,10 @@
 # Implementação contextual Arandu NLU 0.4.0
 
+Relatório histórico da implementação funcional 0.4.0. A distribuição atual
+0.4.1 usa HACS para a integração Python e Add-on Store para o Rust; siga
+[INSTALL.md](../../INSTALL.md) e [RELEASES.md](RELEASES.md). Evidências abaixo
+permanecem da versão/contexto em que foram medidas.
+
 Data: 2026-10-07. Escopo: F0–F7 da especificação contextual. Rust continua
 passivo; Python continua a única fronteira de autorização/execução HA.
 Não foi alterado o projeto Arandu-STT nem adicionado serviço externo obrigatório.

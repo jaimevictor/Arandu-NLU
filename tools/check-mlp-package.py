@@ -38,6 +38,7 @@ EXPECTED_INTEGRATION = {
     "strings.json",
     "translations/en.json",
     "translations/pt-BR.json",
+    "brand/icon.png",
 }
 EXPECTED_VENDOR = {
     "itoa-1.0.18",

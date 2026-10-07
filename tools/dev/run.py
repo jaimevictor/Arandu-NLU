@@ -19,7 +19,7 @@ if task == 'check':
 
 # A fresh container supplies an empty Linux workspace. Copy bytes, not NTFS modes.
 # Restore archive modes; the existing exact-tree verifier still validates them.
-for relative in ('addon', 'custom_components', 'data', 'tests/mlp', 'tools', 'evaluation'):
+for relative in ('addon', 'custom_components', 'data', 'tests/mlp', 'tools', 'evaluation', '.github'):
     if not (source / relative).is_dir():
         continue
     shutil.copytree(source / relative, workspace / relative,
@@ -30,7 +30,7 @@ if (source / '.git').is_dir():
                     ignore=shutil.ignore_patterns('__pycache__', '*.lock'))
 if (source / '.cargo').is_dir():
     shutil.copytree(source / '.cargo', workspace / '.cargo', copy_function=shutil.copyfile)
-for name in ('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'repository.yaml', 'release.json', 'README.md', 'INSTALL.md'):
+for name in ('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'repository.yaml', 'hacs.json', 'release.json', 'README.md', 'INSTALL.md'):
     shutil.copyfile(source / name, workspace / name)
 # Only executable vendor file in the current frozen dependency set. Verified from
 # unicode-normalization-0.1.25.crate, SHA256:

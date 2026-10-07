@@ -21,10 +21,10 @@ class DistributionTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / 'repo'
         self.root.mkdir()
-        for folder in ('addon', 'custom_components/local_nlu', 'tools'):
+        for folder in ('addon', 'custom_components/local_nlu', 'tools', '.github'):
             shutil.copytree(ROOT / folder, self.root / folder,
                             ignore=shutil.ignore_patterns('target', '__pycache__'))
-        for name in ('repository.yaml', 'release.json', 'README.md', 'INSTALL.md', 'Cargo.lock'):
+        for name in ('repository.yaml', 'hacs.json', 'release.json', 'README.md', 'INSTALL.md', 'Cargo.lock'):
             shutil.copyfile(ROOT / name, self.root / name)
 
     def replace(self, name, old, new):
