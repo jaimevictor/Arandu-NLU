@@ -2,7 +2,9 @@
 
 ## Estado
 Data: 2026-10-06
-Branch: chore/cleanup-store-20260918-233959
+Branch atual: feat/nlu-2.0-contextual
+Versão atual do release: 0.3.0 (motor contextual 2.0).
+PR: https://github.com/jaimevictor/Arandu-NLU/pull/5
 Commit base: cd1014770763cac29135b98db2c83b5e0bba996f
 Workspace contém mudanças locais: sim; inclui modificações anteriores preservadas.
 Workspace: E:/Pycharm Projects/Arandu NLU
@@ -42,6 +44,6 @@ Entrega local concluída. Solicitação posterior do usuário autorizou commit, 
 
 ## Comandos necessários para retomar
 `./tools/mlp-dev.ps1 -Task check` — gate oficial em Docker/Linux, log target/nlu-2.0-check.log.
-`python tools/contextual-record.py --gate-pass --package target/arandu-nlu-2.0.0.zip` — somente após gate com o fingerprint atual e avaliação/benchmarks atualizados.
+`python tools/contextual-record.py --gate-pass --package target/arandu-nlu-0.3.0.zip` — somente após gate com o fingerprint atual e avaliação/benchmarks atualizados. Evidências anteriores permanecem associadas ao build 2.0.0.
 `python tools/import-stt-corpus.py --stt-root "E:/Pycharm Projects/Arandu STT/arandu-stt-github" --check` — proveniência/inventário reproduzível.
-Critérios finais: segurança sem CRITICAL/HIGH/MEDIUM de execução pendentes; gate, corpus, benchmarks, Docker e ZIP extraído aprovados; relatório READY WITH KNOWN LIMITATIONS se HA real/ARM continuarem sem teste; nenhum push/deploy.
+Critérios finais: segurança sem CRITICAL/HIGH/MEDIUM de execução pendentes; gate, corpus, benchmarks, Docker e ZIP extraído aprovados; relatório READY WITH KNOWN LIMITATIONS se HA real/ARM continuarem sem teste; nenhum deploy.

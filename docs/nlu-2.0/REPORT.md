@@ -1,5 +1,7 @@
 # Relatório NLU 2.0.0
 
+Registro histórico do build validado antes da alteração de versionamento. A versão atual do release é **0.3.0**, com motor contextual 2.0. Os hashes, benchmarks e artefatos abaixo continuam identificando o build original 2.0.0; não representam uma nova validação completa da versão 0.3.0.
+
 Implementação contextual aditiva em Rust/Python, versões anteriores preservadas e STT inalterado. Fingerprint normalizado das fontes executáveis: `18909fef2fd43649bb6412f63b40a36309c73634d5f41ecf64956505ff1ef02f`. Trabalho no checkout local; nenhum commit, push ou implantação numa residência foi efetuado.
 
 ## A. Implementação
