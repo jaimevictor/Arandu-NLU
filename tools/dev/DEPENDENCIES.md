@@ -23,7 +23,7 @@ O probe oficial e o job HACS usam somente o ambiente oficial de desenvolvimento:
 | --- | --- | --- | --- |
 | HACS Action container | ghcr.io/hacs/action@sha256:dc92fdad2f6ffbe74bffb7269d781ea8e064f52d9bb486cdf3925d74e7ab6ebf | MIT; hacs/integration, revisão OCI 3f3080cbf909b8f51488e227be73f62902b4ef6c | schemas oficiais, registro/consumidor com fixtures; validação GitHub no CI |
 | Home Assistant no container acima | 2026.8.3 | Apache-2.0; home-assistant/core | ambiente do validador, não evidência HA residencial |
-| actions/checkout | 11d5960a326750d5838078e36cf38b85af677262 (v4) | MIT; https://github.com/actions/checkout | checkout sem credenciais persistidas |
+| Git do runner Ubuntu 24.04 | pacote ambiente; 2.55.0 observado no CI | GPL-2.0; https://git-scm.com/ | checkout público anônimo por SHA/tag, sem submodule foreach ou credenciais |
 | actions/setup-python | a26af69be951a213d495a4c3e4e4022e16d87065 (v5) | MIT; https://github.com/actions/setup-python | Python 3.12 para testes/empacotamento CI |
 
 O wrapper hacs/action consultado usa docker://ghcr.io/hacs/action:main, mutável;

@@ -1,6 +1,6 @@
 # Arandu NLU — instalação e atualização
 
-Versão atual: `0.4.1` (motor contextual 2.0).
+Versão atual: `0.4.2` (motor contextual 2.0).
 
 O motor Rust é atualizado pela **Add-on Store**; a integração Python, pelo **HACS**.
 Atualize os dois componentes e reinicie o Home Assistant após atualizar pelo HACS.
@@ -74,7 +74,7 @@ mostra um hash; o manifesto/diagnóstico informa a versão do produto. Quando ho
 releases publicadas, escolha a versão estável: uma tag sozinha não é uma release.
 Se estiver seguindo `master`, use Baixar novamente para mudar para a versão
 estável quando ela for publicada. HACS não atualiza o add-on automaticamente.
-Mantenha ambos em 0.4.1; a atualização do motor segue o procedimento abaixo.
+Mantenha ambos em 0.4.2; a atualização do motor segue o procedimento abaixo.
 
 ## Migrar do add-on antigo / atualizar
 
@@ -86,7 +86,7 @@ abaixo; não troque para o repositório GitHub durante essa migração.
 
 1. Faça backup completo do HA e guarde as opções da integração e do add-on.
 2. Na loja, use ⋮ → Verificar atualizações (Check for updates). Espere o catálogo
-   atualizar. Confira que **ARANDU NLU** oferece **0.4.1**, mantendo o mesmo identificador.
+   atualizar. Confira que **ARANDU NLU** oferece **0.4.2**, mantendo o mesmo identificador.
    Não remova e adicione o repositório a cada atualização.
 3. Na página do add-on, execute **Atualizar**. Como não existe campo `image`,
    o Supervisor reconstrói a imagem a partir da pasta publicada. Espere o build terminar;
@@ -96,7 +96,7 @@ abaixo; não troque para o repositório GitHub durante essa migração.
    não a versão do release.
 5. Atualize **ARANDU NLU** pelo HACS. Preserve `/config/.storage/` e as opções
    existentes; não apague nem recrie a entrada da integração.
-6. Reinicie o Home Assistant. Confira `manifest.json` com versão **0.4.1**,
+6. Reinicie o Home Assistant. Confira `manifest.json` com versão **0.4.2**,
    o endpoint e a opção `contextual_enabled=true`. Verifique exposição ao Assist,
    permissões do usuário e área do satélite.
 7. Teste uma consulta e uma ação contextual com entidades reais configuradas,
@@ -117,8 +117,8 @@ confira os valores efetivamente carregados:
 
 ```json
 {
-  "integration_version": "0.4.1",
-  "service_version": "0.4.1",
+  "integration_version": "0.4.2",
+  "service_version": "0.4.2",
   "contextual_enabled": true,
   "protocol": 4,
   "route": "/v4/interpret",
@@ -146,15 +146,15 @@ Em Windows com Docker Linux, execute `./tools/mlp-dev.ps1 -Task check`.
 Em Linux com as ferramentas pinadas, execute `./tools/mlp-check`.
 Para a imagem amd64: `./tools/mlp-dev.ps1 -Task image`.
 Build manual: `docker build --network none --platform linux/amd64 --build-arg
-BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.4.1 -t local-nlu:0.4.1-amd64 addon`.
+BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.4.2 -t local-nlu:0.4.2-amd64 addon`.
 Para ARM64 use `--platform linux/arm64` e `BUILD_ARCH=aarch64`.
 O builder usa digest OCI multi-arquitetura pinado e crates vendorizados.
 
 Com Python 3.11+ e Ruby instalados:
-`python3 tools/release-package.py` produz em `target/dist/0.4.1/`:
+`python3 tools/release-package.py` produz em `target/dist/0.4.2/`:
 
-- `arandu-nlu-addon-0.4.1.zip`: `repository.yaml` e a pasta `addon/` completa.
-- `arandu-nlu-integration-0.4.1.zip`: somente `custom_components/local_nlu/`.
+- `arandu-nlu-addon-0.4.2.zip`: `repository.yaml` e a pasta `addon/` completa.
+- `arandu-nlu-integration-0.4.2.zip`: somente `custom_components/local_nlu/`.
 - `arandu-nlu-integration.zip`: conteúdo plano da integração, manifesto na raiz,
   formato do consumidor ZIP HACS. A configuração HACS atual instala por fonte;
   este asset serve à release/verificação e à instalação avançada.
@@ -162,7 +162,7 @@ Com Python 3.11+ e Ruby instalados:
 
 O empacotador verifica CRC, lista de arquivos, bytes extraídos e versões.
 Datas ZIP, ordem, modos Unix e conteúdo textual são normalizados.
-`python3 tools/make-store-repo.py --output target/dist/store-0.4.1`
+`python3 tools/make-store-repo.py --output target/dist/store-0.4.2`
 gera uma estrutura de loja isolada com `addon/`, incluindo avisos de licença;
 recusa sobrescrever saída não vazia. O GitHub principal já tem essa estrutura.
 
@@ -183,7 +183,7 @@ Confira [RELEASES.md](docs/nlu-2.0/RELEASES.md) antes de publicar.
 
 ## Instalação manual — avançada/desenvolvimento
 
-Para desenvolvimento offline, extraia `arandu-nlu-integration-0.4.1.zip` no
+Para desenvolvimento offline, extraia `arandu-nlu-integration-0.4.2.zip` no
 diretório de configuração HA e reinicie. O manifesto deve ficar em
 `/config/custom_components/local_nlu/manifest.json`. O ZIP fixo plano deve ser
 extraído **dentro** de `/config/custom_components/local_nlu/`, nunca em `/config`.
@@ -196,10 +196,10 @@ Ainda não executada nesta entrega. Requer uma instalação HA e entidades reais
 - [ ] Adicionar custom repository no HACS e reconhecer categoria Integration.
 - [ ] ARANDU NLU aparece instalável; baixar `master` ou release estável disponível.
 - [ ] Verificar `/config/custom_components/local_nlu/manifest.json`, domínio
-  `local_nlu`, versão 0.4.1 e ausência de um diretório `custom_components` aninhado.
+  `local_nlu`, versão 0.4.2 e ausência de um diretório `custom_components` aninhado.
 - [ ] Reiniciar HA sem erro de importação/setup nos logs.
 - [ ] Entrada antiga, entry_id, options e seleção no Assist permanecem válidos.
-- [ ] Diagnóstico mostra integration_version=service_version=0.4.1 e compatible=true.
+- [ ] Diagnóstico mostra integration_version=service_version=0.4.2 e compatible=true.
 - [ ] contextual_enabled=true, protocol=4 e route=/v4/interpret.
 - [ ] Consulta simples de entidade exposta/autorizada responde e não chama serviço.
 - [ ] Após uma próxima release/commit autorizado, atualização aparece no HACS;

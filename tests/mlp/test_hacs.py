@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -226,8 +227,10 @@ class HacsTests(unittest.TestCase):
         job = workflow['jobs']['integration']
         self.assertEqual(job['permissions'], {'contents': 'write'})
         checkout = job['steps'][0]
-        self.assertEqual(checkout['with']['ref'], '${{ github.event.release.tag_name }}')
-        self.assertFalse(checkout['with']['persist-credentials'])
+        self.assertEqual(checkout['env']['CHECKOUT_REF'], '${{ github.event.release.tag_name }}')
+        self.assertIn('git fetch --no-tags --depth=1 -- origin "refs/tags/$CHECKOUT_REF"', checkout['run'])
+        self.assertIn('git checkout --detach FETCH_HEAD', checkout['run'])
+        self.assertNotIn('token', checkout['env'])
         scripts = '\n'.join(step.get('run', '') for step in job['steps'])
         self.assertIn('--tag "$RELEASE_TAG"', scripts)
         self.assertIn('gh release upload "$RELEASE_TAG"', scripts)
@@ -235,6 +238,57 @@ class HacsTests(unittest.TestCase):
             self.assertNotIn(command, scripts)
         validation = distribution.yaml_file(self.root / '.github/workflows/hacs.yml')
         self.assertEqual(validation['permissions'], {'contents': 'read'})
+        public_checkout = validation['jobs']['distribution']['steps'][0]
+        self.assertEqual(public_checkout['env']['CHECKOUT_REF'], '${{ github.sha }}')
+        for step in (checkout, public_checkout):
+            self.assertIn("git sparse-checkout set --no-cone '/*' '!/*/' '/.github/' '/addon/' '/custom_components/' '/data/' '/tests/' '/tools/' '!/implementation-clean-room'", step['run'])
+            self.assertNotIn('submodule', step['run'])
+            self.assertNotIn('extraheader', step['run'])
         official = validation['jobs']['official-hacs']['steps'][0]
         self.assertTrue(official['uses'].startswith('docker://ghcr.io/hacs/action@sha256:'))
         self.assertEqual(official['env']['INPUT_IGNORE'].split(), ['description', 'topics'])
+
+    def test_public_checkout_handles_legacy_gitlink_without_storing_credentials(self):
+        origin = Path(self.temp.name) / 'git-origin'
+        origin.mkdir()
+        def git(path, *arguments):
+            return subprocess.check_output(['git', '-C', str(path), *arguments], text=True,
+                                           stderr=subprocess.STDOUT).strip()
+        git(origin, 'init', '-q')
+        git(origin, 'config', 'user.name', 'FIXTURE_TECNICA')
+        git(origin, 'config', 'user.email', 'fixture@example.invalid')
+        (origin / 'README.md').write_text('FIXTURE_TECNICA')
+        (origin / 'addon').mkdir()
+        (origin / 'addon/product').write_text('FIXTURE_TECNICA')
+        git(origin, 'add', '.')
+        git(origin, 'commit', '-qm', 'fixture')
+        commit = git(origin, 'rev-parse', 'HEAD')
+        git(origin, 'update-index', '--add', '--cacheinfo', f'160000,{commit},implementation-clean-room')
+        git(origin, 'commit', '-qm', 'fixture legacy gitlink without URL')
+        checkout = Path(self.temp.name) / 'git-checkout'
+        checkout.mkdir()
+        git(checkout, 'init', '-q')
+        git(checkout, 'remote', 'add', 'origin', str(origin))
+        revision = git(origin, 'rev-parse', 'HEAD')
+        git(checkout, 'fetch', '--no-tags', '--depth=1', '--', 'origin', revision)
+        git(checkout, 'sparse-checkout', 'set', '--no-cone', '/*', '!/*/', '/.github/', '/addon/',
+            '/custom_components/', '/data/', '/tests/', '/tools/', '!/implementation-clean-room')
+        git(checkout, 'checkout', '--detach', 'FETCH_HEAD')
+        self.assertTrue((checkout / 'addon/product').is_file())
+        self.assertTrue((checkout / 'README.md').is_file())
+        self.assertFalse((checkout / 'implementation-clean-room').exists())
+        self.assertIn('160000', git(checkout, 'ls-files', '--stage', 'implementation-clean-room'))
+        result = subprocess.run(['git', '-C', str(checkout), 'config', '--local', '--get-regexp',
+                                 r'credential|extraheader'], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, '')
+        # A published release must never fall back to a same-named branch.
+        git(origin, 'branch', 'v0.0.1', commit)
+        result = subprocess.run(['git', '-C', str(checkout), 'fetch', '--no-tags', '--depth=1',
+                                 '--', 'origin', 'refs/tags/v0.0.1'], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        git(origin, 'tag', 'v0.0.1', revision)  # Technical fixture only, not a product tag.
+        git(checkout, 'fetch', '--no-tags', '--depth=1', '--', 'origin', 'refs/tags/v0.0.1')
+        git(checkout, 'checkout', '--detach', 'FETCH_HEAD')
+        self.assertEqual(git(checkout, 'rev-parse', 'HEAD'), revision)
+        self.assertNotEqual(git(checkout, 'rev-parse', 'HEAD'), commit)

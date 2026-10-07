@@ -38,8 +38,13 @@ gera os pacotes e verifica ZIP/CRC/allowlist/SHA. Anexa somente ZIP fixo/hash à
 release correspondente, sem sobrescrever assets existentes. Não cria tag nem
 release, não publica imagem e não executa deploy. Push comum roda validação,
 jamais upload. Job de upload tem contents:write; os demais, contents:read.
-Actions e imagem oficial HACS são fixadas por SHA/digest; checkout não preserva
-credenciais. Não há secrets customizados necessários: só GITHUB_TOKEN do CI.
+Setup Python e imagem oficial HACS são fixados por SHA/digest. Checkout usa Git
+anônimo no repositório público e commit SHA/tag validado, com sparse checkout
+da árvore necessária; não grava credenciais nem executa operações de submódulos.
+O gitlink legado sem URL é preservado no repositório e fica fora dos arquivos
+materializados. Isso evita a falha de cleanup de actions/checkout sem modificar
+conteúdo histórico ou relaxar permissões. Não há secrets customizados necessários:
+só GITHUB_TOKEN para validador e upload, nos respectivos passos.
 
 ## Preparar a próxima release (mantenedor)
 

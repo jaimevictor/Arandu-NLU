@@ -1,7 +1,7 @@
 # Implementação contextual Arandu NLU 0.4.0
 
 Relatório histórico da implementação funcional 0.4.0. A distribuição atual
-0.4.1 usa HACS para a integração Python e Add-on Store para o Rust; siga
+0.4.2 usa HACS para a integração Python e Add-on Store para o Rust; siga
 [INSTALL.md](../../INSTALL.md) e [RELEASES.md](RELEASES.md). Evidências abaixo
 permanecem da versão/contexto em que foram medidas.
 

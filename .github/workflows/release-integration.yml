@@ -18,10 +18,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
-          persist-credentials: false
+      - name: Checkout public release tag without credentials or submodule operations
+        env:
+          CHECKOUT_REF: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          [[ "$CHECKOUT_REF" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          git init .
+          git remote add origin https://github.com/jaimevictor/Arandu-NLU.git
+          git fetch --no-tags --depth=1 -- origin "refs/tags/$CHECKOUT_REF"
+          git sparse-checkout set --no-cone '/*' '!/*/' '/.github/' '/addon/' '/custom_components/' '/data/' '/tests/' '/tools/' '!/implementation-clean-room'
+          git checkout --detach FETCH_HEAD
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
