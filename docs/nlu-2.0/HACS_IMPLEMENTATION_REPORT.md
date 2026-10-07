@@ -83,8 +83,12 @@ oficiais, sem rede. Isso não comprova frontend HACS nem HA residencial.
 
 O job oficial GitHub usa o mesmo container, mantendo ativos todos os checks
 técnicos. Description/topics são as únicas exceções de catálogo, pois esses
-metadados ainda estão vazios no GitHub. Runs remotos são verificáveis em
-https://github.com/jaimevictor/Arandu-NLU/actions/workflows/hacs.yml.
+metadados ainda estão vazios no GitHub. O código final foi enviado diretamente
+para master no commit 321e717a5fc4a99d4f5bf90148f6c1295e9bb235. A
+[CI desse commit](https://github.com/jaimevictor/Arandu-NLU/actions/runs/37629182830)
+concluiu com **success** nos dois jobs: distribution e official-hacs. Nenhuma
+tag, release ou publicação residencial foi feita. O registro posterior desse
+resultado altera somente documentação; código, pacotes e fingerprints são iguais.
 
 O primeiro push foi 6b11213 (produto 0.4.1). Nesse
 [run](https://github.com/jaimevictor/Arandu-NLU/actions/runs/37625912914), o job
@@ -135,7 +139,7 @@ foram verificados. Artefatos locais não são incluídos no Git.
 | Requisito | Evidência |
 | --- | --- |
 | hacs.json válido | schema oficial + check/test local |
-| custom Integration reconhecível | HacsIntegrationRepository real/fixtures + CI oficial preparado |
+| custom Integration reconhecível | HacsIntegrationRepository real/fixtures + CI oficial remoto PASS |
 | domínio local_nlu | manifest e registro oficiais; testes negativos |
 | componente Python válido | gate/allowlist/manifest/licenses |
 | pacote HACS reproduzível | duas gerações, hash/lista/CRC e consumidor oficial |
