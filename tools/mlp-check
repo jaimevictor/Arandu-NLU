@@ -12,6 +12,7 @@ python3 tools/contextual-record.py --fingerprint
 
 ./tools/generate-mlp-corpus --check
 ./tools/check-mlp-package
+python3 tools/distribution.py
 ruby -rjson -ryaml -e '
   JSON.parse(File.read("custom_components/local_nlu/manifest.json"))
   JSON.parse(File.read("custom_components/local_nlu/strings.json"))

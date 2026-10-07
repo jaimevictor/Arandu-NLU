@@ -15,7 +15,10 @@ if ($LASTEXITCODE -ne 0) {
 & $docker.Source build --tag $image --file (Join-Path $root 'tools/dev/Dockerfile') (Join-Path $root 'tools/dev')
 if ($LASTEXITCODE -ne 0) { throw 'Developer image build failed.' }
 if ($Task -eq 'image') {
-    & $docker.Source build --network none --platform linux/amd64 --tag 'local-nlu:0.3.1-amd64' --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.3.1 (Join-Path $root 'addon')
+    $versionLine = Get-Content (Join-Path $root 'addon/config.yaml') | Where-Object { $_ -match '^version: ' }
+    $productVersion = ($versionLine -replace '^version: ', '').Trim('"', "'")
+    if ($productVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid add-on version' }
+    & $docker.Source build --network none --platform linux/amd64 --tag "local-nlu:$productVersion-amd64" --build-arg BUILD_ARCH=amd64 --build-arg "BUILD_VERSION=$productVersion" (Join-Path $root 'addon')
     if ($LASTEXITCODE -ne 0) { throw 'Add-on image build failed.' }
     exit 0
 }
