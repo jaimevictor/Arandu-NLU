@@ -2,7 +2,7 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
-**NLU 2.0.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+**Versão 0.3.1 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
 
 Local, deterministic Brazilian Portuguese conversation agent for Home Assistant.
 

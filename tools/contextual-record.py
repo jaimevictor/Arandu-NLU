@@ -122,7 +122,7 @@ def record(args):
         ht = transport['phases']['observed_rust_http_executor_ms']
         bench_rows.append(f"| {native['entities']} | {nt['p50_ms']:.4f} | {nt['p95_ms']:.4f} | {nt.get('p99_ms', 0):.4f} | {ht['p50_ms']:.4f} | {ht['p95_ms']:.4f} | {ht.get('p99_ms', 0):.4f} | {native['catalog_compile_p50_ms']:.2f} | {native['process_rss']} |")
     imperfect = [f"- `{name}`: {row['operational_simulated']}/{row['cases']} execuções simuladas; motivos: {', '.join(row['reasons']) or 'abstenção/ambiguidade/checagem semântica; veja cases_detail'}." for name, row in coverage['intents'].items() if row['operational_simulated'] != row['cases']]
-    report = f"""# Relatório NLU 2.0.0
+    report = f"""# Relatório NLU 0.3.1 — motor contextual 2.0
 
 Implementação contextual aditiva em Rust/Python, versões anteriores preservadas e STT inalterado. Fingerprint normalizado das fontes executáveis: `{source_hash}`. Trabalho no checkout local; nenhum commit, push ou implantação numa residência foi efetuado.
 
@@ -210,7 +210,7 @@ Casos que ainda não completam a execução simulada isolada:
 
 ## I. Alterações
 
-Rust: `addon/engine/src/contextual`, rotas em server/lib e testes/exemplo de benchmark. Python: catálogo/protocolo/executor contextual, capabilities/queries, runtime/conversation/config_flow/init e traduções. Build: versões 2.0.0, Docker, avisos de licença e staging LF. Dados: inventário/proveniência/cobertura/benchmarks. Ferramentas: importação, avaliação, medição, smoke e pacote. Documentos: arquitetura/contratos/implantação/revisões/relatório/checkpoint. Modificações locais anteriores foram preservadas.
+Rust: `addon/engine/src/contextual`, rotas em server/lib e testes/exemplo de benchmark. Python: catálogo/protocolo/executor contextual, capabilities/queries, runtime/conversation/config_flow/init e traduções. Build: versão 0.3.1, Docker, avisos de licença e staging LF. Dados: inventário/proveniência/cobertura/benchmarks. Ferramentas: importação, avaliação, medição, smoke e pacote. Documentos: arquitetura/contratos/implantação/revisões/relatório/checkpoint. Modificações locais anteriores foram preservadas.
 
 ## J. Pronto para implantação?
 
@@ -265,7 +265,7 @@ def package(destination):
             info.external_attr = (0o100755 if executable else 0o100644) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, content)
-        archive.writestr('RELEASE-MANIFEST.json', json.dumps({'version': '2.0.0', 'source_digest': digest(), 'files': manifest}, sort_keys=True, indent=2))
+        archive.writestr('RELEASE-MANIFEST.json', json.dumps({'version': '0.3.1', 'source_digest': digest(), 'files': manifest}, sort_keys=True, indent=2))
     with zipfile.ZipFile(destination) as archive:
         assert archive.testzip() is None
         for name, expected in manifest.items():

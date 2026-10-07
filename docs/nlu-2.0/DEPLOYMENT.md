@@ -1,7 +1,7 @@
-# Implantação 2.0.0
+# Implantação 0.3.1 — motor contextual 2.0
 
 1. Faça backup da integração atual e da configuração do Assist. Instale o conteúdo de `custom_components/local_nlu` no diretório de configuração do HA; reinicie o HA.
-2. Instale o add-on deste repositório, versão 2.0.0, e inicie-o. O Rust é estático, sem root, sem credenciais e sem acesso de saída necessário. Configure a integração com o endpoint privado do add-on (o slug continua `ptbr_nlu`).
+2. Instale o add-on deste repositório, versão 0.3.1, e inicie-o. O Rust é estático, sem root, sem credenciais e sem acesso de saída necessário. Configure a integração com o endpoint privado do add-on (o slug continua `ptbr_nlu`).
 3. Selecione ARANDU NLU como agente de conversa no pipeline Assist. Exponha as entidades desejadas em Assist, atribua áreas aos dispositivos/satélites e confira aliases e nomes reais.
 4. Em opções, mantenha `contextual_enabled=true`. Configure área padrão somente se quiser usá-la quando não existe origem identificável. Ajuste preferências, incrementos e políticas abaixo.
 5. Teste primeiro uma consulta, depois uma ação simples e um esclarecimento: “Qual a temperatura aqui?”, “Liga o ar”, “Coloca o ventilador em 50 por cento”. Confira o histórico HA antes de habilitar ações sensíveis.
@@ -10,7 +10,9 @@ Não há requisito de modificar STT. O áudio continua no pipeline existente; o 
 
 ## Instalar o pacote local
 
-Extraia `arandu-nlu-2.0.0.zip` e confira o SHA-256 do arquivo com o `.zip.sha256` entregue. Em uma instalação com Supervisor, copie a pasta `addon` inteira para `/addons/arandu_nlu`, preservando seus arquivos internos; recarregue a loja e instale a entrada local Arandu NLU. Esse é o [fluxo oficial de apps locais do Home Assistant](https://developers.home-assistant.io/docs/apps/tutorial/). O pacote é código-fonte e o Supervisor compila a imagem; não depende de um push deste checkout.
+Ao gerar o pacote `arandu-nlu-0.3.1.zip`, extraia-o e confira o SHA-256 do arquivo com o `.zip.sha256` entregue. Em uma instalação com Supervisor, copie a pasta `addon` inteira para `/addons/arandu_nlu`, preservando seus arquivos internos; recarregue a loja e instale a entrada local Arandu NLU. Esse é o [fluxo oficial de apps locais do Home Assistant](https://developers.home-assistant.io/docs/apps/tutorial/). O pacote é código-fonte e o Supervisor compila a imagem; não depende de um push deste checkout.
+
+A evidência de validação existente registra o build anterior 2.0.0. O versionamento atual é 0.3.1; gere e valide novamente o pacote antes de distribuí-lo com esse número.
 
 Copie `custom_components/local_nlu` para `/config/custom_components/local_nlu`, reinicie o HA e adicione a integração em Dispositivos e serviços. Use o hostname privado exibido pelo Supervisor para esse app e a porta interna 11555. O add-on não publica uma porta no host. Em HA Container, compile a imagem e conecte-a à mesma rede privada do HA, com o endpoint configurado para o nome desse container; use a integração da mesma forma.
 
@@ -95,7 +97,7 @@ Calendário precisa suportar create_event para criação. O diálogo coleta tít
 
 Pré-requisitos: HA com Conversation/Assist e um usuário ativo identificado no contexto; Supervisor para o app local ou Docker em rede privada para HA Container. Build requer o builder Rust pinado; o gate usa Python 3.11+ (tomllib), Ruby e Rust 1.98.0. Em Windows, Docker Linux e `tools/mlp-dev.ps1` fornecem as versões registradas em tools/dev/DEPENDENCIES.md. Somente serviços/integradores realmente instalados ficam disponíveis.
 
-Windows: `./tools/mlp-dev.ps1 -Task check`. Linux com Rust 1.98.0: `./tools/mlp-check` (fontes vendorizadas, build offline). Imagem: `docker build --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=2.0.0 -t arandu-nlu:2.0.0 addon`.
+Windows: `./tools/mlp-dev.ps1 -Task check`. Linux com Rust 1.98.0: `./tools/mlp-check` (fontes vendorizadas, build offline). Imagem: `docker build --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.3.1 -t arandu-nlu:0.3.1 addon`.
 
 Para reproduzir cobertura: importe/valide o corpus com `tools/import-stt-corpus.py --stt-root <repo-stt> --check`; use `ARANDU_NLU_BINARY=<binário-release> python3 tools/contextual-evaluate.py --stt-root <repo-stt> --output <resultado.json>`. O teste usa executor real com HA simulado. Benchmark puro: `cargo run --release --locked --offline -p local-nlu --example contextual_bench`.
 

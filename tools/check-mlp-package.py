@@ -54,7 +54,7 @@ EXPECTED_VENDOR = {
 }
 EXPECTED_LOCK_PACKAGES = {
     "itoa": "1.0.18",
-    "local-nlu": "2.0.0",
+    "local-nlu": "0.3.1",
     "memchr": "2.8.3",
     "proc-macro2": "1.0.107",
     "quote": "1.0.47",
@@ -94,7 +94,7 @@ def check_integration() -> None:
         "iot_class": "local_polling",
         "requirements": [],
         "single_config_entry": True,
-        "version": "2.0.0",
+        "version": "0.3.1",
     }
     for key, value in expected.items():
         if manifest.get(key) != value:
