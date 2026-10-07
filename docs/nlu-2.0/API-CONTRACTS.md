@@ -43,4 +43,20 @@ O catálogo admite `groups:[{group_id,names,area_ids}]` para andares registrados
 
 Resposta plan contém `operations` com `intent`, `action`, `targets` (IDs de registro ordenados), `parameters`, `evidence` e `depends_on` (somente operações anteriores). Respostas alternativas: clarification, unavailable, invalid_request, no_match, stale, cancel, confirm, repeat_response. Campos desconhecidos são rejeitados. IDs HA e serviços não são fornecidos pelo texto. Tempos medidos ficam separados dos resultados semânticos determinísticos.
 
-Rust não recebe token/contexto de autenticação do HA. O contexto original fica no Python e acompanha cada chamada de serviço. Use a rede privada do add-on; não publique a porta do interpretador na internet.
+Rust não recebe token/contexto de autenticação nem IDs de usuários do HA. Contexto
+autenticado original acompanha os serviços. Quando falta user_id, uma identidade
+explicitamente configurada recebe Context(user_id=effective_user_id,
+parent_id=original.id), sem mutar a entrada original. O mesmo ID é revalidado em
+todas as etapas e acompanha cada serviço. Use a rede privada do add-on; não
+publique a porta do interpretador na internet.
+
+## Identidade Assist 0.4.3 — HA 2026.9.4
+
+Contrato adicional verificado no tag 2026.9.4: WebSocket usa connection.context
+(usuário autenticado); AssistSatelliteEntity pode usar Context() sem usuário.
+satellite_id é entity_id de assist_satellite, device_id é ID do device registry.
+SelectSelector apresenta usuários ativos de hass.auth.async_get_users; não há
+UserSelector nessa versão. Opções armazenam apenas IDs; diagnóstico/logs não os
+expõem. Resolução contextual: context > satellite_binding > device_binding >
+fallback > missing_user. Usuário inválido/inativo nunca é substituído por outra
+fonte. [Fontes, contraprovas e limites](MISSING_USER_RESIDENTIAL_FIX.md).

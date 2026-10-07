@@ -13,6 +13,9 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
     result = {"integration_version": version, "contextual_enabled": enabled,
               "protocol": getattr(runtime._client, "_last_interpret_protocol", configured), "configured_protocol": configured,
               "last_outcome": getattr(getattr(runtime, "_contextual", None), "last_outcome", None)}
+    from .identity import identity_diagnostics
+    contextual = getattr(runtime, "_contextual", None)
+    result["identity"] = contextual.identity_diagnostics() if contextual is not None else identity_diagnostics(dict(entry.options) if hasattr(entry, "options") else {})
     try:
         service = await runtime._client.async_diagnostics()
         result.update(service)

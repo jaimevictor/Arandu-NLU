@@ -16,11 +16,11 @@ visível. Antes da primeira release, master fornece instalação/atualizações 
 commit. Releases estáveis futuras oferecem versão etiquetada: o HACS extrai
 somente custom_components/local_nlu do arquivo GitHub, não instala o add-on.
 
-Por que não zip_release=true agora: a API pública GitHub não mostrou releases
-publicadas em 2026-10-07. O instalador HACS 2.0.5 e main consultado chama
+Na preparação de 0.4.2, a API pública GitHub não mostrou releases publicadas.
+O instalador HACS 2.0.5 e main consultado chama
 download_zip_files incondicionalmente com esse campo, inclusive para master.
-Isso quebraria a instalação antes de um asset existir. Esta missão proíbe
-publicar releases. A preferência por ZIP não supera instalação funcional.
+Isso quebraria a instalação antes de um asset existir. A missão de suporte HACS
+0.4.2 não autorizava publicação. A preferência por ZIP não supera instalação funcional.
 Fonte é um método oficialmente suportado; não exige migração posterior.
 
 ## ZIP fixo e workflow
@@ -61,8 +61,10 @@ só GITHUB_TOKEN para validador e upload, nos respectivos passos.
 4. Espere os checks/upload e execute checklist real em INSTALL.md. HACS e Store
    atualizam independentemente; reinicie HA e confirme versões efetivas/rota v4.
 
-Esta missão não executa o passo de publicação. O job de upload foi preparado,
-mas só poderá ser comprovado remoto quando uma release for autorizada/publicada.
+O workflow não cria uma release; o mantenedor publica após autorização da missão
+e validação do commit. A correção de identidade 0.4.3 requer entrega instalável;
+seu checkpoint registra o resultado real de tag/release/assets, separadamente
+da validação residencial. Confira [MISSING_USER_RESIDENTIAL_FIX.md](MISSING_USER_RESIDENTIAL_FIX.md).
 Não habilite zip_release sem primeiro assegurar asset compatível em toda release
 oferecida. Uma mudança futura para ZIP deve manter filename fixo acima, conservar
 o domínio e explicar que master deixa de ser instalável nesse modo no HACS atual.

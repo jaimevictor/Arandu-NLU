@@ -14,6 +14,13 @@ Não há embeddings, LLM, busca aproximada, subprocesso por fala, credenciais do
 
 ## Resolução e contexto
 
+Identidade contextual 0.4.3: identity.py resolve o ConversationInput completo uma
+vez, pela ordem contexto, associação de satélite, associação de dispositivo,
+fallback explícito. Guarda user_id/user/source imutáveis; revalidação atualiza
+somente as permissões do mesmo ID. Sessões usam esse ID efetivo, origem e conversa;
+mudança de fonte ou configuração invalida pendências. Um listener de opções
+também invalida mudança seguida de restauração durante I/O. [Evidências](MISSING_USER_RESIDENTIAL_FIX.md).
+
 Prioridade: ID explícito, alias do usuário, nome amigável, nome do dispositivo, tipo semântico. Área explícita limita o candidato; uma área desconhecida pede esclarecimento. Se “da TV” faz parte de um nome registrado completo, esse nome pode ser resolvido como unidade. Tipos genéricos podem usar a área de origem e uma preferência configurada. Dois alvos equivalentes pedem esclarecimento.
 
 Origem: `satellite_id` registrado → área efetiva; senão `device_id` → área do dispositivo; senão `default_area` válido. Sem evidência, “aqui” pede o cômodo. A localização de uma pessoa nunca define automaticamente seu quarto.

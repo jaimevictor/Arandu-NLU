@@ -1,6 +1,10 @@
 """Typed, privacy-safe outcomes shared by runtime and the HA speech boundary."""
 
 MESSAGES = {
+    "missing_user": "Este dispositivo de voz ainda não está associado a um usuário.",
+    "inactive_or_missing_configured_user": "O usuário associado a este dispositivo de voz está indisponível. Confira a configuração do ARANDU NLU.",
+    "identity_origin_unavailable": "O dispositivo de voz associado está indisponível. Confira a configuração do ARANDU NLU.",
+    "identity_changed": "A identidade da conversa mudou. Faça o pedido novamente.",
     "unknown_area": "Não encontrei um cômodo com esse nome.",
     "ambiguous_area": "Há mais de um cômodo com esse nome. Em qual cômodo?",
     "no_accessible_sensor": "Não encontrei um sensor acessível para essa medição nesse cômodo ou aparelho.",

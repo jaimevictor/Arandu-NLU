@@ -37,9 +37,32 @@
           "person_device_bindings": "Person aliases and device bindings",
           "device_sensor_bindings": "Device sensor bindings",
           "excluded_from_bulk_actions": "Exclude from collective actions",
-          "low_battery_threshold": "Low battery threshold (%)"
+          "low_battery_threshold": "Low battery threshold (%)",
+          "fallback_user_id": "User for pipelines without identity",
+          "configure_identity_bindings": "Configure device/satellite identity bindings"
+        },
+        "data_description": {
+          "fallback_user_id": "User whose permissions are used when Home Assistant does not provide the voice pipeline identity. Select — to disable."
+        }
+      },
+      "identity_binding": {
+        "title": "Voice identity bindings",
+        "description": "Choose one satellite OR device and a user. Uncheck Save and finish to add another binding. To remove, select an existing binding or check Remove binding. Authenticated context always wins; users are never chosen automatically.",
+        "data": {
+          "satellite_id": "Assist satellite",
+          "device_id": "Origin device",
+          "identity_user_id": "Associated user",
+          "remove_binding": "Remove binding",
+          "save_and_finish": "Save and finish",
+          "existing_binding": "Existing binding to remove"
         }
       }
+    },
+    "error": {
+      "invalid_identity_user": "Choose an active user.",
+      "choose_one_identity_origin": "Choose exactly one satellite or device.",
+      "invalid_identity_origin": "The selected origin is unavailable.",
+      "invalid_identity_configuration": "Identity bindings are invalid or exceed the limit."
     }
   },
   "title": "ARANDU NLU"

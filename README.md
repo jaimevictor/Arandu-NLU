@@ -2,7 +2,7 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
-**Versão 0.4.2 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+**Versão 0.4.3 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
 
 Distribuição: motor Rust pelo **Home Assistant Add-on Store**, com slug `ptbr_nlu`;
 integração Python pelo **HACS**, domínio `local_nlu`. Os dois canais compartilham
@@ -57,7 +57,7 @@ The add-on never receives Home Assistant credentials. The integration is the sol
 
 ## Limits
 
-No arbitrary service calls, generative model, fuzzy authorization, inferred indoor identity, fabricated readings or assumed atomic HA transactions. Unsupported conditions/exceptions abstain. Sensitive access/protection operations need policy and confirmation; entity PIN requirements remain enforced. Backends and authenticated `context.user_id` are required. Real residential HA and ARM64 have not been tested here; coverage uses the real executor with simulated HA. See the report for exact counts and remaining interpretation failures.
+No arbitrary service calls, generative model, fuzzy authorization, inferred indoor identity, fabricated readings or assumed atomic HA transactions. Unsupported conditions/exceptions abstain. Sensitive access/protection operations need policy and confirmation; entity PIN requirements remain enforced. An active request user is required: authenticated context wins; identity-less contextual pipelines use only an explicitly configured satellite/device binding or fallback user. Configure this in the integration options. Real residential HA and ARM64 have not been tested here; coverage uses the real executor with simulated HA. See the report for exact counts and remaining interpretation failures.
 
 ## Installation
 
@@ -73,6 +73,14 @@ dos arquivos e reinicie, sem excluir a entrada. [Passos completos](INSTALL.md).
 HACS usa a fonte da branch `master` antes da primeira release; releases futuras
 oferecem versões etiquetadas. Um push não atualiza os componentes já carregados.
 Veja [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md) para Assist e adaptadores.
+
+### Satélites sem identidade — 0.4.3
+
+Em Dispositivos e serviços → ARANDU NLU → Configurar, selecione
+**Usuário para pipelines sem identidade**. Suas permissões continuam obrigatórias;
+um usuário autenticado no contexto sempre prevalece. Associações específicas
+por satélite/dispositivo também podem ser configuradas por seletores.
+[Correção, testes e checklist residencial](docs/nlu-2.0/MISSING_USER_RESIDENTIAL_FIX.md).
 
 ## Development
 

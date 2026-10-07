@@ -31,6 +31,7 @@ EXPECTED_INTEGRATION = {
     "contextual_errors.py",
     "device_location.py",
     "diagnostics.py",
+    "identity.py",
     "queries.py",
     "manifest.json",
     "protocol.py",

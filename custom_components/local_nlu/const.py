@@ -6,6 +6,9 @@ PLATFORMS = ("conversation",)
 CONF_ENDPOINT = "endpoint"
 CONF_V2_ENABLED = "v2_enabled"
 CONF_CONTEXTUAL_ENABLED = "contextual_enabled"
+CONF_FALLBACK_USER_ID = "fallback_user_id"
+CONF_VOICE_IDENTITY_BINDINGS = "voice_identity_bindings"
+CONF_DEVICE_IDENTITY_BINDINGS = "device_identity_bindings"
 CONF_SHADOW_ENABLED = "shadow_enabled"
 DEFAULT_ENDPOINT = "http://local-ptbr-nlu:11555"
 

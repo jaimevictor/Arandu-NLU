@@ -11,7 +11,7 @@ ASSET = 'arandu-nlu-integration.zip'
 INTEGRATION_FILES = frozenset('''__init__.py LICENSE THIRD_PARTY_NOTICES.md
 catalog.py client.py config_flow.py const.py conversation.py capabilities.py
 contextual_protocol.py contextual_catalog.py contextual_runtime.py contextual_errors.py
-device_location.py diagnostics.py queries.py manifest.json protocol.py runtime.py
+device_location.py diagnostics.py identity.py queries.py manifest.json protocol.py runtime.py
 strings.json translations/en.json translations/pt-BR.json brand/icon.png'''.split())
 HACS_FIELDS = {
     'name': str, 'homeassistant': str, 'hacs': str, 'content_in_root': bool,

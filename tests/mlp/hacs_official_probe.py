@@ -111,6 +111,21 @@ async def probe(root, package):
         assert repo.validate.success and not (destination / 'obsolete.py').exists()
         assert entry.read_bytes() == original
 
+        # Actual HACS update decision and tagged source install, GitHub release metadata simulated.
+        repo.data.installed_version = 'v0.4.2'
+        repo.data.installed_commit = 'fixture-old-commit'
+        repo.data.last_commit = 'fixture-new-commit'
+        repo.data.releases = True
+        repo.data.last_version = 'v' + manifest['version']
+        repo.data.selected_tag = None
+        assert repo.pending_update and repo.version_to_download() == repo.data.last_version
+        await repo.async_install_repository(version=repo.data.last_version)
+        assert repo.validate.success, repo.validate.errors
+        assert 'archive/refs/tags/v' + manifest['version'] in downloaded[-1]
+        assert json.loads((destination / 'manifest.json').read_text()) == manifest
+        assert (destination / 'identity.py').exists()
+        assert entry.read_bytes() == original and not repo.pending_update
+
         # Fixed release ZIP: exact official extraction target, no nested component.
         repo.repository_manifest = HacsManifest.from_dict({**metadata, 'zip_release': True,
                                                            'filename': package.name})
@@ -119,7 +134,7 @@ async def probe(root, package):
         assert entry.read_bytes() == original
         assert json.loads((destination / 'manifest.json').read_text()) == manifest
         assert not (destination / 'custom_components').exists()
-    print('OFFICIAL HACS schemas/validators/registration/source install/reinstall/release ZIP PASS (fixtures)')
+    print('OFFICIAL HACS schemas/validators/registration/source install/reinstall/upgrade detection/tagged source/release ZIP PASS (fixtures)')
 
 
 if __name__ == '__main__':

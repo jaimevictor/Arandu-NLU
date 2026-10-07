@@ -37,9 +37,32 @@
           "person_device_bindings": "Aliases de pessoas e aparelhos vinculados",
           "device_sensor_bindings": "Sensores vinculados a aparelhos",
           "excluded_from_bulk_actions": "Excluir de ações coletivas",
-          "low_battery_threshold": "Limite de bateria baixa (%)"
+          "low_battery_threshold": "Limite de bateria baixa (%)",
+          "fallback_user_id": "Usuário para pipelines sem identidade",
+          "configure_identity_bindings": "Configurar associações por dispositivo/satélite"
+        },
+        "data_description": {
+          "fallback_user_id": "Usuário cujas permissões serão utilizadas quando o Home Assistant não informar a identidade da pipeline de voz. Selecione — para desativar."
+        }
+      },
+      "identity_binding": {
+        "title": "Associações de identidade de voz",
+        "description": "Escolha um satélite OU dispositivo e um usuário. Para adicionar outra associação, desmarque Salvar e concluir. Para remover, selecione uma associação existente ou marque Remover associação. Contexto autenticado sempre prevalece; nenhum usuário é escolhido automaticamente.",
+        "data": {
+          "satellite_id": "Satélite Assist",
+          "device_id": "Dispositivo de origem",
+          "identity_user_id": "Usuário associado",
+          "remove_binding": "Remover associação",
+          "save_and_finish": "Salvar e concluir",
+          "existing_binding": "Associação existente a remover"
         }
       }
+    },
+    "error": {
+      "invalid_identity_user": "Escolha um usuário ativo.",
+      "choose_one_identity_origin": "Escolha apenas um satélite ou dispositivo.",
+      "invalid_identity_origin": "A origem selecionada não está disponível.",
+      "invalid_identity_configuration": "As associações de identidade são inválidas ou excedem o limite."
     }
   },
   "title": "ARANDU NLU"

@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import dataclass, field, replace
 import hashlib
 import json
+import logging
 import time
 from typing import Any
 import uuid
@@ -18,6 +19,9 @@ from .contextual_catalog import CatalogCache, Snapshot, exposed, origin_area
 from .contextual_protocol import Operation, Outcome, normalize, parse
 from .protocol import ProtocolError
 from .queries import QueryError, calendar_response, calendar_parameters, date_window, now, read, render
+from .identity import IDENTITY_OPTIONS, IdentityError, ResolvedIdentity, effective_input, identity_diagnostics, request_origin, resolve_request_identity, revalidate_identity, validate_binding_origin
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ExecutionError(Exception):
@@ -29,6 +33,7 @@ class ExecutionError(Exception):
 @dataclass
 class Session:
     expires: float
+    identity_source: str | None = None
     last_targets: tuple[str, ...] = ()
     last_area: str | None = None
     pending: dict | None = None
@@ -62,10 +67,20 @@ class ContextualRuntime:
         self.sessions: dict[tuple[str, str, str], Session] = {}
         self.sent_generations: set[str] = set()
         self.lock = asyncio.Lock()
+        self.identity_source: str | None = None
+        self.origin_binding_configured = False
+        self.identity_options: str | None = None
+        self.options_revision = 0
+        self.request_revision = 0
 
     def close(self) -> None:
         self.catalog.close()
         self.sessions.clear()
+
+    def options_changed(self) -> None:
+        self.options_revision += 1
+        self.sessions.clear()
+        self.catalog.invalidate()
 
     def result(self, code: str, user_input: Any, *, speech: str | None = None, count: int = 0, followup: bool = False, reason: str | None = None, timings: dict | None = None) -> Any:
         from .runtime import RuntimeResult
@@ -84,16 +99,23 @@ class ContextualRuntime:
         return {**service, "integration_version": integration_version, "protocol": 4,
                 "contextual_enabled": True, "route": "/v4/interpret",
                 "compatible": service["service_version"] == integration_version and 4 in service["protocols"],
+                "identity": self.identity_diagnostics(),
                 "last_outcome": getattr(self, "last_outcome", None)}
 
-    async def user(self, context: Any) -> tuple[str, Any]:
-        user_id = getattr(context, "user_id", None)
-        if type(user_id) is not str:
-            raise ExecutionError("denied", "missing_user")
-        user = await self.hass.auth.async_get_user(user_id)
-        if user is None or user.is_active is not True:
-            raise ExecutionError("denied", "inactive_user")
-        return user_id, user
+    def identity_diagnostics(self) -> dict:
+        return identity_diagnostics(dict(self.options()), self.identity_source, binding=self.origin_binding_configured)
+
+    async def revalidate(self, identity: ResolvedIdentity, user_input: Any, options: dict) -> Any:
+        self.validate_options(options)
+        validate_binding_origin(self.hass, user_input, identity.source)
+        if getattr(user_input.context, "user_id", None) != identity.user_id:
+            raise IdentityError("identity_changed")
+        user = await revalidate_identity(self.hass, identity)
+        self.validate_options(options)
+        validate_binding_origin(self.hass, user_input, identity.source)
+        if getattr(user_input.context, "user_id", None) != identity.user_id:
+            raise IdentityError("identity_changed")
+        return user
 
     async def process(self, user_input: Any) -> Any:
         # Serializes this agent's live relative updates and retry/confirmation decisions.
@@ -107,11 +129,14 @@ class ContextualRuntime:
         return json.loads(encoded)
 
     def validate_options(self, expected: dict) -> None:
-        if self.current_options() != expected:
+        if self.options_revision != self.request_revision or self.current_options() != expected:
             raise ExecutionError("stale", "options_changed")
 
     async def _process(self, user_input: Any) -> Any:
         started = time.perf_counter()
+        self.identity_source = None
+        self.origin_binding_configured = False
+        self.request_revision = self.options_revision
         try:
             options = self.current_options()
         except (ExecutionError, TypeError, ValueError):
@@ -127,10 +152,18 @@ class ContextualRuntime:
         if type(conversation_id) is not str or not 1 <= len(conversation_id) <= 128:
             return self.result("invalid_request", user_input)
         try:
-            user_id, user = await self.user(user_input.context)
-            origin = getattr(user_input, "satellite_id", None) or getattr(user_input, "device_id", None) or "text"
-            if type(origin) is not str or len(origin) > 255:
-                raise ExecutionError("invalid_request", "origin")
+            policy = json.dumps({key: options.get(key) for key in IDENTITY_OPTIONS}, sort_keys=True)
+            if self.identity_options is not None and self.identity_options != policy:
+                self.sessions.clear()
+                self.catalog.invalidate()
+            self.identity_options = policy
+            identity = await resolve_request_identity(self.hass, user_input, options)
+            self.validate_options(options)
+            self.identity_source = identity.source
+            self.origin_binding_configured = identity.source in ("satellite_binding", "device_binding")
+            user_input = effective_input(user_input, identity)
+            user_id, user = identity.user_id, identity.user
+            origin = request_origin(user_input)
             key = (user_id, origin, conversation_id)
             current_time = time.monotonic()
             expired = key in self.sessions and self.sessions[key].expires < current_time
@@ -139,10 +172,15 @@ class ContextualRuntime:
             if key not in self.sessions:
                 if len(self.sessions) >= 128:
                     self.sessions.pop(next(iter(self.sessions)))
-                self.sessions[key] = Session(current_time + _ttl(options))
+                self.sessions[key] = Session(current_time + _ttl(options), identity_source=identity.source)
             session = self.sessions[key]
             text = normalize(user_input.text)
             independent = _independent_command(text)
+            if session.identity_source != identity.source:
+                self.sessions[key] = Session(current_time + _ttl(options), identity_source=identity.source)
+                session = self.sessions[key]
+                if not independent:
+                    return self.result("stale", user_input, reason="identity_changed")
             if not independent and (session.selection or session.pending or session.confirmation) and text not in ("sim", "não", "nao", "confirmo", "pode", "pode confirmar", "isso"):
                 # Rust remains the grammar authority for command families without verbs.
                 # This probe has no effects and never renders a catalog or candidates.
@@ -159,7 +197,7 @@ class ContextualRuntime:
                 session.candidates = ()
                 session.confirmation = ()
             elif session.selection is not None:
-                return await self.choose_set(text, user_input, session, user_id, user, options)
+                return await self.choose_set(text, user_input, session, identity, options)
             if text in ("cancela", "cancela isso", "nao", "nao pode", "esquece", "deixa pra la"):
                 session.pending = None
                 session.confirmation = ()
@@ -178,7 +216,7 @@ class ContextualRuntime:
                     raise ExecutionError("stale", "confirmation_origin_changed")
                 if _options_hash(options) != session.confirmation_options:
                     raise ExecutionError("stale", "confirmation_options_changed")
-                return await self.execute(operations, snapshot, user_input, session, options, confirmed=True)
+                return await self.execute(operations, snapshot, user_input, session, options, identity, confirmed=True)
             if session.confirmation:
                 # Any new utterance invalidates sensitive pending authorization.
                 session.confirmation = ()
@@ -200,6 +238,7 @@ class ContextualRuntime:
             payload = {"version": 4, "generation": generation, "text": user_input.text,
                        "origin_area": area, "last_area": session.last_area,
                        "last_targets": list(session.last_targets), "pending": pending}
+            _LOGGER.debug("ARANDU contextual route=/v4/interpret")
             outcome = parse(await self.client.async_interpret_v4(payload))
             if outcome.status == "stale":
                 await self._send(snapshot)
@@ -208,7 +247,7 @@ class ContextualRuntime:
             if outcome.status == "clarification":
                 # Interpretation awaits I/O; cached names are not permission authority.
                 from .contextual_catalog import build
-                _, current_user = await self.user(user_input.context)
+                current_user = await self.revalidate(identity, user_input, options)
                 self.validate_options(options)
                 current_snapshot = build(self.hass, current_user, options)
                 if current_snapshot.payload["generation"] != generation or origin_area(self.hass, user_input, options) != area:
@@ -257,12 +296,12 @@ class ContextualRuntime:
                 if not targets <= set(session.candidates):
                     raise ExecutionError("stale", "clarification_candidate_changed")
             session.expires = time.monotonic() + _ttl(options)
-            result = await self.execute(outcome.operations, snapshot, user_input, session, options)
+            result = await self.execute(outcome.operations, snapshot, user_input, session, options, identity)
             timings = dict(outcome.timings or {})
             timings.update(result.timings)
             timings["integration_total_ms"] = (time.perf_counter() - started) * 1000
             return replace(result, timings=timings)
-        except ExecutionError as error:
+        except (ExecutionError, IdentityError) as error:
             return self.result(error.code, user_input, reason=error.reason)
         except QueryError as error:
             return self.result("unavailable", user_input, reason=str(error))
@@ -287,13 +326,14 @@ class ContextualRuntime:
         return (f"Quer usar todos os {len(spatial['targets'])} {category} de {room_name}? "
                 f"Responda sim para todos do cômodo, ou não para apenas os {len(nominal['targets'])} que correspondem ao nome.")
 
-    async def choose_set(self, text: str, user_input: Any, session: Session, user_id: str, user: Any, options: dict) -> Any:
+    async def choose_set(self, text: str, user_input: Any, session: Session, identity: ResolvedIdentity, options: dict) -> Any:
         pending = session.selection
         if text in ("cancela", "cancela isso", "esquece", "deixa pra la"):
             session.selection = None
             session.pending = None
             return self.result("cancelled", user_input, speech="Cancelado.")
         from .contextual_catalog import build
+        user = await self.revalidate(identity, user_input, options)
         snapshot = build(self.hass, user, options)
         area = origin_area(self.hass, user_input, options)
         if snapshot.payload["generation"] != pending["generation"] or area != pending["origin"] or _options_hash(options) != pending["options_hash"]:
@@ -342,7 +382,7 @@ class ContextualRuntime:
         session.pending = None
         session.candidates = ()
         session.expires = time.monotonic() + _ttl(options)
-        return await self.execute((operation,), snapshot, user_input, session, options)
+        return await self.execute((operation,), snapshot, user_input, session, options, identity)
 
     async def _send(self, snapshot: Snapshot) -> None:
         response = await self.client.async_catalog_v4(snapshot.payload)
@@ -503,9 +543,9 @@ class ContextualRuntime:
             return [{"domain": "remote", "service": "send_command", "entity_id": target, "data": data, "backend_row": backend, "bound_action": action}]
         return [{"domain": backend["domain"], "service": ADAPTERS[(backend["domain"], action)].service, "entity_id": target, "data": {}, "backend_row": backend, "bound_action": action}]
 
-    async def execute(self, operations: tuple[Operation, ...], snapshot: Snapshot, user_input: Any, session: Session, options: dict, *, confirmed: bool = False) -> Any:
+    async def execute(self, operations: tuple[Operation, ...], snapshot: Snapshot, user_input: Any, session: Session, options: dict, identity: ResolvedIdentity, *, confirmed: bool = False) -> Any:
         validation_start = time.perf_counter()
-        _, user = await self.user(user_input.context)
+        user = await self.revalidate(identity, user_input, options)
         self.validate_options(options)
         prepared = tuple(self.prepare(operation, snapshot, user, options) for operation in operations)
         self.validate_plan(prepared)
@@ -529,7 +569,7 @@ class ContextualRuntime:
         try:
             for item in prepared:
                 # Renew authentication and rebind each entire operation immediately before execution.
-                _, user = await self.user(user_input.context)
+                user = await self.revalidate(identity, user_input, options)
                 self.validate_options(options)
                 fresh = self.prepare(item.operation, snapshot, user, options)
                 if fresh.calls != item.calls:
@@ -537,17 +577,17 @@ class ContextualRuntime:
                 action = item.operation.action
                 if action in READ_ACTIONS:
                     async with asyncio.timeout(10):
-                        responses.append(await self.query(item, snapshot, user_input.context, user, options))
+                        responses.append(await self.query(item, snapshot, user_input, user, options, identity))
                 elif action in ("music", "transfer"):
                     attempted_effect = True
                     session.signature, session.last_execution = signature, time.monotonic()
                     async with asyncio.timeout(10):
-                        await self.music(item, snapshot, user_input.context, user, options)
+                        await self.music(item, snapshot, user_input, user, options, identity)
                     had_effects = True
                 else:
                     for call_index, call in enumerate(item.calls):
                         # Includes the permission of a remote/script backend, separate from TV.
-                        _, user = await self.user(user_input.context)
+                        user = await self.revalidate(identity, user_input, options)
                         self.validate_options(options)
                         current_calls = self.prepare(item.operation, snapshot, user, options).calls
                         self.validate_bulk_snapshot(operations, snapshot, user, options)
@@ -566,7 +606,7 @@ class ContextualRuntime:
                 completed += 1
         except asyncio.CancelledError:
             raise
-        except (ExecutionError, QueryError, CapabilityError) as error:
+        except (ExecutionError, IdentityError, QueryError, CapabilityError) as error:
             if attempted_effect:
                 session.signature, session.last_execution = signature, time.monotonic()
             return self.result("partial_failure" if completed or had_effects else getattr(error, "code", "unavailable"), user_input,
@@ -646,7 +686,7 @@ class ContextualRuntime:
         from types import SimpleNamespace
         return read(self.hass, row, SimpleNamespace(state=rooms[0].name, attributes={}), params)
 
-    async def query(self, item: Prepared, snapshot: Snapshot, context: Any, user: Any, options: dict) -> str:
+    async def query(self, item: Prepared, snapshot: Snapshot, user_input: Any, user: Any, options: dict, identity: ResolvedIdentity) -> str:
         action, params = item.operation.action, item.operation.parameters
         if action == "local_time":
             return f"São {now(self.hass):%H:%M}."
@@ -670,10 +710,10 @@ class ContextualRuntime:
             data, service = {"type": "daily"}, "get_forecasts"
         else:
             data, service = {"status": "needs_action"}, "get_items"
-        raw = await self.hass.services.async_call(item.rows[0]["domain"], service, data, blocking=True, context=context,
+        raw = await self.hass.services.async_call(item.rows[0]["domain"], service, data, blocking=True, context=user_input.context,
                                                    target={"entity_id": [row["entity_id"] for row in item.rows]}, return_response=True)
         self.validate_options(options)
-        _, current_user = await self.user(context)
+        current_user = await self.revalidate(identity, user_input, options)
         for row in item.rows:
             self.live(row, action, current_user, options)
         if type(raw) is not dict or set(raw) != {row["entity_id"] for row in item.rows}:
@@ -711,7 +751,7 @@ class ContextualRuntime:
             readings.append(", ".join(parts))
         return "; ".join(readings) + "."
 
-    async def music(self, item: Prepared, snapshot: Snapshot, context: Any, user: Any, options: dict) -> None:
+    async def music(self, item: Prepared, snapshot: Snapshot, user_input: Any, user: Any, options: dict, identity: ResolvedIdentity) -> None:
         row = item.rows[0]
         if len(item.rows) != 1:
             raise ExecutionError("unavailable", "configured_music_group_required")
@@ -727,7 +767,7 @@ class ContextualRuntime:
                 raise ExecutionError("unavailable", "music_assistant_config_entry")
             query = item.operation.parameters["value"]
             media_type = "artist" if item.operation.intent == "media.play_artist" else "playlist" if item.operation.intent == "media.play_playlist" else "track"
-            raw = await self.hass.services.async_call("music_assistant", "search", {"config_entry_id": config_entry_id, "name": query, "media_type": [media_type], "search_options": {"limit": 5}}, blocking=True, context=context, return_response=True)
+            raw = await self.hass.services.async_call("music_assistant", "search", {"config_entry_id": config_entry_id, "name": query, "media_type": [media_type], "search_options": {"limit": 5}}, blocking=True, context=user_input.context, return_response=True)
             if type(raw) is not dict:
                 raise ExecutionError("unavailable", "music_search_response")
             items = raw.get(media_type + "s", [])
@@ -739,12 +779,12 @@ class ContextualRuntime:
                 raise ExecutionError("unavailable", "music_search_ambiguous_or_empty")
             data = {"media_id": matches[0]["uri"], "media_type": media_type, "enqueue": "replace"}
             service = "play_media"
-        _, current_user = await self.user(context)
+        current_user = await self.revalidate(identity, user_input, options)
         self.validate_options(options)
         self.live(row, item.operation.action, current_user, options)
         if item.operation.action == "transfer":
             self.live(source, "transfer", current_user, options)
-        await self.hass.services.async_call("music_assistant", service, data, blocking=True, context=context, target={"entity_id": [row["entity_id"]]})
+        await self.hass.services.async_call("music_assistant", service, data, blocking=True, context=user_input.context, target={"entity_id": [row["entity_id"]]})
 
 
 def _options_hash(options: dict) -> str:

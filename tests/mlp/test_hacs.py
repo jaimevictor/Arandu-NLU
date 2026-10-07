@@ -137,12 +137,13 @@ class HacsTests(unittest.TestCase):
         second = Path(self.temp.name) / 'second'
         release_package.package(self.root, second)
         self.assertEqual(archive.read_bytes(), (second / hacs.ASSET).read_bytes())
-        self.assertEqual(hacs.check_zip(archive, version), 23)
+        self.assertEqual(hacs.check_zip(archive, version), 24)
         self.assertEqual(archive.with_suffix('.zip.sha256').read_text().split()[0],
                          hashlib.sha256(archive.read_bytes()).hexdigest())
         self.assertEqual({item['version'] for item in results}, {version})
         with zipfile.ZipFile(archive) as zipped:
             self.assertIn('manifest.json', zipped.namelist())
+            self.assertIn('identity.py', zipped.namelist())
             self.assertFalse(any(name.startswith('custom_components/') for name in zipped.namelist()))
             destination = Path(self.temp.name) / 'ha/custom_components/local_nlu'
             zipped.extractall(destination)  # Same target/operation as official HACS ZIP consumer.

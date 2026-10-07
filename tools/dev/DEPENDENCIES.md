@@ -22,7 +22,8 @@ O probe oficial e o job HACS usam somente o ambiente oficial de desenvolvimento:
 | Entrada | Referência congelada | Licença / proveniência | Uso |
 | --- | --- | --- | --- |
 | HACS Action container | ghcr.io/hacs/action@sha256:dc92fdad2f6ffbe74bffb7269d781ea8e064f52d9bb486cdf3925d74e7ab6ebf | MIT; hacs/integration, revisão OCI 3f3080cbf909b8f51488e227be73f62902b4ef6c | schemas oficiais, registro/consumidor com fixtures; validação GitHub no CI |
-| Home Assistant no container acima | 2026.8.3 | Apache-2.0; home-assistant/core | ambiente do validador, não evidência HA residencial |
+| Home Assistant no container acima | 2026.7.4, confirmado diretamente em 2026-10-07 | Apache-2.0; home-assistant/core | ambiente do validador; corrige a identificação anterior 2026.8.3, não evidência HA residencial |
+| Home Assistant Core para probe de identidade | ghcr.io/home-assistant/home-assistant:2026.9.4, digest sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76 | Apache-2.0; https://github.com/home-assistant/core/tree/2026.9.4 | classes oficiais de opções/selectors/ConversationInput/Context com registries/serviços simulados; somente ferramenta opcional, sem deploy |
 | Git do runner Ubuntu 24.04 | pacote ambiente; 2.55.0 observado no CI | GPL-2.0; https://git-scm.com/ | checkout público anônimo por SHA/tag, sem submodule foreach ou credenciais |
 | actions/setup-python | a26af69be951a213d495a4c3e4e4022e16d87065 (v5) | MIT; https://github.com/actions/setup-python | Python 3.12 para testes/empacotamento CI |
 
