@@ -12,7 +12,7 @@
 - Baseline host: `python -m unittest discover -s tests/mlp -p 'test_*.py'`: 100 testes, 11 falhas, 6 erros, 9 skips. Python 3.10 sem `asyncio.timeout`/`tomllib`; resultado não é baseline do ambiente suportado.
 - Baseline e gate final concluídos no container `arandu-context-dev`, Python 3.12/Rust 1.98; `tools/mlp-check` PASS. Evidências detalhadas abaixo.
 - Ambiente: Docker Linux disponível e imagens de desenvolvimento/add-on locais; HA residencial e hardware BLE não fornecidos. Nenhuma validação física presumida.
-- Próxima ação: finalizar commit seletivo/push autorizado e verificar igualdade HEAD ↔ origin/master. Não há requisito contextual implementável pendente.
+- Próxima ação: nenhuma de implementação. Código commitado e push autorizado confirmado; verificar HEAD ↔ master remoto quando necessário.
 - Retomada: `docker exec arandu-context-dev sh -c 'cd /workspace && ./tools/mlp-check'`; código montado read-only em `/source`, staging Linux em `/workspace`, artefatos em `target/`.
 - Push direto para master explicitamente autorizado pela última instrução do usuário; somente após F7 validada, sem force push.
 
@@ -120,5 +120,7 @@
 - Limitações reais: sem HA residencial/BLE físico; provider/timestamp precisam existir e estar autorizados. Sessões efêmeras; catálogo frio tem custo; quatro operações/32 alvos; duas declarações de estado do corpus permanecem no_match. Não existe reversão física atômica nem retry de efeito incerto.
 - Pendências de implementação: nenhuma nas capacidades solicitadas. Deploy residencial/release/upload de imagem não realizados e não autorizados. Untracked originais do usuário continuam preservados.
 - Git base avançada por fast-forward para `a443e8f18a44ba3eb49ef6c5a871fc1e38ddea54`, árvore idêntica ao ponto inicial; não foi preciso merge de conteúdo ou descartar mudanças. Push direto para master autorizado pelo usuário.
-- Próxima ação exata de entrega: staging seletivo dos arquivos desta missão, `git commit -m "feat: implement contextual capabilities for NLU 0.4.0"`, `git push origin HEAD:master`, comparar `git rev-parse HEAD` e `git ls-remote origin refs/heads/master`. Se já coincidem, entrega concluída; não repetir implementação/auditorias/gate sem alteração de código.
+- Entrega do código: commit `477d028235347838cbdd5bde272ec376cbdd8fd8` (`feat: implement contextual capabilities for NLU 0.4.0`), 48 arquivos da missão. Push normal origin HEAD:master PASS, a443e8f → 477d028; HEAD e master remoto verificados iguais. Três untracked originais preservados; nenhum arquivo de STT alterado.
+- Verificação documental: links relativos dos manuais/relatório/matriz PASS. Git whitespace check sinalizou quatro hardbreaks Markdown (dois espaços finais) existentes na especificação copiada; mantidos para preservar o documento original, sem efeito no código/gate.
+- Próxima ação exata: nenhuma implementação ou validação pendente. Esta atualização documental registra a entrega já verificada; confirmar último commit documental no remoto com `git log -1` e `git ls-remote origin refs/heads/master`. Não repetir auditorias/gate sem alteração de código.
 - Comandos de retomada/verificação: `git status --short`; `git log -1`; `git ls-remote origin refs/heads/master`; `pwsh -File tools/mlp-dev.ps1 -Task check` somente se necessário. Container dev e artefatos target disponíveis; interromper os três containers de smoke antes de reutilizar portas do namespace dev.

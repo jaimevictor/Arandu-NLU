@@ -194,6 +194,8 @@ logs e resumo do gate estão em [image-validation.json](../../data/contextual/im
 O usuário autorizou expressamente push direto para master ao final. A branch
 local foi avançada por fast-forward para origin/master a443e8f, cuja árvore era
 idêntica ao ponto inicial, preservando todas as alterações. A entrega usa commit
-seletivo e `git push origin HEAD:master`, sem force push. O hash final é verificável
-por `git log -1` e `git ls-remote origin refs/heads/master`. Nenhum release,
+seletivo e `git push origin HEAD:master`, sem force push. Código entregue no commit
+`477d028235347838cbdd5bde272ec376cbdd8fd8`, com push e igualdade HEAD/master remoto
+confirmados. Esta atualização documental não altera o fingerprint executável.
+O último commit é verificável por `git log -1` e `git ls-remote origin refs/heads/master`. Nenhum release,
 deploy residencial, alteração de STT ou publicação de imagens foi solicitado.
