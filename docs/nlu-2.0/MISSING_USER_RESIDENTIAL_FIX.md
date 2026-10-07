@@ -7,7 +7,10 @@ Baseline auditado: master **260115282fee7df2cfd265018801f7729e526ab6**, versão 
 **previous_identity_fix_present=false**.
 
 Gate completo, artefatos extraídos e duas revisões independentes PASS.
-Publicação remota ainda pendente neste checkpoint; próxima ação abaixo.
+Release estável [v0.4.3](https://github.com/jaimevictor/Arandu-NLU/releases/tag/v0.4.3)
+publicada no commit testado **369d2a4b0aef8dead765b7746e04202d418c0a44**,
+enviado diretamente para master, sem force push. Todos os assets remotos
+baixados/conferidos; hashes iguais aos artefatos testados. Próxima ação residencial abaixo.
 Nenhum deploy ou teste residencial foi realizado. Arandu STT não foi acessado ou alterado.
 Os arquivos locais anteriores não relacionados à missão foram preservados.
 
@@ -133,7 +136,7 @@ exigir contexto autenticado; os protocolos antigos não foram redesenhados.
 | F16 | mensagem específica para missing_user | PASS |
 | F17 | debug apenas fonte/authenticated/rota | PASS |
 | F18 | versões/locks/release.json sincronizados em 0.4.3 | PASS |
-| F19 | HACS oficial detecta upgrade e instala tag em fixture; publicação remota pendente | local PASS |
+| F19 | release/tag no commit testado, assets remotos idênticos; HACS oficial detecta upgrade em fixture | PASS |
 | F20 | Store anuncia 0.4.3, pacote compilável e instruções abaixo | PASS local |
 | F21 | runtime de ambos ZIPs, Rust compilado do ZIP add-on | PASS |
 | F22 | relatório/checkpoint, hashes e retomada | atualizado |
@@ -194,6 +197,30 @@ Digest distribuído revisado:
 02a9f093a9f69f9aac527377fbb5981ec34183cce4e8399727337bbb8ed21855.
 Nenhuma dependência obrigatória nova, nenhum LLM/cloud e nenhuma mudança no parser Rust.
 Não se reivindica benchmark novo ou validação residencial.
+
+Publicação remota em 2026-10-07: [CI HACS/distribution](https://github.com/jaimevictor/Arandu-NLU/actions/runs/37643122825)
+**PASS** e [workflow da release/upload](https://github.com/jaimevictor/Arandu-NLU/actions/runs/37643354625)
+**PASS**, ambos no commit 369d2a4b0aef8dead765b7746e04202d418c0a44.
+A API GitHub confirmou release não draft/não prerelease e tag apontando para
+esse commit. Os sete assets (três ZIPs, três hashes e packages.json) foram
+baixados; SHA/CRC/contagem conferidos e idênticos aos arquivos testados.
+
+O arquivo de fonte GitHub da tag também foi baixado. Foram lidos somente os
+24 arquivos da integração e metadata ativa HACS/Store/release; bytes textuais
+normalizados e binários íntegros correspondem ao produto testado. Confirmados
+manifesto 0.4.3, identity.py, UI fallback, runtime sem antigas chamadas e
+addon/config.yaml 0.4.3. Não foram inspecionadas implementações legadas/gitlinks.
+
+Probes oficiais repetidos usando **a fonte baixada da tag pública** e o ZIP
+baixado da release: HACS instalação/reinstalação/decisão de upgrade/extrator
+**PASS**; HA 2026.9.4 com Rust real do pacote add-on e serviço simulado **PASS**.
+Os clientes externos do probe HACS continuam em fixture: não se afirma que a
+instância residencial do proprietário já detectou a atualização. A release e
+fonte públicas necessárias para essa detecção estão presentes e verificadas.
+Evidência local remota: target/remote-identity-0.4.3 e
+target/verify-remote-identity.py. A primeira execução desse verificador tratou
+erroneamente PNG como texto e recusou comparação do ícone; verificação corrigida
+preserva bytes binários e passou. Nenhum produto/asset foi alterado por isso.
 
 ## Pacotes 0.4.3 e hashes SHA-256
 
@@ -304,10 +331,19 @@ antes de compartilhar. Não compartilhe tokens ou dumps de .storage.
 
 ## Retomada exata e pendências
 
-Código, testes, revisões e artefatos locais concluídos. Próxima ação:
-commit seletivo, push autorizado HEAD:master, aguardar CI, publicar v0.4.3 no
-commit testado, aguardar upload do workflow e verificar os assets baixados/tag.
-Depois atualizar este checkpoint com SHA/URLs/checks reais. Nenhuma ação residencial.
+Código, testes, revisões, push direto master, release/tag, CI e verificação
+remota concluídos. Este registro final é um commit apenas documental posterior
+ao commit da tag; não muda os ZIPs ou o digest distribuído.
+Não restam requisitos implementáveis desta correção.
+Próxima ação exata é do proprietário: executar atualização F23 e smoke F24
+na residência e conferir diagnósticos/trace. Isso não foi substituído por simulação.
+
+Limitações reais: fallback/bindings somente no modo contextual v4; políticas
+HA podem legitimamente impedir controle; resultados dependem do catálogo,
+estados e integrações locais disponíveis. Não foi realizada observação da UI
+HACS/Supervisor na residência, deploy físico ou leitura de hardware Bluetooth.
+As fixtures não atestam localização ou resultado de equipamentos indisponíveis.
+Nenhum serviço executado é automaticamente revertido após falha parcial.
 
 Comandos de validação, no diretório Arandu NLU:
 
@@ -318,6 +354,7 @@ docker exec -w /source arandu-context-dev python3 tools/hacs.py --tag v0.4.3 --z
 docker exec -w /source arandu-context-dev python3 tools/identity-artifact-check.py --packages /output/dist/0.4.3 --staging /output/identity-0.4.3-new-staging
 gh run list --repo jaimevictor/Arandu-NLU --limit 5
 gh release view v0.4.3 --repo jaimevictor/Arandu-NLU
+git ls-remote --heads --tags origin master v0.4.3
 ~~~
 
 Não reexecute gate sem mudança executável ou falha nova. Staging deve ser novo;

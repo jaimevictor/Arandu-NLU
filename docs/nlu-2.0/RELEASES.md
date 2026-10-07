@@ -13,7 +13,8 @@ não uma versão do produto: `version` não é um campo suportado nesse manifest
 
 HACS instala por fonte, `content_in_root=false`, `zip_release=false`, branch
 visível. Antes da primeira release, master fornece instalação/atualizações por
-commit. Releases estáveis futuras oferecem versão etiquetada: o HACS extrai
+commit. A release estável [v0.4.3](https://github.com/jaimevictor/Arandu-NLU/releases/tag/v0.4.3)
+oferece versão etiquetada: o HACS extrai
 somente custom_components/local_nlu do arquivo GitHub, não instala o add-on.
 
 Na preparação de 0.4.2, a API pública GitHub não mostrou releases publicadas.
