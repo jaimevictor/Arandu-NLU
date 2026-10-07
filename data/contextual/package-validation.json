@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "version": "2.0.0",
+  "source_digest": "18909fef2fd43649bb6412f63b40a36309c73634d5f41ecf64956505ff1ef02f",
+  "zip_created": true,
+  "zip_extracted": true,
+  "content_validated": true,
+  "manifest_files": 686,
+  "executable_permissions": "PASS",
+  "relative_document_links": "PASS",
+  "full_gate_from_extracted_package": "PASS",
+  "python_tests_unique": 99,
+  "rust_tests": 90,
+  "limits": "Real Rust HTTP, simulated HA; no residential HA or ARM64"
+}

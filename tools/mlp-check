@@ -8,6 +8,8 @@ export PATH="$ROOT/.tools/rust-1.98.0/bin:$PATH"
 export CARGO_HOME="$ROOT/.cargo-home"
 export PYTHONDONTWRITEBYTECODE=1
 
+python3 tools/contextual-record.py --fingerprint
+
 ./tools/generate-mlp-corpus --check
 ./tools/check-mlp-package
 ruby -rjson -ryaml -e '
@@ -25,6 +27,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 cargo test --workspace --locked --offline
 cargo build --workspace --release --locked --offline
+ARANDU_NLU_BINARY="$ROOT/target/release/local-nlu" python3 -m unittest discover -s tests/mlp -p 'test_contextual.py'
 ./tools/mlp-smoke.py
 
 printf '%s\n' "MLP CHECK PASS"

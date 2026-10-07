@@ -1,0 +1,153 @@
+{
+  "catalogs": [
+    {
+      "catalog_compile_p50_ms": 0.890598,
+      "catalog_compile_p95_ms": 4.376813,
+      "entities": 64,
+      "iterations": 1000,
+      "phases": {
+        "context_ms": {
+          "p50_ms": 0.0038580000000000003,
+          "p95_ms": 0.006873,
+          "p99_ms": 0.012253
+        },
+        "intent_and_slots_ms": {
+          "p50_ms": 0.008365999999999998,
+          "p95_ms": 0.015490000000000002,
+          "p99_ms": 0.0518
+        },
+        "intent_slots_context_planning_ms": {
+          "p50_ms": 0.028695,
+          "p95_ms": 0.063983,
+          "p99_ms": 0.11449
+        },
+        "normalization_ms": {
+          "p50_ms": 0.000892,
+          "p95_ms": 0.001803,
+          "p99_ms": 0.002755
+        },
+        "planning_ms": {
+          "p50_ms": 0.0008729999999999988,
+          "p95_ms": 0.0020730000000000054,
+          "p99_ms": 0.004728999999999997
+        },
+        "resolution_ms": {
+          "p50_ms": 0.014939000000000001,
+          "p95_ms": 0.031229999999999997,
+          "p99_ms": 0.077854
+        },
+        "total_ms": {
+          "p50_ms": 0.030298,
+          "p95_ms": 0.06810100000000001,
+          "p99_ms": 0.12580100000000002
+        }
+      },
+      "process_rss": "VmRSS:\t    1716 kB",
+      "snapshot_bytes": 20337,
+      "statuses": {
+        "plan": 1000
+      },
+      "warmup": 100
+    },
+    {
+      "catalog_compile_p50_ms": 5.009797,
+      "catalog_compile_p95_ms": 6.933896,
+      "entities": 512,
+      "iterations": 1000,
+      "phases": {
+        "context_ms": {
+          "p50_ms": 0.017985,
+          "p95_ms": 0.029587,
+          "p99_ms": 0.043915
+        },
+        "intent_and_slots_ms": {
+          "p50_ms": 0.009418000000000003,
+          "p95_ms": 0.014497999999999997,
+          "p99_ms": 0.023306
+        },
+        "intent_slots_context_planning_ms": {
+          "p50_ms": 0.104661,
+          "p95_ms": 0.1405,
+          "p99_ms": 0.189323
+        },
+        "normalization_ms": {
+          "p50_ms": 0.001062,
+          "p95_ms": 0.0019429999999999998,
+          "p99_ms": 0.002705
+        },
+        "planning_ms": {
+          "p50_ms": 0.0010730000000000045,
+          "p95_ms": 0.002053000000000013,
+          "p99_ms": 0.01386699999999999
+        },
+        "resolution_ms": {
+          "p50_ms": 0.075936,
+          "p95_ms": 0.104119,
+          "p99_ms": 0.13751400000000003
+        },
+        "total_ms": {
+          "p50_ms": 0.106554,
+          "p95_ms": 0.14272300000000002,
+          "p99_ms": 0.194323
+        }
+      },
+      "process_rss": "VmRSS:\t    3516 kB",
+      "snapshot_bytes": 163965,
+      "statuses": {
+        "plan": 1000
+      },
+      "warmup": 100
+    },
+    {
+      "catalog_compile_p50_ms": 43.698676,
+      "catalog_compile_p95_ms": 47.457533000000005,
+      "entities": 4096,
+      "iterations": 1000,
+      "phases": {
+        "context_ms": {
+          "p50_ms": 0.12937800000000002,
+          "p95_ms": 0.183502,
+          "p99_ms": 0.270229
+        },
+        "intent_and_slots_ms": {
+          "p50_ms": 0.015539999999999998,
+          "p95_ms": 0.02309400000000003,
+          "p99_ms": 0.037021000000000026
+        },
+        "intent_slots_context_planning_ms": {
+          "p50_ms": 1.808798,
+          "p95_ms": 2.110778,
+          "p99_ms": 2.595056
+        },
+        "normalization_ms": {
+          "p50_ms": 0.002074,
+          "p95_ms": 0.003397,
+          "p99_ms": 0.00498
+        },
+        "planning_ms": {
+          "p50_ms": 0.002454999999999652,
+          "p95_ms": 0.0035479999999998846,
+          "p99_ms": 0.010450999999999988
+        },
+        "resolution_ms": {
+          "p50_ms": 1.65843,
+          "p95_ms": 1.94032,
+          "p99_ms": 2.414059
+        },
+        "total_ms": {
+          "p50_ms": 1.812154,
+          "p95_ms": 2.115697,
+          "p99_ms": 2.598623
+        }
+      },
+      "process_rss": "VmRSS:\t   15296 kB",
+      "snapshot_bytes": 1329909,
+      "statuses": {
+        "plan": 1000
+      },
+      "warmup": 100
+    }
+  ],
+  "kind": "Rust release in-process synthetic catalog benchmark; excludes HTTP and HA execution",
+  "source_digest": "18909fef2fd43649bb6412f63b40a36309c73634d5f41ecf64956505ff1ef02f"
+}

@@ -5,6 +5,7 @@ PLATFORMS = ("conversation",)
 
 CONF_ENDPOINT = "endpoint"
 CONF_V2_ENABLED = "v2_enabled"
+CONF_CONTEXTUAL_ENABLED = "contextual_enabled"
 CONF_SHADOW_ENABLED = "shadow_enabled"
 DEFAULT_ENDPOINT = "http://local-ptbr-nlu:11555"
 

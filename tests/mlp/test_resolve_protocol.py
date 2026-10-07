@@ -10,6 +10,7 @@ from custom_components.local_nlu.protocol import (
     ProtocolError,
     parse_v2_plan,
     parse_v2_response,
+    parse_v3_plan,
 )
 
 
@@ -206,6 +207,58 @@ class ResolvePlanTests(unittest.TestCase):
         for response in invalid:
             with self.subTest(response=response), self.assertRaises(ProtocolError):
                 parse_v2_plan(response)
+
+    def test_accepts_music_assistant_v3_plan(self) -> None:
+        outcome = parse_v3_plan(
+            {
+                "music": {
+                    "action": "play",
+                    "media_query": "Queen",
+                    "provider": "deezer",
+                    "player": "media_player.sala_ma",
+                    "queue_mode": "replace",
+                },
+                "status": "plan",
+                "version": 3,
+            }
+        )
+
+        self.assertEqual(outcome.status, "plan")
+        self.assertEqual(outcome.music.provider, "deezer")
+        self.assertEqual(outcome.music.player, "media_player.sala_ma")
+
+    def test_rejects_direct_provider_or_weak_music_v3_shapes(self) -> None:
+        invalid = (
+            {
+                "music": {
+                    "action": "play",
+                    "media_query": "Queen",
+                    "player": "spotify",
+                },
+                "status": "plan",
+                "version": 3,
+            },
+            {
+                "music": {
+                    "action": "play",
+                    "provider": "spotify",
+                    "player": "media_player.sala_ma",
+                },
+                "status": "plan",
+                "version": 3,
+            },
+            {
+                "music": {
+                    "action": "set_volume",
+                    "player": "media_player.sala_ma",
+                },
+                "status": "plan",
+                "version": 3,
+            },
+        )
+        for response in invalid:
+            with self.subTest(response=response), self.assertRaises(ProtocolError):
+                parse_v3_plan(response)
 
 
 if __name__ == "__main__":

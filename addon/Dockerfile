@@ -19,9 +19,11 @@ LABEL \
 COPY --from=builder /build/engine/target/release/local-nlu /usr/bin/local-nlu
 COPY LICENSE /licenses/Apache-2.0.txt
 COPY THIRD_PARTY_NOTICES.md /licenses/THIRD_PARTY_NOTICES.md
+COPY engine/data/STT-MIT.txt /licenses/STT-MIT.txt
 COPY container-inputs.json /licenses/container-inputs.json
 COPY vendor/memchr-2.8.3/LICENSE-MIT /licenses/memchr-MIT.txt
 COPY vendor/unicode-ident-1.0.24/LICENSE-UNICODE /licenses/unicode-ident-Unicode-3.0.txt
+COPY licenses /licenses/runtime
 
 USER 65534:65534
 EXPOSE 11555

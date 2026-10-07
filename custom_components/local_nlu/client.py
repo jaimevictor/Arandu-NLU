@@ -169,6 +169,15 @@ class LocalNluClient:
     async def async_interpret_v2(self, payload: dict[str, Any]) -> Any:
         return await self._async_json("POST", "/v2/interpret", payload)
 
+    async def async_interpret_v3(self, payload: dict[str, Any]) -> Any:
+        return await self._async_json("POST", "/v3/interpret", payload)
+
+    async def async_catalog_v4(self, payload: dict[str, Any]) -> Any:
+        return await self._async_json("POST", "/v4/catalog", payload)
+
+    async def async_interpret_v4(self, payload: dict[str, Any]) -> Any:
+        return await self._async_json("POST", "/v4/interpret", payload)
+
     async def _async_json(
         self,
         method: str,
@@ -187,7 +196,8 @@ class LocalNluClient:
                         separators=(",", ":"),
                         sort_keys=True,
                     ).encode("utf-8")
-                    if len(body) > MAX_REQUEST_BYTES:
+                    limit = 2_097_152 if path == "/v4/catalog" else MAX_REQUEST_BYTES
+                    if len(body) > limit:
                         raise ClientError("length")
                     headers["Content-Type"] = "application/json"
                 request = self._session.request(

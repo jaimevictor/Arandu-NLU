@@ -24,6 +24,11 @@ EXPECTED_INTEGRATION = {
     "config_flow.py",
     "const.py",
     "conversation.py",
+    "capabilities.py",
+    "contextual_protocol.py",
+    "contextual_catalog.py",
+    "contextual_runtime.py",
+    "queries.py",
     "manifest.json",
     "protocol.py",
     "runtime.py",
@@ -49,7 +54,7 @@ EXPECTED_VENDOR = {
 }
 EXPECTED_LOCK_PACKAGES = {
     "itoa": "1.0.18",
-    "local-nlu": "0.2.0",
+    "local-nlu": "2.0.0",
     "memchr": "2.8.3",
     "proc-macro2": "1.0.107",
     "quote": "1.0.47",
@@ -89,7 +94,7 @@ def check_integration() -> None:
         "iot_class": "local_polling",
         "requirements": [],
         "single_config_entry": True,
-        "version": "0.2.0",
+        "version": "2.0.0",
     }
     for key, value in expected.items():
         if manifest.get(key) != value:
@@ -210,9 +215,9 @@ def check_dependencies() -> None:
         [sys.executable, str(ROOT / "tools/materialize-mlp-vendor.py"), "--check"],
         check=True,
     )
-    if (ROOT / "Cargo.lock").read_bytes() != (
+    if (ROOT / "Cargo.lock").read_bytes().replace(b"\r\n", b"\n") != (
         ADDON / "engine" / "Cargo.lock"
-    ).read_bytes():
+    ).read_bytes().replace(b"\r\n", b"\n"):
         fail("root and app lockfiles differ")
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     packages = {
@@ -243,10 +248,10 @@ def check_dependencies() -> None:
 
 
 def check_licenses_and_limits() -> None:
-    root_license = (ROOT / "LICENSE").read_bytes()
-    if (ADDON / "LICENSE").read_bytes() != root_license:
+    root_license = (ROOT / "LICENSE").read_bytes().replace(b"\r\n", b"\n")
+    if (ADDON / "LICENSE").read_bytes().replace(b"\r\n", b"\n") != root_license:
         fail("app license differs from project license")
-    if (INTEGRATION / "LICENSE").read_bytes() != root_license:
+    if (INTEGRATION / "LICENSE").read_bytes().replace(b"\r\n", b"\n") != root_license:
         fail("integration license differs from project license")
     addon_notice = (ADDON / "THIRD_PARTY_NOTICES.md").read_text(
         encoding="utf-8"

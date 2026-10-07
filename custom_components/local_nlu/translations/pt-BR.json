@@ -17,5 +17,26 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Contexto e políticas dos dispositivos",
+        "description": "Defina um cômodo padrão somente quando ele for conhecido. Dispositivos de acesso exigem política explícita e confirmação.",
+        "data": {
+          "contextual_enabled": "Ativar Arandu NLU 2.0",
+          "session_ttl": "Validade do contexto (segundos)",
+          "default_area": "ID do cômodo padrão",
+          "increments": "Incrementos dos ajustes relativos",
+          "entity_preferences": "Sensores preferidos e categorias semânticas",
+          "sensitive_entities": "Dispositivos de acesso permitidos com confirmação",
+          "energy_sources": "Fontes de consumo verificadas, sem sobreposição",
+          "device_mappings": "Mapeamentos de TV e controle remoto",
+          "intent_bindings": "Adaptadores de scripts e botões registrados",
+          "v2_enabled": "Ativar v3 legado quando o modo contextual estiver desativado",
+          "shadow_enabled": "Ativar diagnóstico do resolvedor legado"
+        }
+      }
+    }
+  },
   "title": "ARANDU NLU"
 }

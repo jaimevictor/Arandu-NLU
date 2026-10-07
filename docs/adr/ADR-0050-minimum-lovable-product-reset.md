@@ -1,6 +1,6 @@
 # ADR-0050: Minimum lovable product reset
 
-- Status: `ACCEPTED`
+- Status: `ACCEPTED, PARTIALLY SUPERSEDED BY ADR-0055`
 - Date: 2026-09-12
 - Owners: MLP
 - Supersedes: ADR-0005 through ADR-0049 where they prescribe P00-P16 delivery,

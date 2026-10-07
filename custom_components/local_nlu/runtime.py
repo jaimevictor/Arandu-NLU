@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
@@ -30,6 +31,7 @@ from .const import (
     SUPPORTED_DOMAINS,
 )
 from .protocol import (
+    MusicPlan,
     Outcome,
     PlanOperation,
     PlanV2,
@@ -37,6 +39,7 @@ from .protocol import (
     parse_response,
     parse_v2_plan,
     parse_v2_response,
+    parse_v3_plan,
 )
 
 
@@ -45,11 +48,17 @@ ResultCode = Literal[
     "denied",
     "execution_failed",
     "invalid_request",
+    "missing_slot",
     "no_match",
     "query_success",
     "stale",
     "success",
+    "unsupported_intent",
+    "unresolved_target",
     "unavailable",
+    "cancelled",
+    "confirmation_required",
+    "partial_failure",
 ]
 
 
@@ -65,6 +74,13 @@ class RuntimeResult:
     code: ResultCode
     operation_count: int = 0
     states: tuple[StateResult, ...] = ()
+    missing_slot: str | None = None
+    provider: str | None = None
+    response_text: str | None = None
+    continue_conversation: bool = False
+    conversation_id: str | None = None
+    reason: str | None = None
+    timings: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -83,6 +99,17 @@ class _PreparedOperation:
     targets: tuple[_PreparedTarget, ...]
 
 
+@dataclass(frozen=True)
+class _PendingDialogue:
+    created: float
+    kind: str
+    action: str | None = None
+    domain: str | None = None
+    provider: str | None = None
+    media_query: str | None = None
+    candidates: tuple[str, ...] = ()
+
+
 class _PreflightError(Exception):
     def __init__(self, code: ResultCode) -> None:
         super().__init__(code)
@@ -95,6 +122,8 @@ _QUERY_PREFIXES = ("qual ", "como ", "quanto ")
 _SHADOW_PROBE_LIMIT = 4
 _SHADOW_UNKNOWN_MENTION = "zxqv_wo_projetor_zz"
 _SHADOW_STALE_GENERATION = "gen-000"
+_PENDING_TTL_SECONDS = 30.0
+_MAX_PENDING_DIALOGUES = 16
 SHADOW_COUNTERS = (
     "probes",
     "matched",
@@ -110,7 +139,27 @@ def _route_v1_first(text: Any) -> bool:
     if type(text) is not str:
         return True
     lowered = text.casefold().strip()
-    return lowered.startswith(_QUERY_PREFIXES) or " e " in lowered
+    return lowered.startswith(_QUERY_PREFIXES)
+
+
+def _looks_like_music(text: Any) -> bool:
+    if type(text) is not str:
+        return False
+    lowered = text.casefold()
+    return any(
+        marker in lowered
+        for marker in (
+            "música",
+            "musica",
+            "spotify",
+            "deezer",
+            "toca",
+            "toque",
+            "pausa",
+            "próxima",
+            "proxima",
+        )
+    )
 
 
 def _valid_snapshot_identifier(value: Any) -> bool:
@@ -176,6 +225,8 @@ class LocalNluRuntime:
         client: LocalNluClient,
         v2_enabled: Callable[[], bool] | None = None,
         shadow_enabled: Callable[[], bool] | None = None,
+        contextual_enabled: Callable[[], bool] | None = None,
+        contextual_options: Callable[[], dict] | None = None,
     ) -> None:
         self._hass = hass
         self._client = client
@@ -184,17 +235,118 @@ class LocalNluRuntime:
             shadow_enabled if shadow_enabled is not None else (lambda: False)
         )
         self._shadow_counters = {key: 0 for key in SHADOW_COUNTERS}
+        self._pending: dict[str, _PendingDialogue] = {}
+        self._contextual_enabled = contextual_enabled or (lambda: False)
+        self._contextual_options = contextual_options or (lambda: {})
+        self._contextual = None
 
     async def async_process(self, user_input: Any) -> RuntimeResult:
-        if self._v2_enabled() and not _route_v1_first(
-            getattr(user_input, "text", None)
-        ):
-            result = await self._async_process_v2(user_input)
+        if self._contextual_enabled():
+            if self._contextual is None:
+                from .contextual_runtime import ContextualRuntime
+                self._contextual = ContextualRuntime(self._hass, self._client, self._contextual_options)
+            return await self._contextual.process(user_input)
+        conversation_id = getattr(user_input, "conversation_id", None)
+        if type(conversation_id) is str and conversation_id in self._pending:
+            result = await self._async_continue_pending(conversation_id, user_input)
+        elif self._v2_enabled() and not _route_v1_first(getattr(user_input, "text", None)):
+            result = await self._async_process_v3(user_input)
         else:
             result = await self._async_process_v1(user_input)
         if self._shadow_enabled():
             await self._observe_shadow()
         return result
+
+    async def _async_continue_pending(
+        self,
+        conversation_id: str,
+        user_input: Any,
+    ) -> RuntimeResult:
+        pending = self._pending.pop(conversation_id)
+        if time.monotonic() - pending.created > _PENDING_TTL_SECONDS:
+            return RuntimeResult(code="stale")
+        if pending.kind == "media_query":
+            return await self._async_execute_music(
+                MusicPlan(
+                    action="play",
+                    media_query=user_input.text,
+                    provider=pending.provider,
+                    player=None,
+                    player_area=pending.media_query,
+                ),
+                user_input.context,
+            )
+        if pending.kind == "player":
+            player = self._resolve_music_player_from_text(user_input.text)
+            if player is None:
+                return RuntimeResult(code="missing_slot", missing_slot="player")
+            return await self._async_execute_music(
+                MusicPlan(
+                    action="play",
+                    media_query=pending.media_query,
+                    provider=pending.provider,
+                    player=player,
+                ),
+                user_input.context,
+            )
+        if pending.kind == "target" and pending.action is not None:
+            registry_id = self._resolve_device_followup(
+                user_input.text, pending.domain, pending.candidates
+            )
+            if registry_id is None:
+                return RuntimeResult(code="unresolved_target")
+            return await self._execute_resolved_v3_device(
+                pending.action, (registry_id,), user_input
+            )
+        return RuntimeResult(code="invalid_request")
+
+    async def _async_process_v3(self, user_input: Any) -> RuntimeResult:
+        try:
+            initial = build_er_snapshot(self._hass)
+            raw = await self._client.async_interpret_v3(
+                {
+                    "catalog": initial.payload,
+                    "generation": initial.payload["generation"],
+                    "text": user_input.text,
+                }
+            )
+            outcome = parse_v3_plan(raw)
+        except (CatalogError, ClientError, ProtocolError):
+            return RuntimeResult(code="unavailable")
+        except Exception:
+            return RuntimeResult(code="unavailable")
+
+        if outcome.status == "plan" and outcome.music is not None:
+            return await self._async_execute_music(outcome.music, user_input.context)
+        if outcome.status == "plan":
+            return await self._execute_v2_operations(outcome, user_input, initial)
+        if outcome.status == "ambiguous_target":
+            return RuntimeResult(code="ambiguous")
+        if outcome.status == "missing_slot":
+            provider = outcome.music.provider if outcome.music is not None else None
+            missing = outcome.music.missing_slot if outcome.music is not None else None
+            conversation_id = getattr(user_input, "conversation_id", None)
+            if type(conversation_id) is str and missing is not None:
+                self._remember_pending(
+                    conversation_id,
+                    _PendingDialogue(
+                        created=time.monotonic(),
+                        kind=missing,
+                        action=outcome.music.pending_action if outcome.music is not None else None,
+                        domain=outcome.music.pending_domain if outcome.music is not None else None,
+                        provider=provider,
+                        media_query=outcome.music.media_query if outcome.music is not None else None,
+                        candidates=outcome.music.candidates if outcome.music is not None else (),
+                    ),
+                )
+            return RuntimeResult(
+                code="missing_slot", missing_slot=missing, provider=provider
+            )
+        if outcome.status == "unsupported_intent":
+            return RuntimeResult(code="unsupported_intent")
+        if outcome.status == "unresolved_target":
+            return RuntimeResult(code="unresolved_target")
+        return RuntimeResult(code="invalid_request")
 
     async def _async_process_v1(self, user_input: Any) -> RuntimeResult:
         try:
@@ -279,12 +431,17 @@ class LocalNluRuntime:
             return RuntimeResult(code="unavailable")
         except Exception:
             return RuntimeResult(code="unavailable")
-        if any(
-            operation.action == "get_state" for operation in outcome.operations
-        ):
-            return RuntimeResult(code="unavailable")
         if outcome.status != "plan":
             return RuntimeResult(code=outcome.status)
+
+        return await self._execute_v2_operations(outcome, user_input, initial)
+
+    async def _execute_v2_operations(
+        self,
+        outcome: Any,
+        user_input: Any,
+        initial: ErSnapshot,
+    ) -> RuntimeResult:
 
         user_id = getattr(user_input.context, "user_id", None)
         if type(user_id) is not str:
@@ -316,6 +473,9 @@ class LocalNluRuntime:
         completed = 0
         try:
             for operation in prepared:
+                if operation.action == "get_state":
+                    states = self._query(operation, user)
+                    return RuntimeResult(code="query_success", operation_count=1, states=states)
                 await self._async_execute(
                     operation,
                     user_id,
@@ -327,6 +487,176 @@ class LocalNluRuntime:
         except Exception:
             return RuntimeResult(code="execution_failed", operation_count=completed)
         return RuntimeResult(code="success", operation_count=completed)
+
+    async def _execute_resolved_v3_device(
+        self,
+        action: str,
+        targets: tuple[str, ...],
+        user_input: Any,
+    ) -> RuntimeResult:
+        return await self._execute_v2_operations(
+            PlanV2(status="plan", operations=(PlanOperation(action=action, targets=targets),)),
+            user_input,
+            build_er_snapshot(self._hass),
+        )
+
+    async def _async_execute_music(
+        self,
+        music: MusicPlan,
+        context: Any,
+    ) -> RuntimeResult:
+        if music.player is None:
+            if music.player_area is not None:
+                player = self._resolve_music_player_in_area(music.player_area)
+                if player is not None:
+                    music = MusicPlan(
+                        action=music.action,
+                        media_query=music.media_query,
+                        media_type=music.media_type,
+                        provider=music.provider,
+                        player=player,
+                        queue_mode=music.queue_mode,
+                        volume=music.volume,
+                    )
+                else:
+                    return RuntimeResult(code="missing_slot", missing_slot="player")
+            else:
+                players = self._music_assistant_players()
+                if len(players) == 1:
+                    music = MusicPlan(
+                        action=music.action,
+                        media_query=music.media_query,
+                        media_type=music.media_type,
+                        provider=music.provider,
+                        player=players[0],
+                        queue_mode=music.queue_mode,
+                        volume=music.volume,
+                    )
+                else:
+                    return RuntimeResult(code="missing_slot", missing_slot="player")
+        if not _is_music_assistant_player(self._hass, music.player):
+            return RuntimeResult(code="stale")
+        services = self._hass.services
+        try:
+            if music.action == "play":
+                if music.media_query is None:
+                    return RuntimeResult(code="missing_slot", missing_slot="media_query", provider=music.provider)
+                if services.has_service("music_assistant", "search") is not True:
+                    return RuntimeResult(code="stale")
+                if services.has_service("music_assistant", "play_media") is not True:
+                    return RuntimeResult(code="stale")
+                search_data = {"name": music.media_query}
+                if music.media_type is not None:
+                    search_data["media_type"] = music.media_type
+                if music.provider is not None:
+                    search_data["provider"] = music.provider
+                await services.async_call(
+                    "music_assistant", "search", search_data,
+                    blocking=True, context=context, target={},
+                )
+                play_data: dict[str, Any] = {
+                    "media_id": music.media_query,
+                    "media_type": music.media_type or "track",
+                    "enqueue": music.queue_mode or "replace",
+                }
+                if music.provider is not None:
+                    play_data["provider"] = music.provider
+                await services.async_call(
+                    "music_assistant", "play_media", play_data,
+                    blocking=True, context=context,
+                    target={"entity_id": [music.player]},
+                )
+                return RuntimeResult(code="success", operation_count=1)
+            service = {
+                "next": "media_next_track",
+                "pause": "media_pause",
+                "previous": "media_previous_track",
+                "resume": "media_play",
+                "set_volume": "volume_set",
+            }[music.action]
+            if services.has_service("media_player", service) is not True:
+                return RuntimeResult(code="stale")
+            data = (
+                {"volume_level": music.volume / 100}
+                if music.action == "set_volume" and music.volume is not None
+                else {}
+            )
+            await services.async_call(
+                "media_player", service, data,
+                blocking=True, context=context,
+                target={"entity_id": [music.player]},
+            )
+            return RuntimeResult(code="success", operation_count=1)
+        except Exception:
+            return RuntimeResult(code="execution_failed")
+
+    def _remember_pending(self, conversation_id: str, pending: _PendingDialogue) -> None:
+        if len(self._pending) >= _MAX_PENDING_DIALOGUES:
+            oldest = min(self._pending, key=lambda key: self._pending[key].created)
+            self._pending.pop(oldest, None)
+        self._pending[conversation_id] = pending
+
+    def _resolve_device_followup(
+        self, text: str, domain: str | None, candidates: tuple[str, ...]
+    ) -> str | None:
+        snapshot = build_er_snapshot(self._hass).payload
+        needle = _normalize_pt(text)
+        rows = [
+            row for row in snapshot["entities"]
+            if (not candidates or row["registry_id"] in candidates)
+            and (domain is None or row["domain"] == domain)
+        ]
+        matches = [
+            row["registry_id"] for row in rows
+            if _row_matches_followup(row, snapshot["areas"], needle)
+        ]
+        matches = sorted(set(matches))
+        return matches[0] if len(matches) == 1 else None
+
+    def _resolve_music_player_from_text(self, text: str) -> str | None:
+        area_id = self._area_id_from_text(text)
+        if area_id is not None:
+            return self._resolve_music_player_in_area(area_id)
+        needle = _normalize_pt(text)
+        matches = [
+            entity_id for entity_id in self._music_assistant_players()
+            if needle in _normalize_pt(entity_id)
+        ]
+        return matches[0] if len(matches) == 1 else None
+
+    def _resolve_music_player_in_area(self, area_id: str) -> str | None:
+        registry = entity_registry.async_get(self._hass)
+        devices = device_registry.async_get(self._hass)
+        matches = []
+        for entry in registry.entities.values():
+            if (
+                entry.entity_id.startswith("media_player.")
+                and _effective_area_id(entry, devices) == area_id
+                and _is_music_assistant_player(self._hass, entry.entity_id)
+            ):
+                matches.append(entry.entity_id)
+        matches.sort()
+        return matches[0] if len(matches) == 1 else None
+
+    def _area_id_from_text(self, text: str) -> str | None:
+        snapshot = build_er_snapshot(self._hass).payload
+        needle = _normalize_pt(text)
+        matches = [
+            area["area_id"] for area in snapshot["areas"]
+            if any(_normalize_pt(name) in needle for name in area["names"])
+        ]
+        matches = sorted(set(matches))
+        return matches[0] if len(matches) == 1 else None
+
+    def _music_assistant_players(self) -> tuple[str, ...]:
+        registry = entity_registry.async_get(self._hass)
+        return tuple(
+            sorted(
+                entry.entity_id for entry in registry.entities.values()
+                if entry.entity_id.startswith("media_player.")
+                and _is_music_assistant_player(self._hass, entry.entity_id)
+            )
+        )
 
     async def _observe_shadow(self) -> None:
         try:
@@ -654,3 +984,34 @@ def _action_supports_domain(action: str, domain: str) -> bool:
         "light",
         "switch",
     )
+
+
+def _is_music_assistant_player(hass: Any, entity_id: str) -> bool:
+    if not entity_id.startswith("media_player."):
+        return False
+    state = hass.states.get(entity_id)
+    if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+    attrs = getattr(state, "attributes", {})
+    return (
+        attrs.get("mass_player_type") is not None
+        or attrs.get("music_assistant_player") is True
+        or attrs.get("integration") == "music_assistant"
+    )
+
+
+def _normalize_pt(value: str) -> str:
+    import unicodedata
+
+    folded = unicodedata.normalize("NFD", value.casefold())
+    asciiish = "".join(ch for ch in folded if unicodedata.category(ch) != "Mn")
+    return " ".join(asciiish.replace(".", " ").replace("_", " ").split())
+
+
+def _row_matches_followup(row: dict[str, Any], areas: list[dict[str, Any]], needle: str) -> bool:
+    values = [row["display_name"], *row["aliases"], row["entity_id"]]
+    for area in areas:
+        if row.get("area_id") == area["area_id"]:
+            values.extend(area["names"])
+    normalized = [_normalize_pt(value) for value in values if type(value) is str]
+    return any(value and (value in needle or needle in value) for value in normalized)

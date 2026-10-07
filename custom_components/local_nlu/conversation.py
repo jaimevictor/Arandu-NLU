@@ -63,14 +63,17 @@ class LocalNluConversationEntity(
             response.async_set_error(error_code, speech)
         return conversation.ConversationResult(
             response=response,
-            conversation_id=user_input.conversation_id,
-            continue_conversation=False,
+            conversation_id=result.conversation_id or user_input.conversation_id,
+            continue_conversation=result.continue_conversation or result.code == "missing_slot",
         )
 
 
 def _render(
     result: RuntimeResult,
 ) -> tuple[str, intent.IntentResponseErrorCode | None, bool]:
+    if result.response_text is not None:
+        error = None if result.code in ("success", "query_success", "missing_slot", "confirmation_required", "cancelled") else intent.IntentResponseErrorCode.UNKNOWN
+        return result.response_text, error, result.code == "query_success"
     if result.code == "success":
         if result.operation_count == 1:
             return ("Pronto.", None, False)
@@ -86,6 +89,30 @@ def _render(
         return (
             "Encontrei mais de um alvo. Diga o nome ou a área com mais detalhes.",
             intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+            False,
+        )
+    if result.code == "missing_slot":
+        if result.missing_slot == "media_query" and result.provider:
+            return (
+                f"O que você quer ouvir no {result.provider}?",
+                None,
+                False,
+            )
+        if result.missing_slot == "media_query":
+            return ("O que você quer ouvir?", None, False)
+        if result.missing_slot == "player":
+            return ("Em qual cômodo você quer tocar?", None, False)
+        return ("Qual alvo você quer usar?", None, False)
+    if result.code == "unresolved_target":
+        return (
+            "Não encontrei esse alvo. Qual alvo você quer usar?",
+            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+            False,
+        )
+    if result.code == "unsupported_intent":
+        return (
+            "Não entendi esse comando.",
+            intent.IntentResponseErrorCode.NO_INTENT_MATCH,
             False,
         )
     if result.code in ("no_match", "invalid_request"):

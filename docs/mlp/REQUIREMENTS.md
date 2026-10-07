@@ -25,3 +25,8 @@
 | MLP-021 | Active dependencies are pinned, FOSS, and documented. | `DEPENDENCIES.md` |
 | MLP-022 | Home Assistant add-on and custom integration package structures are present. | Package check |
 | MLP-023 | `./tools/mlp-check` passes from the repository root. | Final gate transcript |
+| MLP-024 | Music intent output is typed separately from device actions and supports provider hints without treating providers as players. | Protocol tests |
+| MLP-025 | Every music search/playback operation goes through Music Assistant; no Spotify or Deezer backend/API is called. | Integration tests |
+| MLP-026 | Music player targets must be Music Assistant-managed `media_player` entities; provider-named entities are rejected fail-closed. | Integration tests |
+| MLP-027 | Missing required slots such as media query or player produce `continue_conversation=True` and no effect. | Conversation/runtime tests |
+| MLP-028 | Commands containing ` e ` are eligible for the newer route instead of being forced to v1. | Runtime tests |

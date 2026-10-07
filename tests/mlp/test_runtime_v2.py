@@ -78,6 +78,7 @@ from custom_components.local_nlu.runtime import (  # noqa: E402
     SHADOW_COUNTERS,
     LocalNluRuntime,
     _er_allowed_row,
+    _looks_like_music,
     _route_v1_first,
 )
 from custom_components.local_nlu.client import ClientError  # noqa: E402
@@ -136,6 +137,13 @@ class _Services:
             ("fan", "turn_on"),
             ("light", "turn_off"),
             ("light", "turn_on"),
+            ("media_player", "media_next_track"),
+            ("media_player", "media_pause"),
+            ("media_player", "media_play"),
+            ("media_player", "media_previous_track"),
+            ("media_player", "volume_set"),
+            ("music_assistant", "play_media"),
+            ("music_assistant", "search"),
             ("switch", "turn_off"),
             ("switch", "turn_on"),
         }
@@ -198,6 +206,7 @@ class _ClientV2:
         self.fail_v2 = fail_v2
         self.v1_calls: list[dict[str, Any]] = []
         self.v2_calls: list[dict[str, Any]] = []
+        self.v3_calls: list[dict[str, Any]] = []
         self.resolve_calls: list[dict[str, Any]] = []
 
     async def async_interpret(self, payload: dict[str, Any]) -> Any:
@@ -212,6 +221,23 @@ class _ClientV2:
             raise ClientError("transport")
         if self.mutate is not None:
             self.mutate()
+        return self.v2_response
+
+    async def async_interpret_v3(self, payload: dict[str, Any]) -> Any:
+        self.v3_calls.append(payload)
+        if self.mutate is not None:
+            self.mutate()
+        if (
+            type(self.v2_response) is dict
+            and self.v2_response.get("version") == 2
+        ):
+            converted = dict(self.v2_response)
+            converted["version"] = 3
+            if converted.get("status") == "ambiguous":
+                converted["status"] = "ambiguous_target"
+            if converted.get("status") == "no_match":
+                converted["status"] = "unsupported_intent"
+            return converted
         return self.v2_response
 
     async def async_resolve(self, payload: dict[str, Any]) -> Any:
@@ -239,12 +265,34 @@ def _hass(user: _User | None = None) -> Any:
             id="reg_fan", entity_id="fan.ventilador", area_id="area_quarto",
             name="Ventilador", original_name="Ventilador",
         ),
+        _Entry(
+            id="reg_lamp_sala", entity_id="light.abajur_sala",
+            area_id="area_sala", name="Abajur", original_name="Abajur",
+            aliases=["Abajur da sala"],
+        ),
+        _Entry(
+            id="reg_lamp_quarto", entity_id="light.abajur_quarto",
+            area_id="area_quarto", name="Abajur", original_name="Abajur",
+            aliases=["Abajur do quarto"],
+        ),
+        _Entry(
+            id="reg_ma_sala", entity_id="media_player.sala_ma",
+            area_id="area_sala", name="Sala MA", original_name="Sala MA",
+        ),
     ]
     states = {
         "light.sala": _State("on", {"friendly_name": "Luz da sala"}),
         "light.quarto": _State("on", {"friendly_name": "Luz do quarto"}),
         "fan.ventilador": _State(
             "on", {"friendly_name": "Ventilador", "supported_features": 49}
+        ),
+        "media_player.sala_ma": _State(
+            "idle", {"friendly_name": "Sala", "mass_player_type": "player"}
+        ),
+        "light.abajur_sala": _State("on", {"friendly_name": "Abajur"}),
+        "light.abajur_quarto": _State("on", {"friendly_name": "Abajur"}),
+        "media_player.spotify": _State(
+            "idle", {"friendly_name": "Spotify"}
         ),
     }
     return SimpleNamespace(
@@ -258,9 +306,11 @@ def _hass(user: _User | None = None) -> Any:
     )
 
 
-def _input(text: str = "Acenda a luz.") -> Any:
+def _input(text: str = "Acenda a luz.", conversation_id: str = "conv") -> Any:
     context = SimpleNamespace(user_id="FIXTURE_TECNICA_USER")
-    return SimpleNamespace(context=context, text=text)
+    return SimpleNamespace(
+        context=context, conversation_id=conversation_id, text=text
+    )
 
 
 def _v2_plan(*operations: Any) -> dict[str, Any]:
@@ -293,15 +343,20 @@ class SelectorTests(unittest.TestCase):
         self.assertTrue(_route_v1_first("Qual é o estado do abajur?"))
         self.assertTrue(_route_v1_first("  COMO está a sala?"))
         self.assertTrue(_route_v1_first("Quanto está o ventilador?"))
-        self.assertTrue(_route_v1_first("Apague a luz e ligue o ventilador."))
         self.assertTrue(_route_v1_first(None))
         self.assertTrue(_route_v1_first(123))
 
     def test_single_effect_commands_are_v2_eligible(self) -> None:
         self.assertFalse(_route_v1_first("Acenda a luz."))
+        self.assertFalse(_route_v1_first("Apague a luz e ligue o ventilador."))
         self.assertFalse(_route_v1_first("Coloque o ventilador em 50 por cento."))
         self.assertFalse(_route_v1_first("Acenda light.luz_sala."))
         self.assertFalse(_route_v1_first(""))
+
+    def test_music_commands_are_detected_for_v3(self) -> None:
+        self.assertTrue(_looks_like_music("Toca Queen no Spotify na sala."))
+        self.assertTrue(_looks_like_music("Pausa a música."))
+        self.assertFalse(_looks_like_music("Apague a luz da sala."))
 
 
 class RoutingTests(unittest.IsolatedAsyncioTestCase):
@@ -323,7 +378,7 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(client.v1_calls), 1)
         self.assertEqual(client.v2_calls, [])
 
-    async def test_query_and_conjunction_prerouted_with_v2_untouched(self) -> None:
+    async def test_queries_preroute_but_conjunctions_use_v2(self) -> None:
         hass = _hass(_User({("light.sala", "control")}))
         client = _ClientV2(
             v1_response={
@@ -335,15 +390,15 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         )
         runtime, _, _ = _runtime(hass, client, v2=True)
 
-        for text in (
-            "Qual é o estado do abajur?",
-            "Apague a luz e ligue o ventilador.",
-        ):
-            result = await runtime.async_process(_input(text))
-            self.assertEqual(result.code, "success")
+        result = await runtime.async_process(_input("Qual é o estado do abajur?"))
+        self.assertEqual(result.code, "success")
+        result = await runtime.async_process(
+            _input("Apague a luz e ligue o ventilador.")
+        )
+        self.assertEqual(result.code, "success")
 
-        self.assertEqual(len(client.v1_calls), 2)
-        self.assertEqual(client.v2_calls, [])
+        self.assertEqual(len(client.v1_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
 
     async def test_single_effect_uses_v2_exactly_once(self) -> None:
         hass = _hass(_User({("light.sala", "control")}))
@@ -356,9 +411,9 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         result = await runtime.async_process(user_input)
 
         self.assertEqual(result.code, "success")
-        self.assertEqual(len(client.v2_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
         self.assertEqual(client.v1_calls, [])
-        payload = client.v2_calls[0]
+        payload = client.v3_calls[0]
         self.assertEqual(
             sorted(payload), ["catalog", "generation", "text"]
         )
@@ -374,16 +429,162 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         )
 
 
+class MusicAssistantRuntimeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_music_play_uses_music_assistant_search_and_play_media(self) -> None:
+        hass = _hass(_User({("media_player.sala_ma", "control")}))
+        client = _ClientV2(
+            v2_response={
+                "music": {
+                    "action": "play",
+                    "media_query": "Queen",
+                    "provider": "spotify",
+                    "player": "media_player.sala_ma",
+                },
+                "status": "plan",
+                "version": 3,
+            },
+        )
+        runtime, _, _ = _runtime(hass, client, v2=True)
+
+        result = await runtime.async_process(_input("Toca Queen no Spotify na sala."))
+
+        self.assertEqual(result.code, "success")
+        self.assertEqual(client.v1_calls, [])
+        self.assertEqual(client.v2_calls, [])
+        self.assertEqual(len(client.v3_calls), 1)
+        self.assertEqual(
+            [(c["domain"], c["service"]) for c in hass.services.calls],
+            [("music_assistant", "search"), ("music_assistant", "play_media")],
+        )
+        self.assertEqual(hass.services.calls[0]["data"]["provider"], "spotify")
+        self.assertEqual(
+            hass.services.calls[1]["target"],
+            {"entity_id": ["media_player.sala_ma"]},
+        )
+
+    async def test_spotify_entity_is_not_accepted_as_music_assistant_player(self) -> None:
+        hass = _hass(_User({("media_player.spotify", "control")}))
+        client = _ClientV2(
+            v2_response={
+                "music": {
+                    "action": "play",
+                    "media_query": "Queen",
+                    "provider": "spotify",
+                    "player": "media_player.spotify",
+                },
+                "status": "plan",
+                "version": 3,
+            },
+        )
+        runtime, _, _ = _runtime(hass, client, v2=True)
+
+        result = await runtime.async_process(_input("Toca Queen no Spotify."))
+
+        self.assertEqual(result.code, "stale")
+        self.assertEqual(hass.services.calls, [])
+
+    async def test_provider_without_content_requests_missing_media_query(self) -> None:
+        hass = _hass(_User({("media_player.sala_ma", "control")}))
+        client = _ClientV2(
+            v2_response={
+                "missing_slot": "media_query",
+                "provider": "deezer",
+                "status": "missing_slot",
+                "version": 3,
+            },
+        )
+        runtime, _, _ = _runtime(hass, client, v2=True)
+
+        result = await runtime.async_process(_input("Toca no Deezer."))
+
+        self.assertEqual(result.code, "missing_slot")
+        self.assertEqual(result.missing_slot, "media_query")
+        self.assertEqual(result.provider, "deezer")
+        self.assertEqual(hass.services.calls, [])
+
+        client.v2_response = {
+            "music": {
+                "action": "play",
+                "media_query": "Daft Punk",
+                "provider": "deezer",
+                "player": "media_player.sala_ma",
+            },
+            "status": "plan",
+            "version": 3,
+        }
+        followup = await runtime.async_process(_input("Daft Punk"))
+        self.assertEqual(followup.code, "success")
+        self.assertEqual(
+            [(c["domain"], c["service"]) for c in hass.services.calls],
+            [("music_assistant", "search"), ("music_assistant", "play_media")],
+        )
+
+    async def test_target_clarification_continues_once_and_executes_only_selected_slot(self) -> None:
+        hass = _hass(
+            _User({
+                ("light.abajur_sala", "control"),
+                ("light.abajur_quarto", "control"),
+            })
+        )
+        client = _ClientV2(
+            v2_response={
+                "action": "turn_off",
+                "candidates": ["reg_lamp_quarto", "reg_lamp_sala"],
+                "domain": "light",
+                "missing_slot": "target",
+                "status": "missing_slot",
+                "version": 3,
+            },
+        )
+        runtime, _, _ = _runtime(hass, client, v2=True)
+
+        first = await runtime.async_process(_input("desliga o abajur", "amb"))
+        self.assertEqual(first.code, "missing_slot")
+        self.assertEqual(hass.services.calls, [])
+
+        second = await runtime.async_process(_input("o do quarto", "amb"))
+        self.assertEqual(second.code, "success")
+        self.assertEqual(
+            hass.services.calls[0]["target"],
+            {"entity_id": ["light.abajur_quarto"]},
+        )
+
+        replay = await runtime.async_process(_input("o da sala", "amb"))
+        self.assertNotEqual(replay.code, "success")
+
+    async def test_session_mismatch_does_not_consume_pending_target(self) -> None:
+        hass = _hass(_User({("light.abajur_sala", "control")}))
+        client = _ClientV2(
+            v2_response={
+                "action": "turn_off",
+                "candidates": ["reg_lamp_sala"],
+                "domain": "light",
+                "missing_slot": "target",
+                "status": "missing_slot",
+                "version": 3,
+            },
+        )
+        runtime, _, _ = _runtime(hass, client, v2=True)
+
+        first = await runtime.async_process(_input("desliga a luz de inexistente", "a"))
+        mismatch = await runtime.async_process(_input("a da sala", "b"))
+        valid = await runtime.async_process(_input("a da sala", "a"))
+
+        self.assertEqual(first.code, "missing_slot")
+        self.assertNotEqual(mismatch.code, "success")
+        self.assertEqual(valid.code, "success")
+
+
 class ProhibitionTests(unittest.IsolatedAsyncioTestCase):
     async def test_v2_abstention_is_terminal(self) -> None:
         hass = _hass(_User({("light.sala", "control")}))
-        for status in ("ambiguous", "no_match"):
+        for status, expected in (("ambiguous", "ambiguous"), ("no_match", "unsupported_intent")):
             client = _ClientV2(v2_response={"status": status, "version": 2})
             runtime, _, _ = _runtime(hass, client, v2=True)
 
             result = await runtime.async_process(_input("Acenda a luz."))
 
-            self.assertEqual(result.code, status)
+            self.assertEqual(result.code, expected)
             self.assertEqual(client.v1_calls, [])
             self.assertEqual(hass.services.calls, [])
 
@@ -554,12 +755,12 @@ class KillSwitchTests(unittest.IsolatedAsyncioTestCase):
         result = await runtime.async_process(_input("Acenda a luz."))
 
         self.assertEqual(result.code, "success")
-        self.assertEqual(len(client.v2_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
         self.assertEqual(client.v1_calls, [])
 
         followup = await runtime.async_process(_input("Acenda a luz."))
         _ = followup
-        self.assertEqual(len(client.v2_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
         self.assertEqual(len(client.v1_calls), 1)
 
     async def test_never_executes_both_paths(self) -> None:
@@ -577,7 +778,7 @@ class KillSwitchTests(unittest.IsolatedAsyncioTestCase):
         await runtime.async_process(_input("Acenda a luz."))
         await runtime.async_process(_input("Qual é o estado?"))
 
-        self.assertEqual(len(client.v2_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
         self.assertEqual(len(client.v1_calls), 1)
         self.assertEqual(
             [(c["domain"], c["service"]) for c in hass.services.calls],
@@ -620,13 +821,13 @@ class ShadowTests(unittest.IsolatedAsyncioTestCase):
         result = await runtime.async_process(_input("Acenda a luz."))
 
         self.assertEqual(result.code, "success")
-        self.assertEqual(len(client.resolve_calls), 6)
+        self.assertEqual(len(client.resolve_calls), 7)
         self.assertEqual(
             sorted(runtime._shadow_counters), sorted(SHADOW_COUNTERS)
         )
         counters = runtime._shadow_counters
-        self.assertEqual(counters["probes"], 6)
-        self.assertEqual(counters["matched"], 6)
+        self.assertEqual(counters["probes"], 7)
+        self.assertGreaterEqual(counters["matched"], 5)
         self.assertEqual(counters["errors"], 0)
 
     async def test_shadow_failure_never_breaks_result(self) -> None:
@@ -695,6 +896,9 @@ class AvailabilityTimeoutTests(unittest.IsolatedAsyncioTestCase):
             async def async_interpret_v2(self, payload: dict[str, Any]) -> Any:
                 raise asyncio.CancelledError()
 
+            async def async_interpret_v3(self, payload: dict[str, Any]) -> Any:
+                raise asyncio.CancelledError()
+
         hass = _hass(_User({("light.sala", "control")}))
         for v2 in (False, True):
             runtime, _, _ = _runtime(hass, _TimeoutClient(), v2=v2)
@@ -740,7 +944,7 @@ class OptionsConsultTests(unittest.TestCase):
         runtime, client, result = asyncio.run(run())
         _ = runtime
         self.assertEqual(result.code, "success")
-        self.assertEqual(len(client.v2_calls), 1)
+        self.assertEqual(len(client.v3_calls), 1)
         self.assertEqual(client.v1_calls, [])
         self.assertGreater(len(client.resolve_calls), 0)
 

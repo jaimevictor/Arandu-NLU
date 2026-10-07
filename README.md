@@ -2,11 +2,13 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
+**NLU 2.0.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+
 Local, deterministic Brazilian Portuguese conversation agent for Home Assistant.
 
 ## Overview
 
-Arandu is a small, privacy-focused NLU engine that understands exact Portuguese commands to control your smart home. It runs entirely locally—no cloud, no credentials in the add-on, no data collection.
+Arandu is a local, deterministic Portuguese NLU engine with semantic device aliases, spatial context, bounded conversation sessions, typed control and sensor queries. The Rust add-on never receives Home Assistant credentials; the Python integration is the sole authorized executor.
 
 The engine supports:
 
@@ -31,21 +33,22 @@ The add-on never receives Home Assistant credentials. The integration is the sol
 | Dimension | Support |
 |-----------|---------|
 | Language | Brazilian Portuguese |
-| Effect domains | `light`, `switch`, `fan` |
-| Read domains | effect domains + `sensor`, `binary_sensor` |
-| Actions | `turn_on`, `turn_off`, `set_fan_percentage`, `get_state` |
+| Control | Lights, fans, climate, covers, media, helpers and capability-specific HA adapters |
+| Queries | Current states, environmental measurements, presence/location, aggregates, calendar/weather/todo |
+| Conditional features | Music Assistant, configured remote commands, exposed script/button bindings, indoor person trackers |
 | Plan size | Up to 4 ordered operations |
-| Targets | Up to 4 exact entity or area clauses per operation |
-| Chaining | Coordinated targets (`da sala e do quarto`) and mixed actions |
-| Matching | Case/diacritic-insensitive exact aliases |
+| Targets | Up to 32 authorized resolved entities per contextual operation |
+| Context | Origin area, explicit area precedence, recent targets, clarification and expiring confirmation |
+| Matching | Deterministic names/aliases, semantic domain/class/capability evidence; ties ask for clarification |
+| Compatibility | v1/v2/v3 preserved; contextual v4 enabled by default, configurable rollback |
 
-## Explicit Non-Goals
+## Limits
 
-No mixed query/effect chains, contradictory target reuse, timers, follow-ups, sessions, toggle, fuzzy matching, whole-home broadcast, arbitrary service calls, cloud dependency, speech recognition, climate, covers, media, locks, scenes, or automation creation.
+No arbitrary service calls, generative model, fuzzy authorization, inferred indoor identity, fabricated readings or assumed atomic HA transactions. Unsupported conditions/exceptions abstain. Sensitive access/protection operations need policy and confirmation; entity PIN requirements remain enforced. Backends and authenticated `context.user_id` are required. Real residential HA and ARM64 have not been tested here; coverage uses the real executor with simulated HA. See the report for exact counts and remaining interpretation failures.
 
 ## Installation
 
-See [`docs/mlp/INSTALL.md`](docs/mlp/INSTALL.md) for setup instructions.
+See [installation and rollback](docs/nlu-2.0/DEPLOYMENT.md) for the local source package, integration, Assist agent and optional adapters.
 
 ## Development
 
@@ -66,18 +69,18 @@ See [`docs/mlp/INSTALL.md`](docs/mlp/INSTALL.md) for setup instructions.
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/mlp-dev.ps1 check
 ```
 
-See [`docs/mlp/BUILD-WINDOWS.md`](docs/mlp/BUILD-WINDOWS.md) for build, corpus, and container commands.
+See [deployment/build instructions](docs/nlu-2.0/DEPLOYMENT.md) and [pinned developer dependencies](tools/dev/DEPENDENCIES.md).
 
 ## Documentation
 
-- [Product Overview](docs/mlp/PRODUCT.md)
-- [Requirements](docs/mlp/REQUIREMENTS.md)
-- [Dependencies](docs/mlp/DEPENDENCIES.md)
-- [Architecture Decision Records](docs/adr/)
+- [Architecture](docs/nlu-2.0/ARCHITECTURE.md)
+- [Measured coverage and limitations](docs/nlu-2.0/REPORT.md)
+- [Release reviews](docs/nlu-2.0/REVIEWS.md)
+- [Contextual scope decision](docs/adr/0056-contextual-nlu-2.md)
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE) and [`docs/mlp/DEPENDENCIES.md`](docs/mlp/DEPENDENCIES.md) for third-party licenses.
+Apache-2.0. See [LICENSE](LICENSE), [third-party notices](addon/THIRD_PARTY_NOTICES.md) and [STT provenance](data/contextual/provenance.json).
 
 ## Project Name
 

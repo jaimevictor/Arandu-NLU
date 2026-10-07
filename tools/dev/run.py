@@ -16,12 +16,15 @@ if task == 'versions':
 
 # A fresh container supplies an empty Linux workspace. Copy bytes, not NTFS modes.
 # Restore archive modes; the existing exact-tree verifier still validates them.
-for relative in ('addon', 'custom_components', 'data/mlp', 'tests/mlp', 'tools', 'evaluation'):
+for relative in ('addon', 'custom_components', 'data', 'tests/mlp', 'tools', 'evaluation'):
+    if not (source / relative).is_dir():
+        continue
     shutil.copytree(source / relative, workspace / relative,
                     copy_function=shutil.copyfile,
                     ignore=shutil.ignore_patterns('__pycache__', '__MACOSX', '.DS_Store', 'target'))
-shutil.copytree(source / '.git', workspace / '.git', copy_function=shutil.copyfile,
-                ignore=shutil.ignore_patterns('__pycache__', '*.lock'))
+if (source / '.git').is_dir():
+    shutil.copytree(source / '.git', workspace / '.git', copy_function=shutil.copyfile,
+                    ignore=shutil.ignore_patterns('__pycache__', '*.lock'))
 if (source / '.cargo').is_dir():
     shutil.copytree(source / '.cargo', workspace / '.cargo', copy_function=shutil.copyfile)
 for name in ('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE'):
@@ -34,6 +37,8 @@ for path in (workspace / 'tools').rglob('*'):
     if path.is_file():
         with path.open('rb') as file:
             if file.read(2) == b'#!':
+                # NTFS checkouts may have CRLF; executable Linux staging uses LF.
+                path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n'))
                 path.chmod(0o755)
 (workspace / 'target').symlink_to('/output', target_is_directory=True)
 os.chdir(workspace)

@@ -10,8 +10,8 @@ use std::{
 };
 
 use crate::{
-    InterpretRequest, InterpretRequestV2, InterpretResponse, ResolutionRequest, interpret,
-    interpret_v2, resolve_entity,
+    InterpretRequest, InterpretRequestV2, InterpretRequestV3, InterpretResponse, ResolutionRequest,
+    interpret, interpret_v2, interpret_v3, resolve_entity,
 };
 
 const MAX_REQUEST_BYTES: usize = 65_536;
@@ -27,6 +27,9 @@ enum Route {
     V1Interpret,
     V2Resolve,
     V2Interpret,
+    V3Interpret,
+    V4Catalog,
+    V4Interpret,
 }
 
 struct ConnectionGuard(Arc<AtomicUsize>);
@@ -75,12 +78,19 @@ pub fn serve_one(listener: &TcpListener) -> std::io::Result<()> {
 
 fn route_error(stream: &mut TcpStream, route: Route, status: u16) -> std::io::Result<()> {
     match route {
+        Route::V4Catalog | Route::V4Interpret => write_raw(
+            stream,
+            status,
+            br#"{"status":"invalid_request","version":4}"#,
+        ),
         Route::V1Interpret => write_response(
             stream,
             status,
             &InterpretResponse::InvalidRequest { version: 1 },
         ),
-        Route::V2Resolve | Route::V2Interpret => write_raw(stream, status, V2_INVALID_REQUEST),
+        Route::V2Resolve | Route::V2Interpret | Route::V3Interpret => {
+            write_raw(stream, status, V2_INVALID_REQUEST)
+        }
     }
 }
 
@@ -139,6 +149,12 @@ fn handle_connection(stream: &mut TcpStream) -> std::io::Result<()> {
         Route::V2Resolve
     } else if request_line == "POST /v2/interpret HTTP/1.1" {
         Route::V2Interpret
+    } else if request_line == "POST /v3/interpret HTTP/1.1" {
+        Route::V3Interpret
+    } else if request_line == "POST /v4/catalog HTTP/1.1" {
+        Route::V4Catalog
+    } else if request_line == "POST /v4/interpret HTTP/1.1" {
+        Route::V4Interpret
     } else {
         return write_response(
             stream,
@@ -180,7 +196,12 @@ fn handle_connection(stream: &mut TcpStream) -> std::io::Result<()> {
     let Some(content_length) = content_length else {
         return route_error(stream, route, 411);
     };
-    if !content_type_ok || content_length == 0 || content_length > MAX_REQUEST_BYTES {
+    let request_limit = if matches!(route, Route::V4Catalog) {
+        2_097_152
+    } else {
+        MAX_REQUEST_BYTES
+    };
+    if !content_type_ok || content_length == 0 || content_length > request_limit {
         return route_error(stream, route, 400);
     }
 
@@ -194,6 +215,31 @@ fn handle_connection(stream: &mut TcpStream) -> std::io::Result<()> {
     read_exact_until(stream, &mut body[already_read..], deadline)?;
 
     match route {
+        Route::V4Catalog => {
+            let Ok(catalog) = serde_json::from_slice::<crate::contextual::contract::Catalog>(&body)
+            else {
+                return route_error(stream, route, 400);
+            };
+            let response = crate::contextual::register_catalog(catalog);
+            write_raw(
+                stream,
+                200,
+                &serde_json::to_vec(&response).map_err(std::io::Error::other)?,
+            )
+        }
+        Route::V4Interpret => {
+            let Ok(request) =
+                serde_json::from_slice::<crate::contextual::contract::ContextRequest>(&body)
+            else {
+                return route_error(stream, route, 400);
+            };
+            let response = crate::contextual::interpret(&request);
+            write_raw(
+                stream,
+                200,
+                &serde_json::to_vec(&response).map_err(std::io::Error::other)?,
+            )
+        }
         Route::V1Interpret => {
             let response = serde_json::from_slice::<InterpretRequest>(&body).map_or_else(
                 |_| InterpretResponse::InvalidRequest { version: 1 },
@@ -218,6 +264,17 @@ fn handle_connection(stream: &mut TcpStream) -> std::io::Result<()> {
             };
             let payload =
                 serde_json::to_vec(&interpret_v2(&request)).map_err(std::io::Error::other)?;
+            if payload.len() > MAX_RESPONSE_BYTES {
+                return route_error(stream, route, 500);
+            }
+            write_raw(stream, 200, &payload)
+        }
+        Route::V3Interpret => {
+            let Ok(request) = serde_json::from_slice::<InterpretRequestV3>(&body) else {
+                return route_error(stream, route, 400);
+            };
+            let payload =
+                serde_json::to_vec(&interpret_v3(&request)).map_err(std::io::Error::other)?;
             if payload.len() > MAX_RESPONSE_BYTES {
                 return route_error(stream, route, 500);
             }
