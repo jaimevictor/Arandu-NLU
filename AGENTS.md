@@ -24,6 +24,13 @@ Earlier phase queues, requirement matrices, tribunal reports, and P00-P16
 artifacts are retained only as historical evidence and do not gate the MLP.
 Newer explicit user constraints take precedence.
 
+As of 2026-09-23, sessions, follow-ups, clarification, and music are in scope.
+Spotify, Deezer, and other streaming services are content providers only.
+Arandu never integrates directly with those providers and never treats them as
+players or execution backends. All music search and playback must go through
+Music Assistant; Home Assistant `media_player` entities are accepted for music
+only when they are identified as Music Assistant players.
+
 Resolve decisions in this order: newer explicit user constraints, this
 contract, the newest accepted active ADR, the MLP requirements, official
 public contracts, valid tests, then current implementation. At the same level
@@ -71,9 +78,12 @@ The MLP supports:
 One operation may contain multiple sorted targets, while plan operations
 preserve spoken order. The integration must preflight the complete plan before
 the first effect. Contradictory reuse of a target across operations abstains.
-The MLP excludes timers, sessions, follow-ups, toggle, fuzzy matching,
-whole-home broadcast, climate, covers, media, locks, scenes, and arbitrary
-service passthrough. Unsupported or ambiguous requests produce no plan.
+The remaining exclusions are timers, toggle, fuzzy matching, whole-home
+broadcast, climate, covers outside Music Assistant playback, locks, scenes,
+arbitrary service passthrough, and direct provider APIs. Unsupported or
+ambiguous requests produce no executable plan; when the action is understood
+but a required target or music slot is missing, the integration may ask a
+bounded clarification question and continue the conversation once.
 
 ## Engineering Rules
 

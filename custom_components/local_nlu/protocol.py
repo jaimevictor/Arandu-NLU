@@ -17,6 +17,15 @@ Action = Literal[
     "turn_on",
 ]
 
+MusicAction = Literal[
+    "next",
+    "pause",
+    "play",
+    "previous",
+    "resume",
+    "set_volume",
+]
+
 
 @dataclass(frozen=True)
 class PlanOperation:
@@ -188,6 +197,36 @@ class PlanV2:
     operations: tuple[PlanV2Operation, ...] = ()
 
 
+@dataclass(frozen=True)
+class MusicPlan:
+    action: MusicAction
+    media_query: str | None = None
+    media_type: str | None = None
+    provider: str | None = None
+    player: str | None = None
+    player_area: str | None = None
+    queue_mode: str | None = None
+    volume: int | None = None
+    missing_slot: str | None = None
+    pending_action: str | None = None
+    pending_domain: str | None = None
+    candidates: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class PlanV3:
+    status: Literal[
+        "ambiguous_target",
+        "invalid_request",
+        "missing_slot",
+        "plan",
+        "unresolved_target",
+        "unsupported_intent",
+    ]
+    operations: tuple[PlanV2Operation, ...] = ()
+    music: MusicPlan | None = None
+
+
 def parse_v2_plan(value: Any) -> PlanV2:
     """Parse one exact version-two interpretation response."""
 
@@ -215,6 +254,120 @@ def parse_v2_plan(value: Any) -> PlanV2:
                 raise ProtocolError("contradiction")
             affected.add(target)
     return PlanV2(status="plan", operations=operations)
+
+
+def parse_v3_plan(value: Any) -> PlanV3:
+    """Parse one exact version-three interpretation response."""
+
+    if type(value) is not dict or value.get("version") != 3:
+        raise ProtocolError("response")
+    status = value.get("status")
+    if status in (
+        "ambiguous_target",
+        "invalid_request",
+        "unresolved_target",
+        "unsupported_intent",
+    ):
+        if set(value) != {"status", "version"}:
+            raise ProtocolError("response")
+        return PlanV3(status=status)
+    if status == "missing_slot":
+        if not set(value) <= {
+            "action",
+            "candidates",
+            "domain",
+            "media_query",
+            "missing_slot",
+            "provider",
+            "status",
+            "version",
+        }:
+            raise ProtocolError("response")
+        missing_slot = value["missing_slot"]
+        if missing_slot not in ("media_query", "player", "target"):
+            raise ProtocolError("missing_slot")
+        provider = _optional_text(value.get("provider"), 64, "provider")
+        media_query = _optional_text(value.get("media_query"), 256, "media_query")
+        domain = _optional_text(value.get("domain"), 32, "domain")
+        action = _optional_text(value.get("action"), 32, "action")
+        candidates = _optional_candidates(value.get("candidates"))
+        return PlanV3(status="missing_slot", music=MusicPlan(
+            action="play",
+            candidates=candidates,
+            media_query=media_query,
+            missing_slot=missing_slot,
+            pending_action=action,
+            pending_domain=domain,
+            provider=provider,
+        ))
+    if status != "plan":
+        raise ProtocolError("response")
+    if set(value) == {"music", "status", "version"}:
+        return PlanV3(status="plan", music=_parse_music_plan(value["music"]))
+    if set(value) == {"operations", "status", "version"}:
+        raw_operations = value["operations"]
+        if not 1 <= len(raw_operations) <= 4:
+            raise ProtocolError("operations")
+        operations = tuple(_parse_v2_operation(operation) for operation in raw_operations)
+        affected: set[str] = set()
+        for operation in operations:
+            for target in operation.targets:
+                if target in affected:
+                    raise ProtocolError("contradiction")
+                affected.add(target)
+        return PlanV3(status="plan", operations=operations)
+    raise ProtocolError("response")
+
+
+def _parse_music_plan(value: Any) -> MusicPlan:
+    if type(value) is not dict or type(value.get("action")) is not str:
+        raise ProtocolError("music")
+    action = value["action"]
+    if action not in ("next", "pause", "play", "previous", "resume", "set_volume"):
+        raise ProtocolError("music_action")
+    allowed = {
+        "action",
+        "media_query",
+        "media_type",
+        "provider",
+        "player",
+        "player_area",
+        "queue_mode",
+        "volume",
+    }
+    if not set(value) <= allowed:
+        raise ProtocolError("music")
+    media_query = _optional_text(value.get("media_query"), 256, "media_query")
+    media_type = _optional_enum(
+        value.get("media_type"), ("album", "artist", "playlist", "track"), "media_type"
+    )
+    provider = _optional_text(value.get("provider"), 64, "provider")
+    player = value.get("player")
+    if player is not None and not _valid_entity_id(player):
+        raise ProtocolError("player")
+    player_area = _optional_identifier(value.get("player_area"), "player_area")
+    queue_mode = _optional_enum(
+        value.get("queue_mode"), ("add", "next", "play", "replace"), "queue_mode"
+    )
+    volume = value.get("volume")
+    if volume is not None and (type(volume) is not int or not 0 <= volume <= 100):
+        raise ProtocolError("volume")
+    if action == "play" and media_query is None:
+        raise ProtocolError("media_query")
+    if action == "set_volume" and volume is None:
+        raise ProtocolError("volume")
+    if action != "set_volume" and volume is not None:
+        raise ProtocolError("volume")
+    return MusicPlan(
+        action=action,
+        media_query=media_query,
+        media_type=media_type,
+        provider=provider,
+        player=player,
+        player_area=player_area,
+        queue_mode=queue_mode,
+        volume=volume,
+    )
 
 
 def _parse_v2_operation(value: Any) -> PlanV2Operation:
@@ -250,4 +403,62 @@ def _parse_v2_operation(value: Any) -> PlanV2Operation:
         action=action,
         percentage=percentage,
         targets=targets,
+    )
+
+
+def _optional_text(value: Any, max_bytes: int, field: str) -> str | None:
+    if value is None:
+        return None
+    if (
+        type(value) is not str
+        or not value.strip()
+        or len(value.encode("utf-8")) > max_bytes
+        or any(ord(character) < 32 or ord(character) == 127 for character in value)
+    ):
+        raise ProtocolError(field)
+    return value
+
+
+def _optional_enum(value: Any, allowed: tuple[str, ...], field: str) -> str | None:
+    if value is None:
+        return None
+    if value not in allowed:
+        raise ProtocolError(field)
+    return value
+
+
+def _optional_identifier(value: Any, field: str) -> str | None:
+    if value is None:
+        return None
+    if not _valid_identifier(value):
+        raise ProtocolError(field)
+    return value
+
+
+def _optional_candidates(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if (
+        type(value) is not list
+        or len(value) > 16
+        or any(not _valid_identifier(candidate) for candidate in value)
+        or tuple(value) != tuple(sorted(set(value)))
+    ):
+        raise ProtocolError("candidates")
+    return tuple(value)
+
+
+def _valid_entity_id(value: Any) -> bool:
+    if type(value) is not str or len(value) > 255:
+        return False
+    domain, separator, object_id = value.partition(".")
+    return (
+        separator == "."
+        and bool(domain)
+        and bool(object_id)
+        and all(
+            character.isascii()
+            and (character.isalnum() or character in "_")
+            for character in domain + object_id
+        )
     )

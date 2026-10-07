@@ -1,0 +1,13 @@
+{
+  "architecture": "linux/amd64",
+  "image": "local-nlu:2.0.0-amd64",
+  "manifest_digest": "sha256:5e030beae88714bd92b5502382fb2344597ec10acb0183e20b02375dcbed1efd",
+  "status": "PASS",
+  "user": "65534:65534",
+  "network": "none; smoke client joined the same isolated namespace",
+  "smoke": "PASS: actual scratch image, Rust HTTP, Python executor with simulated HA",
+  "command": "tools/contextual-image-smoke.py",
+  "source_digest": "18909fef2fd43649bb6412f63b40a36309c73634d5f41ecf64956505ff1ef02f",
+  "runtime_license_notices": "PASS: musl and Rust standard-library notices copied from actual image and byte-compared",
+  "limitations": ["ARM64 not executed", "No physical Home Assistant instance"]
+}

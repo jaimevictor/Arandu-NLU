@@ -17,5 +17,26 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Context and device policies",
+        "description": "Set a default room only when it is known. Access devices require an explicit policy and confirmation.",
+        "data": {
+          "contextual_enabled": "Enable Arandu NLU 2.0",
+          "session_ttl": "Context lifetime (seconds)",
+          "default_area": "Default room ID",
+          "increments": "Relative adjustment increments",
+          "entity_preferences": "Preferred sensors and semantic categories",
+          "sensitive_entities": "Access devices allowed with confirmation",
+          "energy_sources": "Verified non-overlapping energy sources",
+          "device_mappings": "TV and remote command mappings",
+          "intent_bindings": "Registered script and button adapters",
+          "v2_enabled": "Enable legacy v3 when contextual mode is disabled",
+          "shadow_enabled": "Enable legacy resolver diagnostics"
+        }
+      }
+    }
+  },
   "title": "ARANDU NLU"
 }

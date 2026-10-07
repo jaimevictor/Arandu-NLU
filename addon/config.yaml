@@ -1,7 +1,7 @@
 name: ARANDU NLU
-version: 0.2.0
+version: 2.0.0
 slug: ptbr_nlu
-description: Local deterministic PT-BR commands for Home Assistant
+description: Local contextual Brazilian Portuguese intelligence for Home Assistant
 arch:
   - aarch64
   - amd64
