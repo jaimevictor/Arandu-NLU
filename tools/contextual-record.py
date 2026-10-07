@@ -11,7 +11,7 @@ import zipfile
 from collections import Counter
 
 ROOT = Path(__file__).resolve().parent.parent
-TOOLS = ['mlp-check', 'mlp-smoke.py', 'mlp-dev.ps1', 'generate-mlp-corpus', 'generate-mlp-corpus.rb', 'check-mlp-package', 'check-mlp-package.py', 'materialize-mlp-vendor.py', 'import-stt-corpus.py', 'contextual-evaluate.py', 'contextual-benchmark.py', 'contextual-image-smoke.py', 'contextual-record.py']
+TOOLS = ['mlp-check', 'mlp-smoke.py', 'mlp-dev.ps1', 'generate-mlp-corpus', 'generate-mlp-corpus.rb', 'check-mlp-package', 'check-mlp-package.py', 'materialize-mlp-vendor.py', 'import-stt-corpus.py', 'contextual-evaluate.py', 'contextual-benchmark.py', 'contextual-image-smoke.py', 'contextual-record.py', 'distribution.py', 'release-package.py', 'make-store-repo.py']
 
 
 def digest():
@@ -122,7 +122,7 @@ def record(args):
         ht = transport['phases']['observed_rust_http_executor_ms']
         bench_rows.append(f"| {native['entities']} | {nt['p50_ms']:.4f} | {nt['p95_ms']:.4f} | {nt.get('p99_ms', 0):.4f} | {ht['p50_ms']:.4f} | {ht['p95_ms']:.4f} | {ht.get('p99_ms', 0):.4f} | {native['catalog_compile_p50_ms']:.2f} | {native['process_rss']} |")
     imperfect = [f"- `{name}`: {row['operational_simulated']}/{row['cases']} execuções simuladas; motivos: {', '.join(row['reasons']) or 'abstenção/ambiguidade/checagem semântica; veja cases_detail'}." for name, row in coverage['intents'].items() if row['operational_simulated'] != row['cases']]
-    report = f"""# Relatório NLU 0.3.1 — motor contextual 2.0
+    report = f"""# Relatório NLU 0.3.2 — motor contextual 2.0
 
 Implementação contextual aditiva em Rust/Python, versões anteriores preservadas e STT inalterado. Fingerprint normalizado das fontes executáveis: `{source_hash}`. Trabalho no checkout local; nenhum commit, push ou implantação numa residência foi efetuado.
 
@@ -210,7 +210,7 @@ Casos que ainda não completam a execução simulada isolada:
 
 ## I. Alterações
 
-Rust: `addon/engine/src/contextual`, rotas em server/lib e testes/exemplo de benchmark. Python: catálogo/protocolo/executor contextual, capabilities/queries, runtime/conversation/config_flow/init e traduções. Build: versão 0.3.1, Docker, avisos de licença e staging LF. Dados: inventário/proveniência/cobertura/benchmarks. Ferramentas: importação, avaliação, medição, smoke e pacote. Documentos: arquitetura/contratos/implantação/revisões/relatório/checkpoint. Modificações locais anteriores foram preservadas.
+Rust: `addon/engine/src/contextual`, rotas em server/lib e testes/exemplo de benchmark. Python: catálogo/protocolo/executor contextual, capabilities/queries, runtime/conversation/config_flow/init e traduções. Build: versão 0.3.2, Docker, avisos de licença e staging LF. Dados: inventário/proveniência/cobertura/benchmarks. Ferramentas: importação, avaliação, medição, smoke e pacote. Documentos: arquitetura/contratos/implantação/revisões/relatório/checkpoint. Modificações locais anteriores foram preservadas.
 
 ## J. Pronto para implantação?
 
@@ -247,7 +247,7 @@ def package(destination):
         'v2-interpret': ['snapshot-v1.json', 'corpus-v1.jsonl'],
     }.items():
         paths |= {ROOT / 'evaluation/ptbr-independent' / folder / name for name in names}
-    paths |= {ROOT / name for name in ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'README.md', '.cargo/config.toml', 'docs/adr/0056-contextual-nlu-2.md', 'docs/NLU_2_0_EXECUTION_CHECKPOINT.md']}
+    paths |= {ROOT / name for name in ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'README.md', 'INSTALL.md', 'repository.yaml', 'release.json', '.cargo/config.toml', 'docs/adr/0056-contextual-nlu-2.md', 'docs/NLU_2_0_EXECUTION_CHECKPOINT.md']}
     paths = {path for path in paths if not set(path.relative_to(ROOT).parts) & {'target', '__pycache__', '.git', '.storage'} and path.suffix not in ('.pyc', '.log')}
     manifest = {}
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -265,7 +265,7 @@ def package(destination):
             info.external_attr = (0o100755 if executable else 0o100644) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, content)
-        archive.writestr('RELEASE-MANIFEST.json', json.dumps({'version': '0.3.1', 'source_digest': digest(), 'files': manifest}, sort_keys=True, indent=2))
+        archive.writestr('RELEASE-MANIFEST.json', json.dumps({'version': '0.3.2', 'source_digest': digest(), 'files': manifest}, sort_keys=True, indent=2))
     with zipfile.ZipFile(destination) as archive:
         assert archive.testzip() is None
         for name, expected in manifest.items():

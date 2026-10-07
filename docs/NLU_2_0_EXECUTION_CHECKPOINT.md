@@ -2,9 +2,9 @@
 
 ## Estado
 Data: 2026-10-06
-Branch atual: master (branch padrão do repositório).
-Versão atual do release: 0.3.1 (motor contextual 2.0).
-PR: https://github.com/jaimevictor/Arandu-NLU/pull/5
+Branch atual: fix/unify-distribution-0.3.2; destino master.
+Versão atual do release: 0.3.2 (motor contextual 2.0).
+PR contextual anterior (já integrado): https://github.com/jaimevictor/Arandu-NLU/pull/5
 Commit base: cd1014770763cac29135b98db2c83b5e0bba996f
 Workspace contém mudanças locais: sim; inclui modificações anteriores preservadas.
 Workspace: E:/Pycharm Projects/Arandu NLU
@@ -21,7 +21,16 @@ Workspace: E:/Pycharm Projects/Arandu NLU
 - [x] Documentação: README atual, arquitetura, compatibilidade, implantação/logs/rollback e revisões por severidade
 - [x] Relatório final: docs/nlu-2.0/REPORT.md, estrutura A–J, READY WITH KNOWN LIMITATIONS
 
-## Últimos resultados confirmados
+## Distribuição 0.3.2
+
+Única fonte publicada: addon/; cópia antiga removida após verificar recursos.
+Slug ptbr_nlu e URL pública preservados. Gate final PASS: 108 testes Python,
+90 Rust e 32 contextuais, incluindo 9 E2E HTTP. Builds/smokes amd64 e aarch64
+(emulação) PASS; ZIPs separados extraídos/verificados e imagem do ZIP PASS.
+Duas revisões da distribuição concluídas sem pendências. Ver
+docs/nlu-2.0/DISTRIBUTION-0.3.2.md e INSTALL.md. Supervisor residencial não testado.
+
+## Resultados históricos confirmados (build 2.0.0)
 Rust: 90 testes; fmt/clippy/release/smoke PASS no gate.
 Python: 99 testes únicos; segundo passe contextual 32 incluindo 9 E2E Rust HTTP.
 Integração: Rust real HTTP + executor real Python com HA simulado PASS.
@@ -44,6 +53,6 @@ Entrega local concluída. Solicitação posterior do usuário autorizou commit, 
 
 ## Comandos necessários para retomar
 `./tools/mlp-dev.ps1 -Task check` — gate oficial em Docker/Linux, log target/nlu-2.0-check.log.
-`python tools/contextual-record.py --gate-pass --package target/arandu-nlu-0.3.1.zip` — somente após gate com o fingerprint atual e avaliação/benchmarks atualizados. Evidências anteriores permanecem associadas ao build 2.0.0.
+`python tools/contextual-record.py --gate-pass --package target/arandu-nlu-0.3.2.zip` — somente após gate com o fingerprint atual e avaliação/benchmarks atualizados. Evidências anteriores permanecem associadas ao build 2.0.0.
 `python tools/import-stt-corpus.py --stt-root "E:/Pycharm Projects/Arandu STT/arandu-stt-github" --check` — proveniência/inventário reproduzível.
 Critérios finais: segurança sem CRITICAL/HIGH/MEDIUM de execução pendentes; gate, corpus, benchmarks, Docker e ZIP extraído aprovados; relatório READY WITH KNOWN LIMITATIONS se HA real/ARM continuarem sem teste; nenhum deploy.

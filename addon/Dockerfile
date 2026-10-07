@@ -5,7 +5,7 @@ ENV CARGO_PROFILE_RELEASE_STRIP=none
 COPY .cargo .cargo
 COPY engine engine
 COPY vendor vendor
-RUN cargo build --manifest-path engine/Cargo.toml --locked --release
+RUN cargo build --manifest-path engine/Cargo.toml --locked --offline --release
 
 FROM scratch
 

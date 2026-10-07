@@ -1,119 +1,113 @@
-# Arandu NLU — Installation, update, and releases
+# Arandu NLU — instalação e atualização
 
-This repository is a monorepo. The two distributables are built from it,
-but neither is published by the steps below. No command here pushes,
-tags remotely, or publishes anything.
+Versão atual: `0.3.2` (motor contextual 2.0).
 
-## What gets installed
+São dois componentes: o add-on Rust em `addon/` e a integração Python em
+`custom_components/local_nlu/`. A loja instala e atualiza somente o add-on.
+Instalar o repositório não instala a integração. Ambos compartilham a versão do produto.
 
-| Piece | Source in this repo | Version anchor |
-|---|---|---|
-| Add-on (Rust service) | `addon/` | `addon/config.yaml` (`version`), must equal integration version |
-| Integration (HA custom component) | `custom_components/local_nlu/` | `manifest.json` (`version`) |
-| Engine crate (built into the image) | `addon/engine/` | `Cargo.toml` + `Cargo.lock` (`local-nlu`) |
+## Instalação
 
-All four carry the same version (currently `0.2.0`). A release sets all
-four, never a subset.
+1. Em Configurações → Apps/Add-ons → Loja → ⋮ → Repositórios, adicione
+   `https://github.com/jaimevictor/Arandu-NLU`. Instale **ARANDU NLU** e inicie.
+   O Supervisor compila diretamente `addon/Dockerfile`, sem imagem remota.
+2. Extraia `arandu-nlu-integration-0.3.2.zip` no diretório de configuração HA.
+   O resultado deve ser `/config/custom_components/local_nlu/manifest.json`.
+   Alternativamente copie essa pasta do mesmo commit. Reinicie o Home Assistant.
+3. Adicione Local NLU em Dispositivos e serviços. Configure o endpoint privado
+   indicado pelo Supervisor e selecione ARANDU NLU no pipeline Assist.
 
-## Add-on installation
+Somente `addon/` é publicado. Nome **ARANDU NLU**, slug `ptbr_nlu` e URL do
+repositório permanecem. A identidade usa hash do repositório + slug, não o nome da pasta.
+Assim, a mudança de pasta não exige reinstalar ou apagar configurações.
+[Implementação do Supervisor](https://github.com/home-assistant/supervisor/blob/main/supervisor/store/data.py).
 
-This repository root is a valid Home Assistant store: `repository.yaml`
-plus one add-on directory `ptbr_nlu/` (an exact copy of `addon/`,
-verified byte-identical). Supported routes:
+O hostname de loja para a URL acima é `http://18b0d50a-ptbr-nlu:11555`;
+confirme o hostname na sua instalação. Para instalação local, copie apenas
+`addon/` para `/addons/arandu_nlu`: o hostname é `http://local-ptbr-nlu:11555`.
+Não crie uma segunda cópia com o mesmo slug no mesmo repositório local.
+Trocar uma instalação de loja por local altera o hash da identidade; esse caminho
+é para novas instalações, não é o procedimento de migração abaixo.
+Sem Supervisor, compile `addon/` e conecte o container à rede privada do HA.
+Nenhuma porta é publicada no host pela configuração do add-on.
 
-1. **Store install (primary for GitHub users).** In Home Assistant go
-   to Settings → Add-ons → Add-on Store → ⋮ → Repositories and add
-   `https://github.com/jaimevictor/Arandu-NLU`. Install "Local PT-BR
-   NLU" from the store list, start it, and check the log for a clean
-   start. Slug `ptbr_nlu`; health `GET /health` →
-   `{"status":"ok","version":1}`. The API is not published to the home
-   network (no host port mapping); the integration reaches it over the
-   internal Supervisor network only.
-2. **Supervisor local add-on.** Copy the `ptbr_nlu/` directory to the
-   host add-ons folder, then install from the local section.
-3. **Docker build (verified).** With the pinned toolchain image
-   available, from `ptbr_nlu/` (or `addon/`, identical content):
-   `docker build --network none --platform linux/amd64 --tag
-   'local-nlu:<ver>-amd64' --build-arg BUILD_ARCH=amd64 --build-arg
-   BUILD_VERSION=<ver> .`
-   The build is hermetic (vendored crates, `--locked`, pinned base
-   digest in `Dockerfile` and `container-inputs.json`). aarch64 also
-   builds (buildx) and serves `/health` under emulation.
+## Migrar do add-on antigo / atualizar
 
-## Integration installation (manual only, no HACS)
+Se a instalação existente for **local**, substitua o conteúdo da pasta já
+usada em `/addons/` pelo conteúdo de `addon/`, mesmo que a pasta antiga se
+chame `ptbr_nlu`. Não mantenha dois manifestos locais com esse slug. Preserve
+os dados/configurações do app e siga refresh, atualização/rebuild e restart
+abaixo; não troque para o repositório GitHub durante essa migração.
 
-There is deliberately no HACS support and the add-on never installs the
-integration: the two pieces ship and update independently.
+1. Faça backup completo do HA e guarde as opções da integração e do add-on.
+2. Na loja, use ⋮ → Verificar atualizações (Check for updates). Espere o catálogo
+   atualizar. Confira que **ARANDU NLU** oferece **0.3.2**, mantendo o mesmo identificador.
+   Não remova e adicione o repositório a cada atualização.
+3. Na página do add-on, execute **Atualizar**. Como não existe campo `image`,
+   o Supervisor reconstrói a imagem a partir da pasta publicada. Espere o build terminar;
+   confira os logs do Supervisor e a versão instalada, não apenas a versão disponível.
+4. Inicie/reinicie o add-on e confira seus logs. `GET /health` deve responder
+   `{"status":"ok","version":1}`. Esse 1 é a versão do protocolo de saúde,
+   não a versão do release.
+5. Atualize manualmente `/config/custom_components/local_nlu/` com o ZIP da
+   integração **0.3.2**. Preserve `/config/.storage/` e as opções existentes;
+   não apague nem recrie a entrada da integração.
+6. Reinicie o Home Assistant. Confira `manifest.json` com versão **0.3.2**,
+   o endpoint e a opção `contextual_enabled=true`. Verifique exposição ao Assist,
+   permissões do usuário e área do satélite.
+7. Teste uma consulta e uma ação contextual com entidades reais configuradas,
+   por exemplo “Qual é a temperatura aqui?” e “Liga o ar”.
+   Confira resposta e histórico dos serviços. Esse passo exige a instalação real.
 
-Copy `custom_components/local_nlu/` (exactly the 14 files of the
-integration package, no `__pycache__`) to
-`<ha-config>/custom_components/`, restart Home Assistant, then
-Settings → Devices & Services → Add Integration → "Local NLU"
-(single instance). Restart is required by Home Assistant for new
-custom components, not by this integration.
+Publicação em GitHub, atualização do catálogo, instalação/build e reinicialização
+são passos separados. Um push não altera o container que já está rodando.
+Se o catálogo continuar antigo, confira URL/branch padrão `master`, conexão e logs
+do Supervisor. Se a versão disponível estiver correta mas a instalada estiver antiga,
+resolva o erro do build antes de tentar novamente. Não apague configurações.
+[Atualização do repositório no Supervisor](https://github.com/home-assistant/supervisor/blob/main/supervisor/store/repository.py).
 
-## Endpoint configuration (all install routes)
+## Rollback
 
-There is no auto-discovery; the origin is entered once and validated.
-Supervisor DNS names follow `{REPO}_{SLUG}` with `_` mapped to `-`:
+Restaure o backup do add-on e da configuração HA anterior à atualização,
+ou reinstale explicitamente o pacote/imagem anterior junto com a integração
+da mesma versão e reinicie ambos. Desativar `contextual_enabled` retorna ao
+fluxo anterior de interpretação. A integração mantém suas configurações em
+HA; o Rust não mantém um banco persistente. Não reinstale o Home Assistant.
 
-1. **Local add-on installs**: `{REPO}` is `local`, so the default
-   `http://local-ptbr-nlu:11555` (`const.DEFAULT_ENDPOINT`) resolves.
-2. **GitHub store installs**: `{REPO}` is the 8-hex-digit SHA-1 of the
-   lowercased store repository URL. For this repository
-   (`https://github.com/jaimevictor/Arandu-NLU`) the hash is `18b0d50a`,
-   so the hostname is `http://18b0d50a-ptbr-nlu:11555` (verified against
-   the client allowlist). Recompute after any repo rename/transfer with:
-   `python3 -c "import hashlib; print(hashlib.sha1(
-   b'<store-url>'.lower()).hexdigest()[:8])"`
-   and confirm it in Supervisor → Add-ons → the add-on, or via the
-   Supervisor API `/addons` endpoint, which lists repository identifiers.
-3. The config flow accepts only local origins (loopback, RFC 1918, ULA,
-   `localhost`, single-label `local-*`, single-label
-   `<8hex>-ptbr-nlu`, `.local`, `.home.arpa`), plain HTTP, no
-   credentials, no path/query — anything else, including arbitrary
-   single-label names, numeric-IP forms, and public origins, is rejected
-   before any network use (`client.normalize_endpoint` plus DNS pinning,
-   which drops every resolution outside local ranges).
-4. The flow then performs a live `GET /health` and aborts with
-   `cannot_connect` unless the add-on answers
-   `{"status":"ok","version":1}`. A wrong hostname therefore fails
-   loudly at setup time, never silently at runtime.
+## Build e pacotes reproduzíveis
 
-## Updating
+Em Windows com Docker Linux, execute `./tools/mlp-dev.ps1 -Task check`.
+Em Linux com as ferramentas pinadas, execute `./tools/mlp-check`.
+Para a imagem amd64: `./tools/mlp-dev.ps1 -Task image`.
+Build manual: `docker build --network none --platform linux/amd64 --build-arg
+BUILD_ARCH=amd64 --build-arg BUILD_VERSION=0.3.2 -t local-nlu:0.3.2-amd64 addon`.
+Para ARM64 use `--platform linux/arm64` e `BUILD_ARCH=aarch64`.
+O builder usa digest OCI multi-arquitetura pinado e crates vendorizados.
 
-1. Back up the HA configuration (standard HA backup covers both pieces;
-   neither piece keeps state worth migrating: no migration exists).
-2. Update the add-on first (reinstall image / re-copy), verify
-   `/health`, then update the integration files and restart HA.
-3. Re-enter the entry options only if behavior changed (options persist
-   across file updates; both feature flags default off).
-4. Roll back by reinstalling the previous versions of both pieces;
-   protocol v1 behavior is frozen and baseline-pinned, so downgrades do
-   not strand the integration.
+Com Python 3.11+ e Ruby instalados:
+`python3 tools/release-package.py` produz em `target/dist/0.3.2/`:
 
-## Versioning and releases (maintainer procedure, local only)
+- `arandu-nlu-addon-0.3.2.zip`: `repository.yaml` e a pasta `addon/` completa.
+- `arandu-nlu-integration-0.3.2.zip`: somente `custom_components/local_nlu/`.
+- Checksums SHA-256 e `packages.json`.
 
-1. Set the same version in `custom_components/local_nlu/manifest.json`,
-   `addon/config.yaml`, `addon/engine/Cargo.toml`, and the
-   `local-nlu` entry of `addon/engine/Cargo.lock`.
-2. Re-run the full gate set (Rust tests, clippy, fmt, Python tests,
-   ER/extraction/v2 freezes and oracles, `regression_gate.py` 144/144 +
-   23/23) and record the engine-source divergence if `addon/engine/src`
-   changed (never rewrite a freeze).
-3. Build the add-on image per the Docker command above and smoke-test
-   `/health`, one v1 plan, and one v2 plan.
-4. Assemble artifacts: `arandu-nlu-addon-<ver>` (exact `addon/` tree),
-   `arandu-nlu-integration-<ver>` (exact `custom_components/local_nlu/`
-   tree). Never include `target/`, `work/`, residential data, or
-   credentials (enforced by `.gitignore`).
-5. Create the GitHub release with those artifacts and tag `v<ver>`
-   locally; push tag and branch only with explicit owner approval.
+O empacotador verifica CRC, lista de arquivos, bytes extraídos e versões.
+Datas ZIP, ordem, modos Unix e conteúdo textual são normalizados.
+`python3 tools/make-store-repo.py --output target/dist/store-0.3.2`
+gera uma estrutura de loja isolada com `addon/`, incluindo avisos de licença;
+recusa sobrescrever saída não vazia. O GitHub principal já tem essa estrutura.
 
-## What is intentionally not distributed
+## Procedimento de versionamento
 
-Legacy phase tooling stays in the tree (the standard gate depends on
-it) but ships in no artifact. `work/`, residential data, credentials,
-and local machine setup never enter version control (`.gitignore`).
-Evaluation corpora are synthetic, Apache-2.0, and published as
-conformance evidence, not as product payloads.
+Atualize os manifestos do add-on/integração, Cargo.toml e ambas as entradas
+`local-nlu` dos lockfiles, README e a linha “Versão atual” deste guia.
+Após preparar uma versão maior que a registrada, execute
+`python3 tools/distribution.py --record`. Isso registra em `release.json`
+o hash dos arquivos distribuídos e dos scripts de empacotamento.
+Mudanças nesses arquivos sem nova versão falham no gate. Dependências não são
+atualizadas por esse comando. Relatórios e números históricos ficam preservados.
+
+Execute gate completo, build e smoke HTTP contextual, gere/verifique os dois ZIPs,
+revise o diff e abra PR para `master`. Nenhum script publica GitHub Release
+ou altera uma instalação residencial. HACS pode ser avaliado futuramente,
+sem fazer parte deste fluxo.

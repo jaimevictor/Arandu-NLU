@@ -54,7 +54,7 @@ EXPECTED_VENDOR = {
 }
 EXPECTED_LOCK_PACKAGES = {
     "itoa": "1.0.18",
-    "local-nlu": "0.3.1",
+    "local-nlu": tomllib.loads((ADDON / 'engine/Cargo.toml').read_text())['package']['version'],
     "memchr": "2.8.3",
     "proc-macro2": "1.0.107",
     "quote": "1.0.47",
@@ -94,7 +94,7 @@ def check_integration() -> None:
         "iot_class": "local_polling",
         "requirements": [],
         "single_config_entry": True,
-        "version": "0.3.1",
+        "version": EXPECTED_LOCK_PACKAGES['local-nlu'],
     }
     for key, value in expected.items():
         if manifest.get(key) != value:

@@ -14,6 +14,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
+from distribution import check, content
 
 ROOT = Path(__file__).resolve().parent.parent
 ADDON = ROOT / "addon"
@@ -25,20 +26,21 @@ REQUIRED_TOP = [
     "config.yaml",
     "Dockerfile",
     "DOCS.md",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "container-inputs.json",
     "vendor-manifest.json",
 ]
-REQUIRED_TREES = [".cargo", "engine", "vendor"]
+REQUIRED_TREES = [".cargo", "engine", "vendor", "licenses"]
 
 # Files inside engine/ without which `cargo build --locked` fails closed
 # instead of resolving (a missing lockfile broke Supervisor installs).
 REQUIRED_ENGINE_FILES = ["Cargo.toml", "Cargo.lock"]
 
 STORE_NAME = "ARANDU NLU"
-ADDON_DIR = "ptbr_nlu"
+ADDON_DIR = "addon"
 
 
 def sha256_file(path: Path) -> str:
@@ -69,9 +71,10 @@ def dockerfile_copies() -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--store-url", default="https://github.com/OWNER/arandu-nlu-store")
+    parser.add_argument("--store-url", default="https://github.com/jaimevictor/Arandu-NLU")
     parser.add_argument("--maintainer", default="ARANDU NLU")
     arguments = parser.parse_args()
+    check(ROOT)
 
     for name in REQUIRED_TOP:
         if not (ADDON / name).is_file():
@@ -89,12 +92,12 @@ def main() -> None:
             raise SystemExit(f"Dockerfile COPY source missing: {source}")
 
     output: Path = arguments.output
-    if output.exists():
-        shutil.rmtree(output)
+    if output.exists() and any(output.iterdir()):
+        raise SystemExit('output must be empty; existing files are preserved')
     addon_dir = output / ADDON_DIR
     addon_dir.mkdir(parents=True)
     for name in REQUIRED_TOP:
-        shutil.copyfile(ADDON / name, addon_dir / name)
+        (addon_dir / name).write_bytes(content(ADDON / name))
     for name in REQUIRED_TREES:
         shutil.copytree(
             ADDON / name,
@@ -104,7 +107,6 @@ def main() -> None:
         )
     (output / "repository.yaml").write_text(
         f"# Home Assistant add-on store generated from the Arandu NLU monorepo.\n"
-        f"# Replace OWNER with the real GitHub owner before publishing.\n"
         f"name: {STORE_NAME}\n"
         f"url: {arguments.store_url}\n"
         f"maintainer: {arguments.maintainer}\n",
@@ -115,7 +117,7 @@ def main() -> None:
         "Add this repository URL in Home Assistant under Settings → "
         "Add-ons → Add-on Store → ⋮ → Repositories.\n\n"
         "Contents: one add-on directory per store layout requirements.\n\n"
-        "- `ptbr_nlu/` — Local PT-BR NLU add-on (config, recipe, engine "
+        "- `addon/` — Local PT-BR NLU add-on (config, recipe, engine "
         "sources, vendored crates). Built locally by the Supervisor; no "
         "remote image is referenced.\n",
         encoding="utf-8",
@@ -133,8 +135,8 @@ def main() -> None:
     (output / "manifest-sha256.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    engine_files = sum(1 for item in manifest if item["path"].startswith("ptbr_nlu/"))
-    print(f"store generated: {output} ({engine_files} files under ptbr_nlu/)")
+    engine_files = sum(1 for item in manifest if item["path"].startswith("addon/"))
+    print(f"store generated: {output} ({engine_files} files under addon/)")
 
 
 if __name__ == "__main__":
