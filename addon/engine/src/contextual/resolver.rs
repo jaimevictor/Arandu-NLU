@@ -296,7 +296,10 @@ impl Index {
     }
 
     pub fn normalize_area_control(&self, command: &mut Command) {
-        if !matches!(command.action.as_str(), "turn_off" | "vacuum_stop") {
+        if !matches!(
+            command.action.as_str(),
+            "turn_on" | "turn_off" | "vacuum_stop"
+        ) {
             return;
         }
         let mention = command.mention.as_deref().map(clean).unwrap_or_default();
@@ -314,15 +317,61 @@ impl Index {
                 "tudo" | "aparelhos" | "dispositivos" | "equipamentos"
             );
         if bare_room || explicit_bulk {
-            command.action = "turn_off".into();
+            if command.action == "vacuum_stop" {
+                command.action = "turn_off".into();
+            }
             command.domains.clear();
             command.plural = true;
         }
     }
 
     pub fn domain_hint(&self, text: &str) -> Option<String> {
-        let text = clean(text);
+        let text = clean(&grammar::canonicalize(text));
+        let text = text
+            .strip_prefix("pode ")
+            .or_else(|| text.strip_prefix("poderia "))
+            .or_else(|| text.strip_prefix("quero "))
+            .unwrap_or(&text);
         let words: Vec<&str> = text.split_whitespace().collect();
+        if words.iter().any(|word| {
+            matches!(
+                *word,
+                "luzes" | "lampadas" | "ventiladores" | "tomadas" | "interruptores"
+            )
+        }) && let Some(domain) = grammar::semantic_domain(text)
+        {
+            return Some(domain.into());
+        }
+        // A bare registered room is spatial even if a scene shares its name.
+        if words.first().is_some_and(|verb| {
+            matches!(
+                *verb,
+                "liga"
+                    | "ligue"
+                    | "ligar"
+                    | "desliga"
+                    | "desligue"
+                    | "desligar"
+                    | "acende"
+                    | "acenda"
+                    | "apaga"
+                    | "apague"
+                    | "ativa"
+                    | "ative"
+                    | "desativa"
+                    | "desative"
+            )
+        }) && ["", "tudo ", "aparelhos ", "dispositivos ", "equipamentos "]
+            .iter()
+            .any(|prefix| {
+                words[1..]
+                    .join(" ")
+                    .strip_prefix(prefix)
+                    .is_some_and(|name| self.areas.contains_key(name))
+            })
+        {
+            return Some("area".into());
+        }
         let mut best = 0;
         let mut domains = BTreeSet::new();
         for start in 0..words.len() {
@@ -343,7 +392,7 @@ impl Index {
         if domains.len() == 1 {
             domains.into_iter().next()
         } else {
-            grammar::semantic_domain(&text).map(str::to_owned)
+            grammar::semantic_domain(text).map(str::to_owned)
         }
     }
 
@@ -442,7 +491,9 @@ impl Index {
                 area = Some(self.area(name).ok_or_else(|| {
                     Response::failure("clarification", &command.intent, "ambiguous_area")
                 })?);
-                if !registered_whole || (bare_area && command.action == "turn_off") {
+                if !registered_whole
+                    || (bare_area && matches!(command.action.as_str(), "turn_on" | "turn_off"))
+                {
                     mention = mention[..mention.len() - name.len()].trim().to_owned();
                 }
                 explicit = true;
@@ -454,8 +505,37 @@ impl Index {
                 .any(|word| matches!(word, "aqui" | "daqui"))
             || mention.contains("nesse comodo")
             || mention.contains("neste comodo")
+            || mention.contains("desse comodo")
             || mention.contains("perto mim")
-            || mention.contains("onde eu estou");
+            || mention.contains("onde eu estou")
+            || mention.contains("onde estou");
+        if command.intent.ends_with(".implicit_on")
+            && !matches!(
+                request.origin_area_source.as_deref(),
+                Some("satellite" | "device")
+            )
+            && area.is_none()
+        {
+            return Err(Response::failure(
+                "clarification",
+                &command.intent,
+                "missing_origin_area",
+            ));
+        }
+        let category = command.plural
+            && (mention.is_empty()
+                || command
+                    .domains
+                    .iter()
+                    .any(|domain| type_names(domain, None).contains(&mention.as_str())));
+        if category
+            && command.intent != "home.all_off"
+            && matches!(command.action.as_str(), "turn_on" | "turn_off")
+            && area.is_none()
+            && group_areas.is_none()
+        {
+            area.clone_from(&request.origin_area);
+        }
         if here && area.is_none() {
             area = Some(request.origin_area.clone().ok_or_else(|| {
                 Response::failure("clarification", &command.intent, "missing_origin_area")
@@ -466,8 +546,10 @@ impl Index {
             "aqui",
             "nesse comodo",
             "neste comodo",
+            "desse comodo",
             "perto mim",
             "onde eu estou",
+            "onde estou",
             "nessa sala",
             "nesse quarto",
         ] {
@@ -477,8 +559,8 @@ impl Index {
                 .clone_into(&mut mention);
         }
         if matches!(mention.as_str(), "tudo" | "todos" | "todas")
-            || (command.action == "turn_off"
-                && area.is_some()
+            || (matches!(command.action.as_str(), "turn_on" | "turn_off")
+                && (area.is_some() || group_areas.is_some())
                 && matches!(
                     mention.as_str(),
                     "aparelhos" | "dispositivos" | "equipamentos"
@@ -486,19 +568,17 @@ impl Index {
         {
             mention.clear();
         }
-        let bulk = command.action == "turn_off"
-            && (area.is_some() || group_areas.is_some() || command.intent == "home.all_off")
-            && (bare_area || (mention.is_empty() && command.domains.len() != 1));
+        let bulk = matches!(command.action.as_str(), "turn_on" | "turn_off")
+            && (command.plural
+                || bare_area
+                || (mention.is_empty() && (area.is_some() || group_areas.is_some())));
+        if category {
+            mention.clear();
+        }
         if bulk
+            && mention.is_empty()
             && self.catalog.entities.iter().any(|entity| {
-                matches!(
-                    entity.domain.as_str(),
-                    "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
-                ) && entity
-                    .attributes
-                    .get("bulk_eligible")
-                    .and_then(serde_json::Value::as_bool)
-                    .unwrap_or(true)
+                bulk_eligible(entity, command)
                     && entity
                         .attributes
                         .get("available")
@@ -573,18 +653,34 @@ impl Index {
                 ranked.insert(*i, (50, "capability_category"));
             }
         }
+        if bulk
+            && ranked.keys().any(|i| {
+                let entity = &self.catalog.entities[*i];
+                bulk_eligible(entity, command)
+                    && entity
+                        .attributes
+                        .get("available")
+                        .and_then(serde_json::Value::as_bool)
+                        == Some(false)
+                    && area
+                        .as_ref()
+                        .is_none_or(|id| entity.area_id.as_ref() == Some(id))
+                    && group_areas.as_ref().is_none_or(|ids| {
+                        entity.area_id.as_ref().is_some_and(|id| ids.contains(id))
+                    })
+            })
+        {
+            return Err(Response::failure(
+                "unavailable",
+                &command.intent,
+                "bulk_target_unavailable",
+            ));
+        }
         ranked.retain(|i, _| {
             let entity = &self.catalog.entities[*i];
             entity.actions.contains(&command.action)
                 && (if bulk {
-                    matches!(
-                        entity.domain.as_str(),
-                        "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
-                    ) && entity
-                        .attributes
-                        .get("bulk_eligible")
-                        .and_then(serde_json::Value::as_bool)
-                        .unwrap_or(true)
+                    bulk_eligible(entity, command)
                 } else {
                     command.domains.is_empty() || command.domains.contains(&entity.domain)
                 })
@@ -640,6 +736,7 @@ impl Index {
                             entity.area_id.as_ref() == Some(id)
                                 && entity.actions.contains(&command.action)
                                 && command.domains.contains(&entity.domain)
+                                && (!bulk || bulk_eligible(entity, command))
                                 && class_compatible(command, entity)
                         })
                         .map(|(i, _)| i)
@@ -684,6 +781,13 @@ impl Index {
                     }
                 }
             }
+        }
+        if bulk && command.action == "turn_on" && area.is_none() && group_areas.is_none() {
+            return Err(Response::failure(
+                "clarification",
+                &command.intent,
+                "missing_origin_area",
+            ));
         }
         if ranked.is_empty() {
             return Err(Response::failure(
@@ -812,7 +916,9 @@ impl Index {
             ranked.retain(|i, _| self.catalog.entities[*i].domain == "sensor");
         }
         let max_rank = ranked.values().map(|(rank, _)| *rank).max().unwrap_or(0);
-        ranked.retain(|_, (rank, _)| *rank == max_rank);
+        if !bulk || !mention.is_empty() {
+            ranked.retain(|_, (rank, _)| *rank == max_rank);
+        }
         if !explicit
             && area.is_none()
             && (command.action != "query" || !command.plural)
@@ -878,6 +984,9 @@ impl Index {
             .collect();
         if bulk {
             evidence.insert("bulk_area".into());
+            if mention.is_empty() {
+                evidence.insert("complete_spatial_set".into());
+            }
         }
         Ok((targets, evidence.into_iter().collect(), area.or(group_id)))
     }
@@ -901,6 +1010,27 @@ impl Index {
     pub fn is_group(&self, id: &str) -> bool {
         self.catalog.groups.iter().any(|group| group.group_id == id)
     }
+}
+
+fn bulk_eligible(entity: &super::contract::Entity, command: &Command) -> bool {
+    matches!(
+        entity.domain.as_str(),
+        "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
+    ) && (command.domains.is_empty() || command.domains.contains(&entity.domain))
+        && entity
+            .attributes
+            .get("bulk_eligible")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(true)
+        && !["critical", "excluded_from_bulk_actions"]
+            .iter()
+            .any(|key| {
+                entity
+                    .attributes
+                    .get(*key)
+                    .and_then(serde_json::Value::as_bool)
+                    == Some(true)
+            })
 }
 
 fn valid_name(value: &str) -> bool {

@@ -26,6 +26,7 @@
           "contextual_enabled": "Enable Arandu NLU 2.0",
           "session_ttl": "Context lifetime (seconds)",
           "default_area": "Default room ID",
+          "wake_words": "Exact wake word prefixes (optional list)",
           "increments": "Relative adjustment increments",
           "entity_preferences": "Preferred sensors and semantic categories",
           "sensitive_entities": "Access devices allowed with confirmation",

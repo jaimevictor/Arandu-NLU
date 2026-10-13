@@ -105,6 +105,7 @@ class LocalNluOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_CONTEXTUAL_ENABLED, default=bool(options.get(CONF_CONTEXTUAL_ENABLED, True))): bool,
                     vol.Optional("session_ttl", default=options.get("session_ttl", 60)): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
                     vol.Optional("default_area", **({"default": options["default_area"]} if options.get("default_area") else {})): selector.AreaSelector(),
+                    vol.Optional("wake_words", default=options.get("wake_words", [])): selector.ObjectSelector(),
                     vol.Optional("increments", default=options.get("increments", {})): selector.ObjectSelector(),
                     vol.Optional("entity_preferences", default=options.get("entity_preferences", {})): selector.ObjectSelector(),
                     vol.Optional("person_device_bindings", default=options.get("person_device_bindings", {})): selector.ObjectSelector(),

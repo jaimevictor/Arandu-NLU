@@ -330,7 +330,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         hass = hass_()
         add(hass, "reg_light2", "light.second", "Luz dois", {"supported_color_modes": ["brightness"]})
         hass.services.after_call = lambda: hass.exposed.remove("light.second")
-        runtime = ContextualRuntime(hass, Client(plan(operation(targets=["reg_light", "reg_light2"]))))
+        runtime = ContextualRuntime(hass, Client(plan(operation(targets=["reg_light", "reg_light2"], params={"scope": "bulk_area", "area": "area_sala"}))))
         result = await runtime.process(input_())
         self.assertEqual(result.code, "partial_failure", result)
         self.assertEqual(result.operation_count, 0)

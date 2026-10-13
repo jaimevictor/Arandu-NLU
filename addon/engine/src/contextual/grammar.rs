@@ -293,6 +293,14 @@ pub fn recognize(
     domain_hint: Option<&str>,
 ) -> Option<Command> {
     let mut text = canonicalize(text);
+    // Closed, reusable category allowlist. Never derive an implicit action from names.
+    if let Some(domain) = implicit_category(&text) {
+        let mut result = command("turn_on", Some(domain), None);
+        result.intent = format!("{domain}.implicit_on");
+        result.plural = true;
+        result.origin = true;
+        return Some(result);
+    }
     if let Some(device) = text
         .strip_prefix("onde esta ")
         .or_else(|| text.strip_prefix("em qual comodo esta "))
@@ -856,11 +864,23 @@ pub fn semantic_domain(text: &str) -> Option<&'static str> {
     None
 }
 
-fn canonicalize(text: &str) -> String {
+fn implicit_category(text: &str) -> Option<&'static str> {
+    match text {
+        "luz" | "luzes" | "iluminacao" | "lampadas" => Some("light"),
+        "ventilador" | "ventiladores" => Some("fan"),
+        _ => None,
+    }
+}
+
+pub(super) fn canonicalize(text: &str) -> String {
     let mut text = text.strip_prefix("por favor ").unwrap_or(text).to_owned();
     for (from, to) in [
         ("ligar ", "liga "),
         ("desligar ", "desliga "),
+        ("acender ", "acende "),
+        ("apagar ", "apaga "),
+        ("ativar ", "ativa "),
+        ("desativar ", "desativa "),
         ("aciona ", "liga "),
         ("acione ", "liga "),
         ("aumentar ", "aumenta "),
@@ -910,6 +930,8 @@ fn command(action: &str, domain: Option<&str>, target: Option<&str>) -> Command 
 }
 
 fn basic(text: &str, domain: Option<&str>) -> Option<Command> {
+    // Resolver's spatial hint bypasses device templates, not the closed action map.
+    let domain = domain.filter(|domain| *domain != "area");
     let (verb, target) = text.split_once(' ')?;
     let action = match verb {
         "liga" | "ligue" | "acende" | "acenda" | "ativa" | "ative" => "turn_on",

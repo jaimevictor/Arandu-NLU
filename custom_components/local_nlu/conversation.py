@@ -61,11 +61,11 @@ class LocalNluConversationEntity(
                 response.response_type = intent.IntentResponseType.QUERY_ANSWER
         else:
             response.async_set_error(error_code, speech)
-        return conversation.ConversationResult(
-            response=response,
-            conversation_id=result.conversation_id or user_input.conversation_id,
-            continue_conversation=result.continue_conversation or result.code == "missing_slot",
-        )
+        values = {"response": response, "conversation_id": result.conversation_id or user_input.conversation_id}
+        fields = getattr(conversation.ConversationResult, "__dataclass_fields__", None)
+        if fields is None or "continue_conversation" in fields:
+            values["continue_conversation"] = result.continue_conversation or result.code == "missing_slot"
+        return conversation.ConversationResult(**values)
 
 
 def _render(

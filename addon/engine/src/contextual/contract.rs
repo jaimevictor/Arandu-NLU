@@ -149,6 +149,8 @@ pub struct Parameters {
     pub provider: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub secondary_targets: Vec<String>,
 }
@@ -178,6 +180,9 @@ pub struct ContextRequest {
     pub text: String,
     #[serde(default)]
     pub origin_area: Option<String>,
+    /// Additive v4 provenance; absent means untrusted for implicit commands.
+    #[serde(default)]
+    pub origin_area_source: Option<String>,
     #[serde(default)]
     pub last_area: Option<String>,
     #[serde(default)]
@@ -195,6 +200,9 @@ impl ContextRequest {
             && self.text.chars().count() <= 512
             && !self.text.chars().any(char::is_control)
             && self.last_targets.len() <= 32
+            && self.origin_area_source.as_deref().is_none_or(|source| {
+                matches!(source, "satellite" | "device" | "default" | "unknown")
+            })
             && self
                 .pending
                 .as_ref()

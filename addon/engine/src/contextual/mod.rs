@@ -141,6 +141,11 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
             } else {
                 pending.mention = Some(grammar::followup_target(clause).to_owned());
                 pending.area = None;
+                if pending.intent.ends_with(".implicit_on") {
+                    pending.intent = pending.intent.replace(".implicit_on", ".turn_on");
+                    pending.origin = false;
+                    pending.area = pending.mention.take();
+                }
             }
             pending
         } else {
@@ -264,8 +269,11 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
                 }
                 let mut parameters = command.parameters;
                 if evidence.iter().any(|item| item == "bulk_area") {
+                    if command.domains.len() == 1 {
+                        parameters.category = command.domains.first().cloned();
+                    }
                     parameters.scope = Some(
-                        if parameters.scope.as_deref() == Some("floor_group") {
+                        if area_id.as_deref().is_some_and(|id| index.is_group(id)) {
                             "bulk_floor_group"
                         } else if area_id.is_none() {
                             "bulk_global"

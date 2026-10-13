@@ -114,7 +114,7 @@ def build(hass: Any, user: Any, options: dict) -> Snapshot:
         attrs["dynamic_location"] = dynamic
         if dynamic:
             attrs["location_provider"] = provider if provider == "bermuda" else "configured"
-        attrs["bulk_eligible"] = domain in bulk_domains and entity_id not in exclusions and getattr(entry, "entity_category", None) not in ("config", "diagnostic") and not (type(overrides) is dict and (overrides.get("excluded_from_bulk_actions") is True or overrides.get("critical") is True))
+        attrs["bulk_eligible"] = domain in bulk_domains and entity_id not in exclusions and getattr(entry, "entity_category", None) not in ("config", "diagnostic") and not (type(overrides) is dict and (overrides.get("excluded_from_bulk_actions") is True or overrides.get("critical") is True or overrides.get("bulk_eligible") is False))
         aliases = list(getattr(entry, "aliases", ()) or ())
         if type(overrides) is dict and "aliases" in overrides:
             if type(overrides["aliases"]) is not list or len(overrides["aliases"]) > 8 or any(type(alias) is not str or not _bounded_names((alias,)) for alias in overrides["aliases"]):
@@ -236,23 +236,29 @@ class CatalogCache:
 
 
 def origin_area(hass: Any, user_input: Any, options: dict) -> str | None:
+    return origin_context(hass, user_input, options)[0]
+
+
+def origin_context(hass: Any, user_input: Any, options: dict) -> tuple[str | None, str]:
+    """Registered spatial provenance, never inferred from speech or a session."""
     devices = device_registry.async_get(hass)
     registry = entity_registry.async_get(hass)
     device_id = getattr(user_input, "device_id", None)
     satellite_id = getattr(user_input, "satellite_id", None)
+    areas = area_registry.async_get(hass).areas
     if type(satellite_id) is str:
         entry = registry.entities.get(satellite_id)
-        if entry is not None:
+        if entry is not None and satellite_id.startswith("assist_satellite."):
             if getattr(entry, "disabled_by", None) is not None:
-                return None
+                return None, "unknown"
             area = _effective_area_id(entry, devices)
-            if area:
-                return area
+            if area in areas:
+                return area, "satellite"
     if type(device_id) is str:
         device = devices.async_get(device_id)
-        if device is not None and type(device.area_id) is str:
-            return device.area_id
+        if device is not None and type(device.area_id) is str and device.area_id in areas:
+            return device.area_id, "device"
     preferred = options.get("default_area")
     if type(preferred) is str and preferred in area_registry.async_get(hass).areas:
-        return preferred
-    return None
+        return preferred, "default"
+    return None, "unknown"

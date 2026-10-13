@@ -32,6 +32,7 @@ EXPECTED_INTEGRATION = {
     "device_location.py",
     "diagnostics.py",
     "identity.py",
+    "voice_input.py",
     "queries.py",
     "manifest.json",
     "protocol.py",

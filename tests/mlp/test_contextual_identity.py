@@ -104,7 +104,7 @@ class IdentityRegressionTests(IdentityFixture):
         runtime = LocalNluRuntime(hass, client, contextual_enabled=lambda: True)
         response = await entity(runtime).async_process(voice_input())
         self.assertIn("ainda não está associado a um usuário", response.response.speech)
-        self.assertEqual(runtime._contextual.last_outcome, {"code": "denied", "reason": "missing_user"})
+        self.assertEqual(runtime._contextual.last_outcome, {"code": "denied", "reason": "missing_user", "stage": "authorization"})
         self.assertFalse(client.requests or hass.services.calls)
 
     async def test_authorized_non_admin_fallback_service_uses_effective_context(self):

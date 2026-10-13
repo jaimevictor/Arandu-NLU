@@ -26,6 +26,7 @@
           "contextual_enabled": "Ativar Arandu NLU 2.0",
           "session_ttl": "Validade do contexto (segundos)",
           "default_area": "ID do cômodo padrão",
+          "wake_words": "Prefixos exatos de ativação (lista opcional)",
           "increments": "Incrementos dos ajustes relativos",
           "entity_preferences": "Sensores preferidos e categorias semânticas",
           "sensitive_entities": "Dispositivos de acesso permitidos com confirmação",

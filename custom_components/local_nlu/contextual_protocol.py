@@ -29,9 +29,10 @@ class Operation:
     targets: tuple[str, ...]
     parameters: dict
     depends_on: tuple[int, ...] = ()
+    evidence: tuple[str, ...] = ()
 
     def as_dict(self) -> dict:
-        return {"intent": self.intent, "action": self.action, "targets": list(self.targets), "parameters": self.parameters, "evidence": [], "depends_on": list(self.depends_on)}
+        return {"intent": self.intent, "action": self.action, "targets": list(self.targets), "parameters": self.parameters, "evidence": list(self.evidence), "depends_on": list(self.depends_on)}
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,7 @@ class Outcome:
     options: tuple[dict, ...] = ()
 
 
-PARAMETERS = frozenset(("value", "relative", "metric", "aggregate", "state_filter", "threshold", "area", "date", "provider", "secondary_targets", "scope"))
+PARAMETERS = frozenset(("value", "relative", "metric", "aggregate", "state_filter", "threshold", "area", "date", "provider", "secondary_targets", "scope", "category"))
 AGGREGATES = frozenset(("count", "any", "all", "none", "min", "max", "sum", "average", "compare", "filter"))
 METRICS = frozenset(("temperature", "target_temperature", "device_temperature", "humidity", "co2", "illuminance", "noise", "air_quality", "presence", "location", "opening", "power", "energy", "battery", "leak", "tank_level", "people_count", "remaining_time", "media", "inventory", "area", "remaining", "weather", "sunrise", "sunset", "next_event", "position", "speed"))
 
@@ -65,6 +66,9 @@ def validate_parameters(value: Any) -> dict:
                 raise ProtocolError(key)
         elif key == "scope":
             if item not in ("floor_group", "bulk_area", "bulk_floor_group", "bulk_global", "device_location"):
+                raise ProtocolError(key)
+        elif key == "category":
+            if item not in ("light", "switch", "fan", "climate", "media_player", "humidifier"):
                 raise ProtocolError(key)
         elif key == "secondary_targets":
             if type(item) is not list or len(item) > 32 or any(not identifier(target) for target in item):
@@ -114,7 +118,7 @@ def parse(value: Any) -> Outcome:
         evidence = operation["evidence"]
         if type(evidence) is not list or len(evidence) > 8 or any(not text(item, 64) for item in evidence):
             raise ProtocolError("evidence")
-        parsed.append(Operation(operation["intent"], action, tuple(targets), validate_parameters(operation["parameters"]), tuple(dependencies)))
+        parsed.append(Operation(operation["intent"], action, tuple(targets), validate_parameters(operation["parameters"]), tuple(dependencies), tuple(evidence)))
     candidates = value.get("candidates", [])
     if type(candidates) is not list or len(candidates) > 32 or any(not identifier(item) for item in candidates) or candidates != sorted(set(candidates)):
         raise ProtocolError("candidates")

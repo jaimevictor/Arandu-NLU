@@ -137,7 +137,7 @@ class HacsTests(unittest.TestCase):
         second = Path(self.temp.name) / 'second'
         release_package.package(self.root, second)
         self.assertEqual(archive.read_bytes(), (second / hacs.ASSET).read_bytes())
-        self.assertEqual(hacs.check_zip(archive, version), 24)
+        self.assertEqual(hacs.check_zip(archive, version), 25)
         self.assertEqual(archive.with_suffix('.zip.sha256').read_text().split()[0],
                          hashlib.sha256(archive.read_bytes()).hexdigest())
         self.assertEqual({item['version'] for item in results}, {version})

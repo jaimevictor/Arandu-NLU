@@ -6,6 +6,149 @@ use local_nlu::contextual::{
 use serde_json::json;
 use std::collections::BTreeMap;
 
+#[test]
+#[allow(clippy::too_many_lines)] // One bounded spatial acceptance matrix and provenance contract.
+fn spatial_power_and_implicit_origin_contract() {
+    let mut rows = vec![
+        entity(
+            "a",
+            "light",
+            "Bancada",
+            "fixture_room",
+            None,
+            &["turn_on", "turn_off"],
+        ),
+        entity(
+            "b",
+            "fan",
+            "Brisa",
+            "fixture_room",
+            None,
+            &["turn_on", "turn_off"],
+        ),
+        entity(
+            "c",
+            "light",
+            "Excluída",
+            "fixture_room",
+            None,
+            &["turn_on", "turn_off"],
+        ),
+        entity(
+            "d",
+            "light",
+            "Outro cômodo",
+            "fixture_other",
+            None,
+            &["turn_on", "turn_off"],
+        ),
+        entity(
+            "e",
+            "fan",
+            "Somente desliga",
+            "fixture_room",
+            None,
+            &["turn_off"],
+        ),
+        entity(
+            "scene",
+            "scene",
+            "Ambiente técnico",
+            "fixture_room",
+            None,
+            &["activate"],
+        ),
+    ];
+    rows[2]
+        .attributes
+        .insert("bulk_eligible".into(), json!(false));
+    let catalog = Catalog {
+        version: 4,
+        generation: "8".repeat(64),
+        areas: vec![
+            Area {
+                area_id: "fixture_room".into(),
+                names: vec!["Ambiente técnico".into()],
+            },
+            Area {
+                area_id: "fixture_other".into(),
+                names: vec!["Outro".into()],
+            },
+        ],
+        entities: rows,
+        groups: vec![],
+    };
+    assert_eq!(register_catalog(catalog).status, "catalog_ready");
+    let mut input = ContextRequest {
+        version: 4,
+        generation: "8".repeat(64),
+        ..ContextRequest::default()
+    };
+    for (phrase, targets) in [
+        ("liga o ambiente técnico", vec!["a", "b"]),
+        (
+            "liga todos os dispositivos do ambiente técnico",
+            vec!["a", "b"],
+        ),
+        ("liga tudo no ambiente técnico", vec!["a", "b"]),
+        ("desliga o ambiente técnico", vec!["a", "b", "e"]),
+        ("liga todas as luzes do ambiente técnico", vec!["a"]),
+        ("desliga todas as luzes do ambiente técnico", vec!["a"]),
+    ] {
+        input.text = phrase.into();
+        let result = interpret(&input);
+        assert_eq!(result.status, "plan", "{phrase}: {result:?}");
+        assert_eq!(result.operations[0].targets, targets);
+        assert_eq!(
+            result.operations[0].parameters.scope.as_deref(),
+            Some("bulk_area")
+        );
+    }
+    input.text = "luz".into();
+    input.origin_area = Some("fixture_room".into());
+    assert_eq!(
+        interpret(&input).reason.as_deref(),
+        Some("missing_origin_area")
+    );
+    input.origin_area_source = Some("default".into());
+    assert_eq!(interpret(&input).status, "clarification");
+    for source in ["satellite", "device"] {
+        input.origin_area_source = Some(source.into());
+        for text in [
+            "luz",
+            "luzes",
+            "iluminação",
+            "lâmpadas",
+            "ventilador",
+            "ventiladores",
+        ] {
+            input.text = text.into();
+            let result = interpret(&input);
+            assert_eq!(result.status, "plan", "{text}: {result:?}");
+            assert_eq!(result.operations[0].action, "turn_on");
+            assert_eq!(
+                result.operations[0].targets,
+                if text.starts_with("ventil") {
+                    vec!["b"]
+                } else {
+                    vec!["a"]
+                }
+            );
+            assert_eq!(
+                result.operations[0].parameters.area.as_deref(),
+                Some("fixture_room")
+            );
+        }
+    }
+    for text in ["fechadura", "portão", "alarme", "qualquer"] {
+        input.text = text.into();
+        assert!(interpret(&input).operations.is_empty());
+    }
+    input.text = "luz".into();
+    input.origin_area_source = Some("untrusted".into());
+    assert_eq!(interpret(&input).status, "invalid_request");
+}
+
 fn entity(
     id: &str,
     domain: &str,
@@ -338,7 +481,7 @@ fn floor_groups_are_explicit_and_categories_remain_distinct() {
     assert_eq!(plan.operations[0].targets, ["light"]);
     assert_eq!(
         plan.operations[0].parameters.scope.as_deref(),
-        Some("floor_group")
+        Some("bulk_floor_group")
     );
     input.text = "liga as ventiladores do andar superior".into();
     let plan = interpret(&input);

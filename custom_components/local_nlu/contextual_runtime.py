@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from .capabilities import ADAPTERS, READ_ACTIONS, CapabilityError, capabilities, finite, is_music_player, parameters, sensitive
 from .catalog import CatalogError, _effective_area_id
 from .client import ClientError
-from .contextual_catalog import CatalogCache, Snapshot, exposed, origin_area
+from .contextual_catalog import CatalogCache, Snapshot, exposed, origin_area, origin_context
 from .contextual_protocol import Operation, Outcome, normalize, parse
 from .protocol import ProtocolError
 from .queries import QueryError, calendar_response, calendar_parameters, date_window, now, read, render
@@ -86,7 +86,17 @@ class ContextualRuntime:
         from .runtime import RuntimeResult
         from .contextual_errors import speech as failure_speech
         reason = reason or {"denied": "permission_denied", "stale": "stale", "invalid_request": "invalid_request", "no_match": "no_match", "unsupported_intent": "unsupported_intent", "partial_failure": "partial_failure"}.get(code)
-        self.last_outcome = {"code": code, "reason": reason}
+        stage = getattr(self, "stage", "normalization")
+        if reason in ("missing_origin_area", "unknown_area", "ambiguous_area", "ambiguous_group", "origin_area_changed"):
+            stage = "area_resolution"
+        elif reason in ("no_compatible_capability", "ambiguous_target", "bulk_target_unavailable", "target_limit"):
+            stage = "entity_resolution"
+        elif reason == "contradictory_plan":
+            stage = "planning"
+        elif code == "no_match":
+            stage = "intent_recognition"
+        self.last_outcome = {"code": code, "reason": reason, "stage": stage}
+        _LOGGER.debug("ARANDU contextual stage=%s code=%s reason=%s", stage, code, reason)
         speech = speech or failure_speech(code, reason)
         return RuntimeResult(code=code, operation_count=count, response_text=speech,
                              continue_conversation=followup, conversation_id=user_input.conversation_id,
@@ -134,6 +144,7 @@ class ContextualRuntime:
 
     async def _process(self, user_input: Any) -> Any:
         started = time.perf_counter()
+        self.stage = "normalization"
         self.identity_source = None
         self.origin_binding_configured = False
         self.request_revision = self.options_revision
@@ -157,11 +168,17 @@ class ContextualRuntime:
                 self.sessions.clear()
                 self.catalog.invalidate()
             self.identity_options = policy
+            self.stage = "authorization"
             identity = await resolve_request_identity(self.hass, user_input, options)
             self.validate_options(options)
             self.identity_source = identity.source
             self.origin_binding_configured = identity.source in ("satellite_binding", "device_binding")
             user_input = effective_input(user_input, identity)
+            from .voice_input import without_wake_word
+            try:
+                user_input = without_wake_word(user_input, options, origin_context(self.hass, user_input, options)[1] in ("satellite", "device"))
+            except ValueError:
+                raise ExecutionError("invalid_request", "wake_word_configuration") from None
             user_id, user = identity.user_id, identity.user
             origin = request_origin(user_input)
             key = (user_id, origin, conversation_id)
@@ -187,8 +204,8 @@ class ContextualRuntime:
                 from .contextual_catalog import build
                 probe = build(self.hass, user, options)
                 await self._send(probe)
-                recognized = parse(await self.client.async_interpret_v4({"version": 4, "generation": probe.payload["generation"], "text": user_input.text, "origin_area": origin_area(self.hass, user_input, options), "last_area": None, "last_targets": [], "pending": None}))
-                independent = recognized.status == "plan"
+                recognized = parse(await self.client.async_interpret_v4({"version": 4, "generation": probe.payload["generation"], "text": user_input.text, "origin_area": origin_area(self.hass, user_input, options), "origin_area_source": origin_context(self.hass, user_input, options)[1], "last_area": None, "last_targets": [], "pending": None}))
+                independent = recognized.status == "plan" or bool(recognized.command and recognized.command["intent"].endswith(".implicit_on"))
             if expired and not independent:
                 return self.result("stale", user_input, reason="dialogue_expired")
             if independent:
@@ -227,6 +244,7 @@ class ContextualRuntime:
             if generation not in self.sent_generations:
                 await self._send(snapshot)
             area = origin_area(self.hass, user_input, options)
+            spatial_context = origin_context(self.hass, user_input, options)
             pending = session.pending
             if pending is not None and (generation != session.pending_generation or area != session.pending_origin or _options_hash(options) != session.pending_options):
                 session.pending = None
@@ -236,9 +254,10 @@ class ContextualRuntime:
             if text.split()[0] in ("liga", "desliga", "coloca", "aumenta", "diminui", "qual", "quanto", "onde", "ativa", "abre", "fecha"):
                 pending = None
             payload = {"version": 4, "generation": generation, "text": user_input.text,
-                       "origin_area": area, "last_area": session.last_area,
+                       "origin_area": area, "origin_area_source": spatial_context[1], "last_area": session.last_area,
                        "last_targets": list(session.last_targets), "pending": pending}
             _LOGGER.debug("ARANDU contextual route=/v4/interpret")
+            self.stage = "intent_recognition"
             outcome = parse(await self.client.async_interpret_v4(payload))
             if outcome.status == "stale":
                 await self._send(snapshot)
@@ -289,13 +308,14 @@ class ContextualRuntime:
                 return self.result("cancelled", user_input, speech="Nenhuma ação executada.")
             if outcome.status != "plan":
                 return self.result(outcome.status, user_input, reason=outcome.reason)
-            if origin_area(self.hass, user_input, options) != area:
+            if origin_context(self.hass, user_input, options) != spatial_context:
                 raise ExecutionError("stale", "origin_area_changed")
             if pending is not None and session.candidates:
                 targets = {target for operation in outcome.operations for target in operation.targets}
                 if not targets <= set(session.candidates):
                     raise ExecutionError("stale", "clarification_candidate_changed")
             session.expires = time.monotonic() + _ttl(options)
+            self.stage = "planning"
             result = await self.execute(outcome.operations, snapshot, user_input, session, options, identity)
             timings = dict(outcome.timings or {})
             timings.update(result.timings)
@@ -366,7 +386,7 @@ class ContextualRuntime:
         # Re-run the original interpretation against a fresh authorized snapshot.
         await self._send(snapshot)
         outcome = parse(await self.client.async_interpret_v4({"version": 4, "generation": snapshot.payload["generation"],
-                      "text": pending["text"], "origin_area": area, "last_area": session.last_area, "last_targets": list(session.last_targets), "pending": None}))
+                      "text": pending["text"], "origin_area": area, "origin_area_source": origin_context(self.hass, user_input, options)[1], "last_area": session.last_area, "last_targets": list(session.last_targets), "pending": None}))
         current = next((option for option in outcome.options if option["key"] == choice), None)
         expected = next(option for option in pending["options"] if option["key"] == choice)
         if current != expected or outcome.command != pending["command"]:
@@ -377,7 +397,15 @@ class ContextualRuntime:
         params = dict(command["parameters"])
         if current["area"] is not None:
             params["area"] = current["area"]
-        operation = Operation(command["intent"], command["action"], tuple(current["targets"]), params)
+        evidence = tuple(current["evidence"])
+        if command["action"] in ("turn_on", "turn_off") and command["plural"]:
+            params["scope"] = "bulk_area" if current["area"] is not None else "bulk_global"
+            if len(command["domains"]) == 1:
+                params["category"] = command["domains"][0]
+            evidence += ("bulk_area",)
+            if current["area"] is not None:
+                evidence += ("complete_spatial_set",)
+        operation = Operation(command["intent"], command["action"], tuple(current["targets"]), params, evidence=evidence)
         session.selection = None
         session.pending = None
         session.candidates = ()
@@ -445,11 +473,11 @@ class ContextualRuntime:
             if row is None:
                 raise ExecutionError("stale", "target_not_in_snapshot")
             state = self.live(row, operation.action, user, options)
-            if operation.parameters.get("scope") in ("bulk_area", "bulk_floor_group", "bulk_global"):
+            if self.is_bulk(operation):
                 defaults = ["light", "switch", "fan", "climate", "media_player", "humidifier"]
                 preferences = options.get("entity_preferences", {}).get(row["entity_id"], {})
                 from .contextual_catalog import _bulk_exclusions
-                if operation.action != "turn_off" or row["domain"] not in defaults or row["domain"] not in options.get("bulk_domains", defaults) or row["entity_id"] in _bulk_exclusions(self.hass, options.get("excluded_from_bulk_actions", [])) or row.get("attributes", {}).get("bulk_eligible") is not True or (type(preferences) is dict and (preferences.get("excluded_from_bulk_actions") is True or preferences.get("critical") is True)):
+                if operation.action not in ("turn_on", "turn_off") or (operation.action == "turn_on" and operation.parameters.get("scope") not in ("bulk_area", "bulk_floor_group", "floor_group")) or row["domain"] not in defaults or row["domain"] not in options.get("bulk_domains", defaults) or row["entity_id"] in _bulk_exclusions(self.hass, options.get("excluded_from_bulk_actions", [])) or row.get("attributes", {}).get("bulk_eligible") is not True or (type(preferences) is dict and (preferences.get("excluded_from_bulk_actions") is True or preferences.get("critical") is True or preferences.get("bulk_eligible") is False)):
                     raise ExecutionError("denied", "bulk_policy")
             self.validate_scope(row, operation)
             rows.append(row)
@@ -504,6 +532,10 @@ class ContextualRuntime:
         return Prepared(operation, tuple(rows), tuple(calls), needs_confirmation)
 
     def validate_scope(self, row: dict, operation: Operation) -> None:
+        if operation.parameters.get("category") is not None and row["domain"] != operation.parameters["category"]:
+            raise ExecutionError("denied", "bulk_category_mismatch")
+        if operation.parameters.get("scope") == "bulk_area" and (operation.parameters.get("area") is None or row.get("area_id") != operation.parameters["area"]):
+            raise ExecutionError("denied", "bulk_area_mismatch")
         if operation.parameters.get("scope") in ("floor_group", "bulk_floor_group"):
             from homeassistant.helpers import area_registry
             area = area_registry.async_get(self.hass).areas.get(row.get("area_id"))
@@ -545,6 +577,13 @@ class ContextualRuntime:
 
     async def execute(self, operations: tuple[Operation, ...], snapshot: Snapshot, user_input: Any, session: Session, options: dict, identity: ResolvedIdentity, *, confirmed: bool = False) -> Any:
         validation_start = time.perf_counter()
+        self.stage = "authorization"
+        spatial_context = origin_context(self.hass, user_input, options)
+        for operation in operations:
+            if operation.intent.endswith(".implicit_on"):
+                category = operation.intent.removesuffix(".implicit_on")
+                if category not in ("light", "fan") or operation.action != "turn_on" or operation.parameters.get("scope") != "bulk_area" or spatial_context[1] not in ("satellite", "device") or operation.parameters.get("area") != spatial_context[0] or any(snapshot.by_id.get(target, {}).get("domain") != category for target in operation.targets):
+                    raise ExecutionError("denied", "implicit_origin_policy")
         user = await self.revalidate(identity, user_input, options)
         self.validate_options(options)
         prepared = tuple(self.prepare(operation, snapshot, user, options) for operation in operations)
@@ -589,6 +628,8 @@ class ContextualRuntime:
                         # Includes the permission of a remote/script backend, separate from TV.
                         user = await self.revalidate(identity, user_input, options)
                         self.validate_options(options)
+                        if origin_context(self.hass, user_input, options) != spatial_context:
+                            raise ExecutionError("stale", "origin_area_changed")
                         current_calls = self.prepare(item.operation, snapshot, user, options).calls
                         self.validate_bulk_snapshot(operations, snapshot, user, options)
                         if len(current_calls) != len(item.calls) or current_calls[call_index] != call:
@@ -599,6 +640,7 @@ class ContextualRuntime:
                             self.live(row, call.get("bound_action", action) if action in ("binding", "camera_view") else action, user, options)
                             self.validate_scope(row, item.operation)
                         async with asyncio.timeout(10):
+                            self.stage = "ha_execution"
                             attempted_effect = True
                             session.signature, session.last_execution = signature, time.monotonic()
                             await self.hass.services.async_call(call["domain"], call["service"], call["data"], blocking=True, context=user_input.context, target={"entity_id": [call["entity_id"]]})
@@ -639,10 +681,32 @@ class ContextualRuntime:
                 affected.add(key)
 
     def validate_bulk_snapshot(self, operations: tuple[Operation, ...], snapshot: Snapshot, user: Any, options: dict) -> None:
-        if any(operation.parameters.get("scope") in ("bulk_area", "bulk_floor_group", "bulk_global") for operation in operations):
+        if any(self.is_bulk(operation) for operation in operations):
             from .contextual_catalog import build
             if build(self.hass, user, options).payload["generation"] != snapshot.payload["generation"]:
                 raise ExecutionError("stale", "bulk_catalog_changed")
+        for operation in operations:
+            if "complete_spatial_set" not in operation.evidence:
+                continue
+            scope, area, category = (operation.parameters.get(key) for key in ("scope", "area", "category"))
+            if scope not in ("bulk_area", "bulk_floor_group", "bulk_global"):
+                raise ExecutionError("denied", "bulk_scope_missing")
+            members = {area}
+            if scope == "bulk_floor_group":
+                groups = [group for group in snapshot.payload.get("groups", []) if group["group_id"] == area]
+                if len(groups) != 1:
+                    raise ExecutionError("stale", "floor_membership_changed")
+                members = set(groups[0]["area_ids"])
+            candidates = [row for row in snapshot.by_id.values() if row["attributes"].get("bulk_eligible") is True and (category is None or row["domain"] == category) and (scope == "bulk_global" or row["area_id"] in members)]
+            if any(row["attributes"].get("available") is False for row in candidates):
+                raise ExecutionError("unavailable", "bulk_target_unavailable")
+            expected = {row["registry_id"] for row in candidates if operation.action in row["actions"]}
+            if expected != set(operation.targets):
+                raise ExecutionError("denied", "bulk_target_set_changed")
+
+    @staticmethod
+    def is_bulk(operation: Operation) -> bool:
+        return operation.parameters.get("scope") in ("bulk_area", "bulk_floor_group", "bulk_global") or "bulk_area" in operation.evidence or (operation.action in ("turn_on", "turn_off") and len(operation.targets) > 1)
 
     def read_live(self, row: dict, state: Any, params: dict, snapshot: Snapshot, user: Any, options: dict) -> dict:
         if params.get("metric") == "location" and (row["domain"] == "sensor" or params.get("scope") == "device_location"):
