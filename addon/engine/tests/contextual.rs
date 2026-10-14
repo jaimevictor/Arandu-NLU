@@ -149,6 +149,61 @@ fn spatial_power_and_implicit_origin_contract() {
     assert_eq!(interpret(&input).status, "invalid_request");
 }
 
+#[test]
+fn bulk_availability_and_missing_named_target_contract() {
+    let mut cat = catalog();
+    cat.generation = "ac".repeat(32);
+    cat.entities = vec![
+        entity(
+            "online",
+            "light",
+            "Bancada",
+            "sala",
+            None,
+            &["turn_on", "turn_off"],
+        ),
+        entity(
+            "offline",
+            "light",
+            "Reserva",
+            "sala",
+            None,
+            &["query", "turn_on", "turn_off"],
+        ),
+    ];
+    // Availability wins even if a descriptor incorrectly retains effect capabilities.
+    cat.entities[1]
+        .attributes
+        .insert("available".into(), json!(false));
+    assert_eq!(register_catalog(cat.clone()).status, "catalog_ready");
+    let mut input = ContextRequest {
+        version: 4,
+        generation: cat.generation.clone(),
+        ..ContextRequest::default()
+    };
+    for phrase in [
+        "liga a sala",
+        "desliga a sala",
+        "liga todas as luzes da sala",
+    ] {
+        input.text = phrase.into();
+        let response = interpret(&input);
+        assert_eq!(response.status, "plan", "{response:?}");
+        assert_eq!(response.operations[0].targets, vec!["online"]);
+    }
+    input.text = "liga a luz do módulo inexistente".into();
+    let response = interpret(&input);
+    assert_eq!(response.reason.as_deref(), Some("target_not_found"));
+    assert!(response.operations.is_empty());
+    assert!(response.command.is_some());
+    cat.entities[0]
+        .attributes
+        .insert("available".into(), json!(false));
+    assert_eq!(register_catalog(cat).status, "catalog_ready");
+    input.text = "desliga a sala".into();
+    assert!(interpret(&input).operations.is_empty());
+}
+
 fn entity(
     id: &str,
     domain: &str,

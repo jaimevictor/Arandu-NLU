@@ -30,7 +30,7 @@ executor Python real, HA simulado). Testes Rust: `addon/engine/tests/contextual.
 | 2.5 luzes específicas não expandem aparelhos | domínio explícito | test_light_category_never_expands_to_all_appliances |
 | 2.5 exclusões entidades/grupos/infraestrutura | bulk_eligible, _bulk_exclusions, critical, whitelist | test_excluded_group_and_critical_metadata_never_enter_collective_set |
 | 2.5 >32 sem truncamento | target_limit: recusa inteira (alternativa normativa) | test_large_area_refuses_entire_set_explicitly_and_exclusions_are_honored |
-| 2.5 preflight/inventário/estado/exposição | prepare + validate_bulk_snapshot + per-call live | test_bulk_unavailable_and_permission_revocation_prevent_any_effect; test_new_bulk_member_after_planning_invalidates_whole_plan |
+| 2.5 preflight/inventário/estado/exposição | prepare + validate_bulk_snapshot + per-call live; membros offline iniciais são omitidos | test_bulk_skips_initially_unavailable_member; test_new_bulk_member_after_planning_invalidates_whole_plan |
 | 3.1 metric query / no-na-do-da-de-em / área antes / aqui | contextual_query e seleção por classe | test_metric_families_prepositions_aliases_and_explicit_scope (nomes fictícios e quatro métricas) |
 | 3.1 medição climate separada de setpoint | ambient_temperature, current_temperature, unidades | test_area_alias_collisions_climate_measured_fallback_and_setpoint_separation |
 | 3.1 preferred e fontes concorrentes | Index ranking e ambiguous_source | test_measurement_sources_unavailable_invalid_and_preferred |

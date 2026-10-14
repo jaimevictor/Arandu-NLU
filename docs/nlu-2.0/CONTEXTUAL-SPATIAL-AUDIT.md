@@ -19,8 +19,17 @@ exclusões, `critical`, `bulk_eligible=false`, `bulk_domains`, exposição e
 permissões. Domínios coletivos: light, switch, fan, climate, media_player e
 humidifier. Sensores, proteção, covers, automações, cenas e scripts não entram
 no acionamento de cômodo. Serviços e features reais determinam capacidades.
-Alvos são ordenados; o limite permanece 32, sem truncamento. Um membro elegível
-indisponível invalida a operação completa antes de qualquer efeito.
+Alvos são ordenados; o limite permanece 32, sem truncamento. A partir da
+correção de 2026-10-14, comandos coletivos selecionam apenas os membros
+disponíveis. Membros offline, sem estado ou com estado desconhecido não bloqueiam
+os demais. O conjunto disponível completo ainda é validado antes dos efeitos;
+mudanças de disponibilidade durante o pedido invalidam o plano. Um conjunto
+sem alvos disponíveis não produz efeito nem resposta de sucesso.
+
+Um dispositivo solicitado por nome e não encontrado recebe uma resposta com
+o nome entendido, preservando o texto Unicode do pedido. Não há execução,
+busca aproximada nem continuação automática para esse erro. Um nome conhecido
+sem a capacidade solicitada continua sendo uma falha de capacidade.
 
 `luz`, `luzes`, `iluminação` e `lâmpadas` significam `light.turn_on` de todas
 as luzes elegíveis no cômodo de origem. `ventilador` e `ventiladores` usam fan.
@@ -51,7 +60,7 @@ submetido às suas exclusões e capacidades; não é reduzido silenciosamente à
 | Palavra curta sem verbo | Faltava intenção determinística fechada. Adicionada infraestrutura de categorias implícitas light/fan. |
 | Origem sem procedência | Um único string mesclava satélite, dispositivo e default. Contrato v4 recebe procedência e Python revalida área e fonte. |
 | Compatibilidade HA 2025.3 | Input tem device_id, mas não satellite_id; resultado não tem continue_conversation. A origem por dispositivo é aceita e o construtor de resposta passa continuação apenas quando o contrato suporta. Não há continuação automática de pipeline naquela versão. |
-| Membro indisponível omitido | Política aplica a recusa tanto ao cômodo quanto à categoria. Exclusões explícitas não causam recusa por indisponibilidade de membros excluídos. |
+| Membro indisponível omitido | Cômodos e categorias atuam sobre o conjunto disponível completo; membro offline não bloqueia os demais. |
 | Plano incompleto na fronteira | Evidência de conjunto espacial completo é preservada; Python calcula o conjunto esperado e rejeita divergência antes dos serviços. |
 | Prefixo de ativação na transcrição | Assist encaminha texto STT sem remoção textual garantida. Limpeza opcional, exata e limitada no transporte, descrita abaixo. |
 | Singular/plural e artigos | Formas existentes permanecem; plurais de categoria selecionam o conjunto, nomes individuais explícitos mantêm seleção nominal. Testes incluem IDs individuais excluídos de bulk. |
@@ -272,8 +281,9 @@ não uploads nem releases. HACS não recebe automaticamente um patch não public
       observe exclusões e dispositivo crítico. “liga as luzes do quarto” deve
       prevalecer sobre o satélite da sala. Verifique fan singular/plural.
 - [ ] Com área da origem removida, “luz” deve perguntar cômodo sem efeitos,
-      mesmo com default_area. Com entidade indisponível, não deve executar parte
-      do conjunto. Palavras de fechadura, portão e alarme não devem acionar serviços.
+      mesmo com default_area. Com membro offline desde o início, deve executar
+      todos os disponíveis. Mudança de disponibilidade durante o pedido deve
+      invalidar o plano. Palavras de fechadura, portão e alarme não devem acionar serviços.
 - [ ] Confira last_outcome e versões nos diagnósticos. Para verificar wake word,
       observe a transcrição somente na interface local do pipeline; não compartilhe
       transcrições ou IDs privados em logs/relatórios. Não habilite DEBUG persistente.

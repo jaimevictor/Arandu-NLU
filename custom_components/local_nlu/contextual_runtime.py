@@ -89,7 +89,7 @@ class ContextualRuntime:
         stage = getattr(self, "stage", "normalization")
         if reason in ("missing_origin_area", "unknown_area", "ambiguous_area", "ambiguous_group", "origin_area_changed"):
             stage = "area_resolution"
-        elif reason in ("no_compatible_capability", "ambiguous_target", "bulk_target_unavailable", "target_limit"):
+        elif reason in ("no_compatible_capability", "ambiguous_target", "bulk_target_unavailable", "target_limit", "target_not_found"):
             stage = "entity_resolution"
         elif reason == "contradictory_plan":
             stage = "planning"
@@ -307,7 +307,13 @@ class ContextualRuntime:
             if outcome.status in ("cancel", "confirm", "repeat_response"):
                 return self.result("cancelled", user_input, speech="Nenhuma ação executada.")
             if outcome.status != "plan":
-                return self.result(outcome.status, user_input, reason=outcome.reason)
+                speech = None
+                if outcome.reason == "target_not_found" and outcome.command is not None:
+                    from .contextual_errors import requested_target
+                    label = requested_target(outcome.command, user_input.text)
+                    if label:
+                        speech = f'Não encontrei um dispositivo chamado “{label}”.'
+                return self.result(outcome.status, user_input, speech=speech, reason=outcome.reason)
             if origin_context(self.hass, user_input, options) != spatial_context:
                 raise ExecutionError("stale", "origin_area_changed")
             if pending is not None and session.candidates:
@@ -698,9 +704,7 @@ class ContextualRuntime:
                     raise ExecutionError("stale", "floor_membership_changed")
                 members = set(groups[0]["area_ids"])
             candidates = [row for row in snapshot.by_id.values() if row["attributes"].get("bulk_eligible") is True and (category is None or row["domain"] == category) and (scope == "bulk_global" or row["area_id"] in members)]
-            if any(row["attributes"].get("available") is False for row in candidates):
-                raise ExecutionError("unavailable", "bulk_target_unavailable")
-            expected = {row["registry_id"] for row in candidates if operation.action in row["actions"]}
+            expected = {row["registry_id"] for row in candidates if row["attributes"].get("available") is not False and operation.action in row["actions"]}
             if expected != set(operation.targets):
                 raise ExecutionError("denied", "bulk_target_set_changed")
 

@@ -2,12 +2,14 @@
 
 **Sua língua. Sua casa. Seu controle.**
 
-**Versão 0.4.4 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
+**Versão 0.4.5 — motor NLU 2.0 contextual:** [arquitetura](docs/nlu-2.0/ARCHITECTURE.md), [contratos HA](docs/nlu-2.0/API-CONTRACTS.md), [implantação e rollback](docs/nlu-2.0/DEPLOYMENT.md), [validação e cobertura](docs/nlu-2.0/REPORT.md).
 
-Preparação local 0.4.4: ligar/desligar cômodos compartilha políticas coletivas;
+Correções 0.4.5: comandos coletivos acionam todos os dispositivos disponíveis,
+ignorando os offline. Alvos não encontrados recebem uma resposta com o nome entendido.
+Ligar/desligar cômodos compartilha políticas coletivas;
 “luz” e “ventilador” acionam a categoria no cômodo de uma origem registrada.
 Consulte a [auditoria, matriz HTTP e checklist de atualização](docs/nlu-2.0/CONTEXTUAL-SPATIAL-AUDIT.md).
-Publicação desta versão ainda não realizada.
+Atualize o add-on e a integração juntos para aplicar as correções.
 
 Distribuição: motor Rust pelo **Home Assistant Add-on Store**, com slug `ptbr_nlu`;
 integração Python pelo **HACS**, domínio `local_nlu`. Os dois canais compartilham

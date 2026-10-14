@@ -336,7 +336,9 @@ fn interpret_index(text: &str, request: &ContextRequest, index: &Index) -> Respo
                 });
             }
             Err(mut failure) => {
-                if failure.status == "clarification" {
+                if failure.status == "clarification"
+                    || failure.reason.as_deref() == Some("target_not_found")
+                {
                     failure.command = Some(Command { ..command });
                 }
                 return failure;

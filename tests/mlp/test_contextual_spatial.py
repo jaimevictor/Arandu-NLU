@@ -34,6 +34,16 @@ def called(hass):
 
 
 class ProvenanceTests(unittest.TestCase):
+    def test_failed_target_label_preserves_unicode_and_excludes_other_clauses(self):
+        from custom_components.local_nlu.contextual_errors import requested_target
+        command = {"mention": "luz", "area": "modulo inexistente"}
+        for label in ("luz do módulo inexistente", "luz do mo\u0301dulo inexistente", "luz no Módulo Inexistente"):
+            original = f"liga a {label} e desliga a bancada"
+            self.assertEqual(requested_target(command, original), label)
+        self.assertEqual(requested_target({"mention": "a luminaria inexistente"}, "Liga a Luminária Inexistente!"), "Luminária Inexistente")
+        self.assertIsNone(requested_target({"mention": None}, "liga"))
+        self.assertIsNone(requested_target({"mention": "a "}, "liga"))
+
     def test_wake_word_cleanup_is_exact_bounded_and_preserves_input(self):
         from custom_components.local_nlu.voice_input import without_wake_word
         original = input_("Alexa, luz", satellite_id="assist_satellite.sala")
@@ -64,6 +74,15 @@ class ProvenanceTests(unittest.TestCase):
 
 
 class ExecutorPolicyTests(unittest.IsolatedAsyncioTestCase):
+    async def test_complete_available_set_accepts_offline_member_in_snapshot(self):
+        hass = house()
+        hass.states._states["light.sala_1"].state = "unavailable"
+        op = operation(targets=["light_sala_0"], params={"scope": "bulk_area", "area": "area_sala", "category": "light"})
+        op["evidence"] = ["bulk_area", "complete_spatial_set"]
+        result = await ContextualRuntime(hass, Client(plan(op))).process(input_())
+        self.assertEqual(result.code, "success", result)
+        self.assertEqual(called(hass), {"light.sala_0"})
+
     async def test_ha_2025_3_response_constructor_without_followup_field(self):
         from test_contextual_identity import entity
         from custom_components.local_nlu.runtime import RuntimeResult
@@ -280,13 +299,47 @@ class SpatialHttpTests(unittest.IsolatedAsyncioTestCase):
         hass, result = await self.run_command("liga a sala", hass)
         self.assertEqual(called(hass), {"light.sala_0", "light.sala_1"})
 
-    async def test_unavailable_and_limit_refuse_complete_operation(self):
+    async def test_bulk_skips_offline_members_and_executes_available_targets(self):
         for text in ("liga a sala", "desliga a sala", "liga todas as luzes da sala", "luz"):
-            hass = house()
-            hass.states._states["light.sala_1"].state = "unavailable"
-            hass, result = await self.run_command(text, hass)
-            self.assertEqual(result.reason, "bulk_target_unavailable", (text, result))
+            for state in ("unavailable", "unknown", None):
+                hass = house()
+                if state is None:
+                    hass.states._states.pop("light.sala_1")
+                else:
+                    hass.states._states["light.sala_1"].state = state
+                hass, result = await self.run_command(text, hass)
+                self.assertEqual(result.code, "success", (text, state, result))
+                expected = {"light.sala_0", "fan.sala"} if text in ("liga a sala", "desliga a sala") else {"light.sala_0"}
+                self.assertEqual(called(hass), expected)
+
+    async def test_all_offline_and_explicit_offline_target_have_no_effect(self):
+        hass = house()
+        for eid in ("light.sala_0", "light.sala_1", "fan.sala"):
+            hass.states._states[eid].state = "unavailable"
+        hass, result = await self.run_command("desliga a sala", hass)
+        self.assertNotEqual(result.code, "success", result)
+        self.assertFalse(hass.services.calls)
+        hass = house()
+        hass.states._states["light.sala_1"].state = "unavailable"
+        hass, result = await self.run_command("desliga light.sala_1", hass)
+        self.assertNotEqual(result.code, "success", result)
+        self.assertFalse(hass.services.calls)
+
+    async def test_missing_named_target_echoes_mention_without_effect_or_followup(self):
+        for label in ("luz do módulo inexistente", "luz inexistente"):
+            hass, result = await self.run_command("liga a " + label)
+            self.assertEqual(result.reason, "target_not_found", result)
+            self.assertEqual(result.response_text, f'Não encontrei um dispositivo chamado “{label}”.')
+            self.assertFalse(result.continue_conversation)
             self.assertFalse(hass.services.calls)
+        # Known names with a missing capability remain a different failure.
+        hass = house()
+        hass.services.available.remove(("light", "turn_on"))
+        hass, result = await self.run_command("liga light.sala_0", hass)
+        self.assertEqual(result.reason, "no_compatible_capability", result)
+        self.assertFalse(hass.services.calls)
+
+    async def test_limit_still_refuses_complete_operation(self):
         hass = house()
         for n in range(31):
             add(hass, f"extra_{n:02}", f"light.extra_{n}", f"Extra {n}", {})
@@ -321,8 +374,9 @@ class SpatialHttpTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(called(hass), {"light.sala_0", "light.sala_1", "fan.sala"})
 
     async def test_catalog_options_permission_and_origin_changes_abort_before_effect(self):
-        for change in ("member", "options", "permission", "exposure", "origin", "origin_provenance"):
+        for change in ("member", "options", "permission", "exposure", "origin", "origin_provenance", "offline", "online"):
             hass, options = house(), {}
+            if change == "online": hass.states._states["light.sala_1"].state = "unavailable"
             if change == "origin_provenance": options["default_area"] = "area_sala"
             if change == "permission":
                 hass.auth.user = _User({(eid, policy) for eid in hass.entity_registry.entities for policy in ("read", "control")})
@@ -334,6 +388,8 @@ class SpatialHttpTests(unittest.IsolatedAsyncioTestCase):
                     elif change == "permission": hass.auth.user.permissions.allowed.remove(("light.sala_1", "control"))
                     elif change == "exposure": hass.exposed.remove("light.sala_1")
                     elif change == "origin": hass.entity_registry.entities["assist_satellite.sala"].area_id = "area_cozinha"
+                    elif change == "offline": hass.states._states["light.sala_1"].state = "unavailable"
+                    elif change == "online": hass.states._states["light.sala_1"].state = "off"
                     else: hass.entity_registry.entities.pop("assist_satellite.sala")
                     return response
             text = "liga a sala" if change in ("member", "permission") else "luz"

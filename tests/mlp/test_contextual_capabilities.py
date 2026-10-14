@@ -151,12 +151,12 @@ class ContextualHttpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.code, "success", result)
         self.assertEqual(len(hass.services.calls), 1)
 
-    async def test_bulk_unavailable_and_permission_revocation_prevent_any_effect(self):
+    async def test_bulk_skips_initially_unavailable_member(self):
         hass = self.room()
         hass.states._states["fan.item_2"].state = "unavailable"
         result = await ContextualRuntime(hass, HttpClient(self.endpoint)).process(input_("desliga o Estúdio de Ana"))
-        self.assertEqual(result.reason, "bulk_target_unavailable", result)
-        self.assertFalse(hass.services.calls)
+        self.assertEqual(result.code, "success", result)
+        self.assertEqual({call["target"]["entity_id"][0] for call in hass.services.calls}, {"fan.item_0", "fan.item_1"})
 
     async def test_light_category_never_expands_to_all_appliances(self):
         hass = self.room()

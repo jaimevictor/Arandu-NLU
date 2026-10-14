@@ -447,10 +447,20 @@ impl Index {
                 {
                     mention = full;
                 } else {
+                    let named_target =
+                        !mention.is_empty() && !command.plural && command.action != "query";
                     return Err(Response::failure(
-                        "clarification",
+                        if named_target {
+                            "unavailable"
+                        } else {
+                            "clarification"
+                        },
                         &command.intent,
-                        "unknown_area",
+                        if named_target {
+                            "target_not_found"
+                        } else {
+                            "unknown_area"
+                        },
                     ));
                 }
             }
@@ -575,29 +585,6 @@ impl Index {
         if category {
             mention.clear();
         }
-        if bulk
-            && mention.is_empty()
-            && self.catalog.entities.iter().any(|entity| {
-                bulk_eligible(entity, command)
-                    && entity
-                        .attributes
-                        .get("available")
-                        .and_then(serde_json::Value::as_bool)
-                        == Some(false)
-                    && area
-                        .as_ref()
-                        .is_none_or(|id| entity.area_id.as_ref() == Some(id))
-                    && group_areas.as_ref().is_none_or(|ids| {
-                        entity.area_id.as_ref().is_some_and(|id| ids.contains(id))
-                    })
-            })
-        {
-            return Err(Response::failure(
-                "unavailable",
-                &command.intent,
-                "bulk_target_unavailable",
-            ));
-        }
         let context_target = matches!(
             mention.as_str(),
             "isso" | "esse aparelho" | "essa" | "ele" | "ela" | "mais dois graus" | "dois graus"
@@ -653,29 +640,7 @@ impl Index {
                 ranked.insert(*i, (50, "capability_category"));
             }
         }
-        if bulk
-            && ranked.keys().any(|i| {
-                let entity = &self.catalog.entities[*i];
-                bulk_eligible(entity, command)
-                    && entity
-                        .attributes
-                        .get("available")
-                        .and_then(serde_json::Value::as_bool)
-                        == Some(false)
-                    && area
-                        .as_ref()
-                        .is_none_or(|id| entity.area_id.as_ref() == Some(id))
-                    && group_areas.as_ref().is_none_or(|ids| {
-                        entity.area_id.as_ref().is_some_and(|id| ids.contains(id))
-                    })
-            })
-        {
-            return Err(Response::failure(
-                "unavailable",
-                &command.intent,
-                "bulk_target_unavailable",
-            ));
-        }
+        let unknown_mention = !mention.is_empty() && ranked.is_empty() && !context_target;
         ranked.retain(|i, _| {
             let entity = &self.catalog.entities[*i];
             entity.actions.contains(&command.action)
@@ -801,6 +766,8 @@ impl Index {
                     } else {
                         "no_accessible_sensor"
                     }
+                } else if unknown_mention {
+                    "target_not_found"
                 } else {
                     "no_compatible_capability"
                 },
@@ -1017,6 +984,11 @@ fn bulk_eligible(entity: &super::contract::Entity, command: &Command) -> bool {
         entity.domain.as_str(),
         "light" | "switch" | "fan" | "climate" | "media_player" | "humidifier"
     ) && (command.domains.is_empty() || command.domains.contains(&entity.domain))
+        && entity
+            .attributes
+            .get("available")
+            .and_then(serde_json::Value::as_bool)
+            != Some(false)
         && entity
             .attributes
             .get("bulk_eligible")

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.5
+
+- Execute collective room/category actions on all available authorized devices, skipping offline members from the initial snapshot.
+- Reject empty target sets and plans whose availability, permissions or membership change before execution.
+- Report a missing named device using the understood target, preserving request-local Unicode without logging the utterance.
+- Update the add-on and Python integration together; v1–v3 remain compatible.
+
 ## 0.4.0
 
 - Add contextual name/room set resolution, safe collective area shutdown and bounded dialogue choices.
